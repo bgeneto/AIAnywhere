@@ -69,7 +69,7 @@ namespace AIAnywhere.Views
                 CharacterCountTextBlock.Text = "Loading image...";
 
                 // Hide text block, show loading
-                ResultTextBlock.Visibility = Visibility.Collapsed;
+                ResultTextBox.Visibility = Visibility.Collapsed;
                 LoadingPanel.Visibility = Visibility.Visible;
                 ResultImage.Visibility = Visibility.Collapsed;
 
@@ -83,12 +83,12 @@ namespace AIAnywhere.Views
             else
             {
                 // Handle text content
-                ResultTextBlock.Text = _resultText;
+                ResultTextBox.Text = _resultText;
                 OperationTypeTextBlock.Text = _operationType;
                 CharacterCountTextBlock.Text = $"{_resultText.Length} characters";
 
                 // Show text block, hide image and loading
-                ResultTextBlock.Visibility = Visibility.Visible;
+                ResultTextBox.Visibility = Visibility.Visible;
                 ResultImage.Visibility = Visibility.Collapsed;
                 LoadingPanel.Visibility = Visibility.Collapsed;
             }
@@ -101,34 +101,29 @@ namespace AIAnywhere.Views
             PasteButton.Focus();
         }
 
-        private void ShowLoadingState()
-        {
+        private void ShowLoadingState()        {
             LoadingPanel.Visibility = Visibility.Visible;
             ResultImage.Visibility = Visibility.Collapsed;
-            ResultTextBlock.Visibility = Visibility.Collapsed;
+            ResultTextBox.Visibility = Visibility.Collapsed;
         }
 
         private void ShowImageState()
         {
             // Stop loading animation
             var loadingStoryboard = (Storyboard)FindResource("LoadingAnimation");
-            loadingStoryboard.Stop();
-
-            LoadingPanel.Visibility = Visibility.Collapsed;
+            loadingStoryboard.Stop();            LoadingPanel.Visibility = Visibility.Collapsed;
             ResultImage.Visibility = Visibility.Visible;
-            ResultTextBlock.Visibility = Visibility.Collapsed;
+            ResultTextBox.Visibility = Visibility.Collapsed;
         }
 
         private void ShowErrorState(string errorMessage)
         {
             // Stop loading animation
             var loadingStoryboard = (Storyboard)FindResource("LoadingAnimation");
-            loadingStoryboard.Stop();
-
-            LoadingPanel.Visibility = Visibility.Collapsed;
+            loadingStoryboard.Stop();            LoadingPanel.Visibility = Visibility.Collapsed;
             ResultImage.Visibility = Visibility.Collapsed;
-            ResultTextBlock.Visibility = Visibility.Visible;
-            ResultTextBlock.Text = errorMessage;
+            ResultTextBox.Visibility = Visibility.Visible;
+            ResultTextBox.Text = errorMessage;
         }
         private async Task LoadAndDisplayImage()
         {
@@ -174,10 +169,26 @@ namespace AIAnywhere.Views
                 case Key.Escape:
                     CancelAndClose();
                     e.Handled = true;
-                    break;
-                case Key.C when Keyboard.Modifiers == ModifierKeys.Control:
-                    CopyToClipboard();
-                    e.Handled = true;
+                    break;                case Key.C when Keyboard.Modifiers == ModifierKeys.Control:
+                    // If text is selected in the TextBox, copy only selected text
+                    if (ResultTextBox.IsFocused && !string.IsNullOrEmpty(ResultTextBox.SelectedText))
+                    {
+                        // Let the TextBox handle Ctrl+C for selected text
+                        break;
+                    }
+                    else
+                    {
+                        // Copy full content
+                        CopyToClipboard();
+                        e.Handled = true;
+                    }
+                    break;                case Key.A when Keyboard.Modifiers == ModifierKeys.Control:
+                    // Select all text in the TextBox if it's focused
+                    if (ResultTextBox.IsFocused)
+                    {
+                        ResultTextBox.SelectAll();
+                        e.Handled = true;
+                    }
                     break;
             }
         }
@@ -195,6 +206,34 @@ namespace AIAnywhere.Views
         private void CopyButton_Click(object sender, RoutedEventArgs e)
         {
             CopyToClipboard();
+        }
+
+        // Context menu handlers for enhanced text selection
+        private void CopySelectedMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(ResultTextBox.SelectedText))
+            {
+                try
+                {
+                    Clipboard.SetText(ResultTextBox.SelectedText);
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Copied selected text: '{ResultTextBox.SelectedText}'");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Error copying selected text: {ex.Message}");
+                }
+            }
+        }
+
+        private void CopyAllMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            CopyToClipboard();
+        }
+
+        private void SelectAllMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            ResultTextBox.SelectAll();
+            ResultTextBox.Focus();
         }
 
         private async void PasteAndClose()

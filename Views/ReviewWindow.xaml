@@ -45,12 +45,40 @@
         </Grid>          <!-- Preview Content -->
         <Border Grid.Row="1" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="1" 
                 Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="8" Padding="16">            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                <Grid>
-                    <!-- Text Content -->
-                    <TextBlock Name="ResultTextBlock" TextWrapping="Wrap" 
-                               FontFamily="Segoe UI, Tahoma, Geneva, Verdana, sans-serif" 
-                               FontSize="14" LineHeight="20"
-                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                <Grid>                    <!-- Text Content - Now selectable -->
+                    <TextBox Name="ResultTextBox" 
+                             TextWrapping="Wrap" 
+                             IsReadOnly="True"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             FontFamily="Segoe UI, Tahoma, Geneva, Verdana, sans-serif" 
+                             FontSize="14"
+                             Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                             Padding="0"
+                             Margin="0"
+                             VerticalScrollBarVisibility="Disabled"
+                             HorizontalScrollBarVisibility="Disabled"
+                             AcceptsReturn="True"
+                             IsTabStop="True">
+                        <TextBox.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="📋 _Copy Selected" Click="CopySelectedMenuItem_Click" 
+                                          InputGestureText="Ctrl+C"/>
+                                <MenuItem Header="📄 Copy _All" Click="CopyAllMenuItem_Click" 
+                                          InputGestureText="Ctrl+A, Ctrl+C"/>
+                                <Separator/>
+                                <MenuItem Header="🔍 _Select All" Click="SelectAllMenuItem_Click" 
+                                          InputGestureText="Ctrl+A"/>
+                            </ContextMenu>
+                        </TextBox.ContextMenu>
+                        <TextBox.Resources>
+                            <!-- Remove default TextBox selection color and use system selection -->
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" 
+                                             Color="{DynamicResource SystemAccentColor}" Opacity="0.4"/>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" 
+                                             Color="{DynamicResource SystemBaseHighColor}"/>
+                        </TextBox.Resources>
+                    </TextBox>
                     
                     <!-- Image Content -->
                     <Image Name="ResultImage" Visibility="Collapsed" 

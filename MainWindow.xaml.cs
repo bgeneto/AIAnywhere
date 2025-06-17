@@ -117,9 +117,25 @@ namespace AIAnywhere
         {
             // Capture the currently active window before we show our app
             var originalWindowHandle = TextService.GetCurrentForegroundWindow();
+            System.Diagnostics.Debug.WriteLine($"DEBUG: Original window handle: {originalWindowHandle}");
             
-            // Get selected text from the active application
-            var selectedText = TextService.GetSelectedText();
+            string selectedText = "";
+            
+            // Check if text selection is enabled in configuration
+            var config = ConfigurationService.GetConfiguration();
+            if (config.EnableTextSelection)
+            {
+                // Small delay to ensure the hotkey processing doesn't interfere with text selection
+                System.Threading.Thread.Sleep(50);
+                
+                // Get selected text from the active application (this should happen while original app still has focus)
+                selectedText = TextService.GetSelectedText();
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Retrieved selected text in MainWindow: '{selectedText}'");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("DEBUG: Text selection disabled in configuration - opening window immediately");
+            }
             
             // Open prompt window with original window handle
             OpenPromptWindow(selectedText, originalWindowHandle);

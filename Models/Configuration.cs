@@ -14,11 +14,12 @@ namespace AIAnywhere.Models
 
     public class Configuration : INotifyPropertyChanged
     {
-        private string _hotkey = "Ctrl+Alt+A";
+        private string _hotkey = "Ctrl+Alt+Shift+A";
         private string _apiBaseUrl = "https://api.openai.com/v1";
         private string _apiKey = "";
-        private string _llmModel = "gpt-3.5-turbo";
+        private string _llmModel = "gpt-4.1";
         private PasteBehavior _pasteBehavior = PasteBehavior.ReviewMode;
+        private bool _enableTextSelection = true;
 
         public string Hotkey
         {
@@ -63,6 +64,16 @@ namespace AIAnywhere.Models
         {
             get => _pasteBehavior;
             set { _pasteBehavior = value; OnPropertyChanged(nameof(PasteBehavior)); }
+        }
+
+        /// <summary>
+        /// Enable automatic text selection and clipboard detection for prompt prefilling.
+        /// When disabled, the prompt window opens faster but without automatic text prefilling.
+        /// </summary>
+        public bool EnableTextSelection
+        {
+            get => _enableTextSelection;
+            set { _enableTextSelection = value; OnPropertyChanged(nameof(EnableTextSelection)); }
         }
 
         /// <summary>

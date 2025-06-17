@@ -22,42 +22,74 @@
         <TextBlock Grid.Row="0" Text="AI Anywhere" Style="{StaticResource TitleTextBlock}"/>
         
         <!-- Operation Selection -->
-        <TextBlock Grid.Row="1" Text="Select Operation:" Style="{StaticResource HeadingTextBlock}"/>        <ComboBox Grid.Row="2" Name="OperationComboBox" Margin="0,0,0,20"
+        <TextBlock Grid.Row="1" Text="Task Selection:" Style="{StaticResource HeadingTextBlock}"/>        <ComboBox Grid.Row="2" Name="OperationComboBox" Margin="0,0,0,20"
                   DisplayMemberPath="Name" SelectionChanged="OperationComboBox_SelectionChanged"
                   IsReadOnly="False" IsEditable="False" IsDropDownOpen="False"/>
         
         <!-- Dynamic Options Panel -->
         <StackPanel Grid.Row="3" Name="OptionsPanel" Margin="0,0,0,20"/>
-        
-        <!-- Prompt Input -->
+          <!-- Prompt Input -->
         <Grid Grid.Row="4">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             
-            <TextBlock Grid.Row="0" Text="Your Prompt:" Style="{StaticResource HeadingTextBlock}"/>
-            <TextBox Grid.Row="1" Name="PromptTextBox" 
+            <!-- Prompt header with clear button -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0" Text="Your Prompt:" Style="{StaticResource HeadingTextBlock}"/>                <Button Grid.Column="1" Name="ClearButton" Content="🗑️ Clear" 
+                        Style="{StaticResource SecondaryButton}" 
+                        FontSize="11" Padding="8,4"
+                        Click="ClearButton_Click"
+                        ToolTip="Clear the prompt text"
+                        Margin="8,0,0,8">
+                    <Button.Resources>
+                        <Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+                            <Setter Property="Background" Value="#FFF9C4"/>
+                            <Setter Property="BorderBrush" Value="#FFB74D"/>
+                            <Setter Property="Foreground" Value="#E65100"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#FFE082"/>
+                                    <Setter Property="BorderBrush" Value="#FF9800"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </Grid>            <TextBox Grid.Row="1" Name="PromptTextBox" 
                      TextWrapping="Wrap" AcceptsReturn="True" 
                      VerticalScrollBarVisibility="Auto"
-                     Margin="0,0,0,20" MinHeight="180"/>
+                     Margin="0,0,0,20" MinHeight="180"
+                     TextChanged="PromptTextBox_TextChanged">                <TextBox.ContextMenu>
+                    <ContextMenu Opened="ContextMenu_Opened">
+                        <MenuItem Name="CutMenuItem" Header="✂️ Cu_t" Click="CutMenuItem_Click" 
+                                  InputGestureText="Ctrl+X"/>
+                        <MenuItem Name="CopyMenuItem" Header="📋 _Copy" Click="CopyMenuItem_Click" 
+                                  InputGestureText="Ctrl+C"/>
+                        <MenuItem Name="PasteMenuItem" Header="📄 _Paste" Click="PasteMenuItem_Click" 
+                                  InputGestureText="Ctrl+V"/>
+                        <Separator/>
+                        <MenuItem Header="🔍 Select _All" Click="SelectAllMenuItem_Click" 
+                                  InputGestureText="Ctrl+A"/>
+                        <MenuItem Header="🗑️ _Clear All" Click="ClearAllMenuItem_Click" 
+                                  InputGestureText=""/>
+                        <Separator/>
+                        <MenuItem Name="UndoMenuItem" Header="↶ _Undo" Click="UndoMenuItem_Click" 
+                                  InputGestureText="Ctrl+Z"/>
+                        <MenuItem Name="RedoMenuItem" Header="↷ _Redo" Click="RedoMenuItem_Click" 
+                                  InputGestureText="Ctrl+Y"/>
+                    </ContextMenu>
+                </TextBox.ContextMenu>
+            </TextBox>
         </Grid>
         
-        <!-- Selected Text Display -->
-        <Grid Grid.Row="5" Name="SelectedTextGrid" Visibility="Collapsed" Margin="0,0,0,20">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-              <TextBlock Grid.Row="0" Text="Selected Text:" Style="{StaticResource HeadingTextBlock}"/>            <Border Grid.Row="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" 
-                    Background="{StaticResource BackgroundBrush}" MaxHeight="120" Padding="12" CornerRadius="2">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <TextBlock Name="SelectedTextBlock" TextWrapping="Wrap" 
-                               FontFamily="Consolas, 'Courier New', monospace" 
-                               FontSize="12" Foreground="{StaticResource SubtleBrush}"/>
-                </ScrollViewer>
-            </Border>
-        </Grid>        <!-- Buttons -->
+        <!-- Buttons -->
         <Grid Grid.Row="6">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>

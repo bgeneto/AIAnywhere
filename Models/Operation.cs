@@ -32,7 +32,7 @@ namespace AIAnywhere.Models
                 new Operation
                 {
                     Type = OperationType.GeneralChat,
-                    Name = "General Chat",
+                    Name = "General Tasks",
                     Description = "General AI assistance",
                     SystemPrompt = systemPrompts.GetValueOrDefault(nameof(OperationType.GeneralChat),
                         "You are operating in a non-interactive mode.\n" +

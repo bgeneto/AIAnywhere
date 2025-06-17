@@ -1,113 +1,317 @@
 # AI Anywhere
 
-A Windows desktop application that provides universal AI assistance through global hotkeys. Access any LLM model from anywhere on your system - Word documents, IDEs, browsers, or any text field.
+A powerful Windows desktop application that provides universal AI assistance through global hotkeys. Access any LLM model from anywhere on your system - Word documents, IDEs, browsers, or any text field. Built with WPF and .NET 9.0 for modern Windows environments.
 
-## Features
+## ✨ Key Features
 
-- **Global Hotkey Access**: Press `Ctrl+Alt+A` (configurable) from any application
-- **Multiple AI Operations**:
-  - Text Translation (to various languages)
-  - Text Rewriting (with different tones)
-  - Image Generation (DALL-E compatible)
-  - General Chat
-- **OpenAI Compatible**: Works with OpenAI API, Anthropic Claude, local LLMs, or any OpenAI-compatible endpoint
-- **Text Integration**: Automatically captures selected text and can replace or insert AI responses
-- **System Tray**: Runs minimized in system tray, accessible via hotkey or right-click menu
+### 🚀 Global Access
+- **Universal Hotkey**: Press `Ctrl+Alt+Shift+A` (fully configurable) from any application
+- **Smart Text Capture**: Automatically detects selected text using UI Automation and clipboard fallback
+- **System Tray Integration**: Runs minimized in system tray with right-click context menu
+- **Background Operation**: Non-intrusive operation that doesn't interfere with your workflow
 
-## Setup
+### 🤖 AI Tasks
+- **General Tasks**: General AI assistance for any request or question
+- **Text Translation**: Translate to 14+ languages including Spanish, French, German, Chinese, Japanese, Arabic, and more
+- **Text Rewriting**: Improve text with configurable tones (formal, informal, professional, casual, academic, creative)
+- **Image Generation**: Generate images with DALL-E, FLUX.1 or any compatible models with size and quality options
 
-### 1. Prerequisites
-- Windows 10/11
-- .NET 9.0 Runtime
+### 🔧 Advanced Features
+- **Multiple Response Modes**: Auto-paste, clipboard mode, or review mode with preview window
+- **Encrypted Configuration**: API keys are encrypted and stored securely
+- **Custom System Prompts**: Advanced users can customize AI behaviour per task/operation type
+- **Flexible API Support**: Works with OpenAI, Anthropic Claude, local LLMs, or any OpenAI-compatible endpoint (can be used with e.g. LiteLLM or Openrouter)
+- **Robust Text Handling**: Intelligent text selection using both UI Automation and clipboard methods
 
-### 2. Configuration
-1. Launch the application
-2. Right-click the system tray icon and select "Configuration"
-3. Configure the following settings:
-   - **Global Hotkey**: Keyboard shortcut to activate (default: Ctrl+Alt+A)
-   - **API Base URL**: Your LLM API endpoint (e.g., https://api.openai.com/v1)
-   - **API Key**: Your API key for the LLM service
-   - **LLM Model**: Model name (e.g., gpt-4, gpt-3.5-turbo, claude-3-opus)
+## 🚀 Quick Start
 
-### 3. Usage
-1. Select text in any application (optional)
-2. Press your configured hotkey (default: `Ctrl+Alt+A`)
-3. Choose an operation from the dropdown
-4. Configure operation-specific options (language, tone, etc.)
-5. Enter your prompt
-6. Click "Process"
-7. Choose to replace selected text or insert the response
+### Prerequisites
+- **Windows 10/11** (64-bit)
+- **.NET 9.0 Runtime** ([Download here](https://dotnet.microsoft.com/download/dotnet/9.0))
 
-## Supported Operations
+### Installation
+1. Download the latest release from the [releases page](../../releases)
+2. Extract the ZIP file to your preferred location
+3. Run `AIAnywhere.exe`
+4. The app will minimize to your system tray
 
-### Text Translation
-- Translate to: Spanish, French, German, Italian, Portuguese, Japanese, Chinese, Korean, Russian, Arabic
-- Automatically replaces selected text with translation
+### First Time Setup
+1. **Right-click** the AI Anywhere icon in your system tray
+2. Select **"Settings"** from the context menu
+3. Configure your settings:
+   - **Global Hotkey**: Set your preferred keyboard shortcut (default: `Ctrl+Alt+Shift+A`)
+   - **API Base URL**: Enter your LLM API endpoint
+     - OpenAI: `https://api.openai.com/v1`
+     - Anthropic: `https://api.anthropic.com/v1` 
+     - Local LLMs: Your local endpoint URL, e.g. `http://localhost:11434/v1` (Ollama)
+   - **API Key**: Your API key (encrypted automatically) **(Required)**
+   - **LLM Model**: Click "Get Models" to populate available options, then select your preferred model **(Required)**
+   - **Paste Behaviour**: Choose how responses are handled
+   - **Performance Settings**: Enable/disable automatic text selection for optimal performance
+4. Click **"Save"** to apply settings (validation ensures required fields are completed)
 
-### Text Rewriting
-- Tones: Formal, Informal, Professional, Casual, Academic, Creative
-- Perfect for improving clarity and style
+## 🎯 How to Use
 
-### Image Generation
-- Sizes: 1024x1024, 1024x768, 512x512
-- Quality: Standard, HD
-- Opens generated images in browser
+### Basic Workflow
+1. **Select text** in any application (optional - will fallback to clipboard, then empty)
+2. **Press your hotkey** (default: `Ctrl+Alt+Shift+A`)
+3. **Select task** from the dropdown menu
+4. **Configure options** (language for translation, tone for rewriting, etc.)
+5. **Add or edit your prompt** (selected text is automatically prefilled)
+6. **Click "Process"** to send to AI
+7. **Review and apply** the response based on your paste behavior setting
 
-## Building from Source
+### Text Selection Priority
+AIAnywhere uses an intelligent text capture system with the following priority:
+1. **Selected Text**: Uses UI Automation to detect highlighted text
+2. **Clipboard Fallback**: If no selection found, uses clipboard content
+3. **Empty Prompt**: If both above fail, starts with an empty prompt
 
-```powershell
-git clone <repository-url>
-cd AIAnywhere
-dotnet build
-dotnet run
-```
+This ensures maximum compatibility across different applications and scenarios.
 
-## Configuration File
+## 🎛️ Available Tasks
 
-Settings are stored in `config.json` in the application directory:
+### 💬 General Tasks
+**Purpose**: General AI assistance for any request or question
+- **Use Cases**: Writing assistance, code help, explanations, creative tasks, problem-solving
+- **System Prompt**: Optimized for non-interactive, immediate responses without follow-up questions
+- **Best For**: Quick answers, content generation, analysis
+
+### 🌍 Text Translation
+**Purpose**: Professional-quality translation between languages
+- **Supported Languages**: 
+  - **European**: English, Spanish, French, German, Italian, Portuguese, Russian
+  - **Asian**: Chinese, Japanese, Korean, Hindi, Bengali, Punjabi
+  - **Middle Eastern/African**: Arabic
+- **Features**: 
+  - Maintains original writing style and formatting
+  - Context-aware translation
+  - Professional translator-quality output
+- **Auto-Replace**: Automatically replaces selected text with translation
+
+### ✍️ Text Rewriting  
+**Purpose**: Improve and refine existing text with different tones
+- **Available Tones**:
+  - **Formal**: Professional, structured language
+  - **Informal**: Conversational, relaxed tone  
+  - **Professional**: Business-appropriate, polished
+  - **Casual**: Friendly, approachable style
+  - **Academic**: Scholarly, research-oriented
+  - **Creative**: Imaginative, expressive language
+- **Features**:
+  - Maintains original meaning
+  - Improves clarity and flow
+  - Keeps similar length (±20%)
+  - Corrects grammar and enhances readability
+
+### 🎨 Image Generation
+**Purpose**: Create images from text descriptions using AI
+- **Supported Sizes**:
+  - `1024x1024` - Square format, ideal for social media
+  - `1024x768` - Landscape format, great for presentations  
+  - `512x512` - Smaller square format, faster generation
+- **Quality Options**:
+  - **Standard**: Higher quality, more detailed images
+  - **Low**: Faster generation, reduced detail
+- **Output**: Opens generated images directly in your default browser
+- **Compatible**: Works with DALL-E and other OpenAI-compatible image models
+
+## ⚙️ Configuration Options
+
+### Basic Settings
+| Setting | Description | Default | Examples |
+|---------|-------------|---------|----------|
+| **Global Hotkey** | Keyboard combination to activate | `Ctrl+Alt+Shift+A` | `Ctrl+Shift+A`, `Alt+Space` |
+| **API Base URL** | Your LLM service endpoint | `https://api.openai.com/v1` | Local: `http://localhost:11434/v1` |
+| **API Key*** | Authentication key (encrypted) | _(empty)_ | `sk-...` (OpenAI format) |
+| **LLM Model*** | Model name to use (required) | _(empty)_ | `gpt-4o`, `claude-3-opus`, `llama3.2` |
+
+**\*Required fields** - Configuration cannot be saved without these values.
+
+### Response Behavior
+| Mode | Description | When to Use |
+|------|-------------|-------------|
+| **Auto Paste** | Automatically replaces selected text | Quick edits, translations |
+| **Clipboard Mode** | Copies to clipboard, manual paste | Protected fields, careful placement |
+| **Review Mode** | Shows preview before applying | Verification, multiple options |
+
+### Performance Settings
+
+#### Text Selection and Clipboard Detection
+**Setting**: Enable automatic text selection and clipboard detection
+
+AIAnywhere offers flexible performance optimization to match your workflow preferences:
+
+**✅ Enabled (Default)**
+- **Smart Text Prefilling**: Automatically detects selected text using UI Automation
+- **Clipboard Fallback**: Uses clipboard content when no text is selected
+- **Seamless Workflow**: Selected text appears instantly in the prompt window
+- **Full Compatibility**: Works with most applications and text fields
+
+**⚡ Disabled (Performance Mode)**
+- **Lightning-Fast Opening**: Window opens instantly without text detection delays
+- **Predictable Response**: Consistent performance regardless of target application
+- **System Efficiency**: Reduced CPU usage and better performance on slower systems
+- **Clean Start**: Always begins with an empty prompt for manual input
+
+### Advanced Configuration
+
+#### Custom System Prompts
+Power users can customize AI behavior by editing the `config.json` file directly, including LLM prompt editing:
 
 ```json
 {
-  "Hotkey": "Ctrl+Alt+A",
-  "ApiBaseUrl": "https://api.openai.com/v1",
-  "ApiKey": "your-api-key-here",
-  "LlmModel": "gpt-4"
+  "Hotkey": "Ctrl+Alt+Shift+A",
+  "ApiBaseUrl": "https://api.openai.com/v1", 
+  "ApiKey": "encrypted_key_here",
+  "LlmModel": "gpt-4o",
+  "PasteBehavior": "ReviewMode",
+  "EnableTextSelection": true,
+  "SystemPrompts": {
+    "GeneralChat": "Your custom system prompt for general tasks...",
+    "TextTranslation": "Custom translation instructions...",
+    "TextRewrite": "Custom rewriting guidelines...",
+    "ImageGeneration": "Custom image generation prompt..."
+  }
 }
 ```
 
-## Troubleshooting
 
-### Hotkey Not Working
-- Check if another application is using the same hotkey
-- Try a different key combination in settings
-- Run as administrator if needed
 
-### API Errors
-- Verify your API key is correct
-- Check if you have sufficient API credits
-- Ensure the base URL is correct for your provider
+#### Security Features
+- **API Key Encryption**: Keys are automatically encrypted using portable encryption
+- **Local Storage**: All settings stored locally, never transmitted to third parties
+- **Memory Protection**: Sensitive data cleared from memory after use
 
-### Text Integration Issues
-- Some applications may have protected text fields
-- Try running as administrator for better compatibility
-- Use copy/paste manually if automatic insertion fails
+## 🌐 Supported AI Providers
 
-## Security Notes
+### OpenAI
+- **Base URL**: `https://api.openai.com/v1`
+- **Models**: `gpt-4o`, `gpt-4.1`, `gpt-3.5-turbo`, etc...
+- **Features**: Full support for all tasks including image generation
 
-- API keys are stored locally in plain text
-- Consider using environment variables for sensitive keys
-- The application requires clipboard access for text operations
+### Anthropic Claude
+- **Base URL**: `https://api.anthropic.com/v1`
+- **Models**: `claude-3-opus`, `claude-3-sonnet`, `claude-3-haiku`
+- **Features**: Text operations (translation, rewriting, general tasks)
+- **Note**: Image generation not supported
 
-## Contributing
+### Local LLMs
+- **Ollama**: `http://localhost:11434/v1`
+- **LM Studio**: `http://localhost:1234/v1`
+- **Text Generation WebUI**: `http://localhost:5000/v1`
+- **Models**: Any local model compatible with OpenAI API format like `gemma3`, `llama3.2`...
+- **Features**: Text operations, image generation (varies by model capabilities)
 
-This is an MVP implementation. Potential improvements:
-- Encrypted configuration storage
-- Plugin system for custom operations
-- Batch processing capabilities
-- Custom prompt templates
-- Conversation history
-- Offline mode with local LLMs
+### Other Compatible Services
+- **Azure OpenAI**: Use your Azure endpoint URL
+- **OpenRouter**: `https://openrouter.ai/api/v1`
+- **Together AI**: `https://api.together.xyz/v1`
+- **Any OpenAI-compatible API**: Just set the correct base URL
 
-## License
+## 💻 System Requirements
 
-[Your license here]
+### Minimum Requirements
+- **OS**: Windows 10 version 1809 or later
+- **Architecture**: x64 (64-bit)
+- **RAM**: 512 MB available memory
+- **Storage**: 100 MB free disk space
+- **Network**: Internet connection for AI API access
+
+### Recommended Requirements
+- **OS**: Windows 11 (latest version)
+- **RAM**: 1 GB available memory
+- **Storage**: 500 MB free disk space
+- **Network**: Stable broadband connection
+- **.NET**: .NET 9.0 Runtime (automatically installed if needed)
+
+### Compatibility
+- **Applications**: Works with most Windows applications including:
+  - Microsoft Office (Word, Excel, PowerPoint, Outlook)
+  - Web browsers (Chrome, Firefox, Edge)
+  - Code editors (VS Code, Visual Studio, Notepad++)
+  - Chat applications (Discord, Slack, Teams)
+  - Text editors and IDEs
+
+## ⌨️ Keyboard Shortcuts & Tips
+
+### Default Shortcuts
+- **`Ctrl+Alt+Shift+A`**: Activate AI Anywhere (globally configurable)
+- **`Ctrl+C`**: Copy text before using hotkey (if selection doesn't work)
+- **`Esc`**: Close any AI Anywhere window
+- **`Ctrl+Enter`**: Submit prompt (in prompt window)
+
+### Pro Tips
+1. **Quick Translation**: Select text → Hotkey → Choose "Text Translation" → Process
+2. **Improve Writing**: Select text → Hotkey → "Text Rewrite" → Choose tone → Process
+3. **Clipboard Mode**: Perfect for protected fields where auto-paste doesn't work
+4. **Review Mode**: Great for checking AI responses before applying them
+5. **Custom Prompts**: Combine operations/tasks (e.g., "Translate to Spanish and make it formal")
+
+## 🤝 Contributing
+
+We welcome contributions from the community! This project is actively maintained and we're looking to expand its capabilities.
+
+### How to Contribute
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/AmazingFeature`)
+3. **Commit** your changes (`git commit -m 'Add some AmazingFeature'`)
+4. **Push** to the branch (`git push origin feature/AmazingFeature`)
+5. **Open** a Pull Request
+
+### Development Guidelines
+- Follow existing code style and patterns
+- Add unit tests for new features
+- Update documentation for any API changes
+- Test with multiple Windows versions and applications
+- Consider accessibility and internationalization
+
+### Bug Reports & Feature Requests
+- Use the [Issues](../../issues) tab to report bugs
+- Provide detailed reproduction steps
+- Include system information and error messages
+- Search existing issues before creating new ones
+
+## 📄 License
+
+**AI Anywhere** is released under the **MIT License**.
+
+```
+MIT License
+
+Copyright (c) 2025 Bernhard Enders
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+---
+
+## 🎉 Acknowledgments
+
+- Built with **WPF** and **.NET 9.0** for modern Windows development
+- **ModernWPF** for contemporary UI styling
+- **UI Automation** for advanced text selection capabilities
+- **OpenAI API** specification for broad LLM compatibility
+- Community feedback and contributions that make this project better
+
+---
+
+**Made with ❤️ for productivity enthusiasts who want AI assistance everywhere they work.**
+
+*Questions? Issues? Ideas? Open an [issue](../../issues) or start a [discussion](../../discussions)!*

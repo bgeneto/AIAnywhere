@@ -6,14 +6,16 @@
         Title="AI Anywhere - Settings" SizeToContent="Height" Width="560"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Icon="../AIAnywhere.ico">    <Grid Margin="32">        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>  <!-- Title -->
+        Icon="../AIAnywhere.ico">    <Grid Margin="32">        <Grid.RowDefinitions>            <RowDefinition Height="Auto"/>  <!-- Title -->
             <RowDefinition Height="Auto"/>  <!-- Hotkey heading -->
             <RowDefinition Height="Auto"/>  <!-- Hotkey textbox -->
             <RowDefinition Height="Auto"/>  <!-- Hotkey description -->
             <RowDefinition Height="Auto"/>  <!-- Paste Behavior heading -->
             <RowDefinition Height="Auto"/>  <!-- Paste Behavior combobox -->
             <RowDefinition Height="Auto"/>  <!-- Paste Behavior description -->
+            <RowDefinition Height="Auto"/>  <!-- Performance Settings heading -->
+            <RowDefinition Height="Auto"/>  <!-- Text Selection checkbox -->
+            <RowDefinition Height="Auto"/>  <!-- Text Selection description -->
             <RowDefinition Height="Auto"/>  <!-- API Configuration heading -->
             <RowDefinition Height="Auto"/>  <!-- API Base URL label -->
             <RowDefinition Height="Auto"/>  <!-- API Base URL textbox -->
@@ -48,40 +50,53 @@
             <ComboBoxItem>Review mode (Show preview window for confirmation)</ComboBoxItem>
         </ComboBox><TextBlock Grid.Row="6" Name="PasteBehaviorDescriptionTextBlock" 
                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                   Margin="0,0,0,24"                   Text="Auto-paste provides the smoothest workflow but requires trust in AI results"/>
+        
+        <!-- Performance Settings Section -->
+        <TextBlock Grid.Row="7" Text="Performance Settings" Style="{StaticResource HeadingTextBlock}"/>
+        
+        <CheckBox Grid.Row="8" Name="EnableTextSelectionCheckBox" Margin="0,0,0,8"
+                  Content="🔍 Enable automatic text selection and clipboard detection"
+                  ToolTip="When enabled, the app will detect selected text and clipboard content to prefill prompts. Disable for faster window opening."/>
+        
+        <TextBlock Grid.Row="9" 
+                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
                    Margin="0,0,0,24"
-                   Text="Auto-paste provides the smoothest workflow but requires trust in AI results"/>
+                   Text="Disabling this feature makes the app more responsive"/>
         
         <!-- API Configuration Section -->
-        <TextBlock Grid.Row="7" Text="API Configuration" Style="{StaticResource HeadingTextBlock}"/>        
-        <TextBlock Grid.Row="8" Text="API Base URL:" Margin="0,0,0,8"/>
-        <TextBox Grid.Row="9" Name="ApiBaseUrlTextBox" Margin="0,0,0,16"
+        <TextBlock Grid.Row="10" Text="API Configuration" Style="{StaticResource HeadingTextBlock}"/>        
+        <TextBlock Grid.Row="11" Text="API Base URL:" Margin="0,0,0,8"/>
+        <TextBox Grid.Row="12" Name="ApiBaseUrlTextBox" Margin="0,0,0,16"
                  ToolTip="OpenAI compatible API endpoint (e.g., https://api.openai.com/v1)"/>
         
-        <TextBlock Grid.Row="10" Margin="0,0,0,8">
+        <TextBlock Grid.Row="13" Margin="0,0,0,8">
             <Run Text="API Key:"/>
             <Run Text=" *" Foreground="Red" FontWeight="Bold"/>
         </TextBlock>
-        <PasswordBox Grid.Row="11" Name="ApiKeyPasswordBox" Margin="0,0,0,16"
+        <PasswordBox Grid.Row="14" Name="ApiKeyPasswordBox" Margin="0,0,0,16"
                      ToolTip="API Key is required to connect to your LLM service"/>
-          <TextBlock Grid.Row="12" Text="LLM Model:" Margin="0,0,0,8"/>
-        <Grid Grid.Row="13">
+          <TextBlock Grid.Row="15" Margin="0,0,0,8">
+            <Run Text="LLM Model:" />
+            <Run Text="*" Foreground="Red" />
+        </TextBlock>
+        <Grid Grid.Row="16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <ComboBox Grid.Column="0" Name="LlmModelComboBox" Margin="0,0,8,0" IsEditable="True"
-                      IsReadOnly="False" IsDropDownOpen="False">
-                <ComboBoxItem Content="gpt-4o"/>
+            </Grid.ColumnDefinitions>            <ComboBox Grid.Column="0" Name="LlmModelComboBox" Margin="0,0,8,0"
+                      ui:ControlHelper.PlaceholderText="Click 'Get Models' to populate..."
+                      ToolTip="Select your LLM model or click 'Get Models' to retrieve available options">
             </ComboBox>
             <Button Grid.Column="1" Name="RetrieveModelsButton" Content="⤓ Get Models" 
                     Style="{StaticResource SecondaryButton}" 
                     Click="RetrieveModelsButton_Click"
-                    ToolTip="Fetch available models from API (requires API key)"/>        </Grid>        <TextBlock Grid.Row="14" Name="ModelStatusTextBlock" 
+                    ToolTip="Fetch available models from API (requires API key)"/>        </Grid>        <TextBlock Grid.Row="17" Name="ModelStatusTextBlock" 
                    Style="{StaticResource SubtleTextBlock}" 
                    Margin="0,4,0,32" 
                    Visibility="Visible"
                    Text="Enter API key and base URL first, then click 'Retrieve Models'"/>        <!-- Buttons -->
-        <Grid Grid.Row="16">
+        <Grid Grid.Row="19">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>

@@ -36,10 +36,12 @@ namespace AIAnywhere.Views
             }
             else
             {
-                ApiKeyPasswordBox.Password = "";
-            }
+                ApiKeyPasswordBox.Password = "";            }
             
-            LlmModelComboBox.Text = _config.LlmModel;            // Set paste behavior
+            // Set LLM Model - find matching item or add custom one
+            SetLlmModelSelection(_config.LlmModel);
+            
+            // Set paste behavior
             try
             {
                 var pasteBehaviorIndex = (int)_config.PasteBehavior;
@@ -51,33 +53,46 @@ namespace AIAnywhere.Views
                 {
                     PasteBehaviorComboBox.SelectedIndex = 0; // Default to Auto-paste
                 }
-            }
-            catch
+            }            catch
             {
                 PasteBehaviorComboBox.SelectedIndex = 0; // Default to Auto-paste
             }
             
             UpdatePasteBehaviorDescription();
             
+            // Set text selection preference
+            EnableTextSelectionCheckBox.IsChecked = _config.EnableTextSelection;
+            
             // Handle selection change event
             PasteBehaviorComboBox.SelectionChanged += PasteBehaviorComboBox_SelectionChanged;
             
             _isApiKeyModified = false; // Reset flag after loading
-        }        private void SaveConfiguration()
+        }private void SaveConfiguration()
         {
             _config.Hotkey = HotkeyTextBox.Text;
             _config.ApiBaseUrl = ApiBaseUrlTextBox.Text;
-            
-            // Use the same logic as validation for consistency
+              // Use the same logic as validation for consistency
             _config.ApiKey = GetActualApiKey();
-            
-            _config.LlmModel = LlmModelComboBox.Text;
-            
-            // Save paste behavior based on selected index
+              // Save LLM Model - get from selected item content, not Text property
+            if (LlmModelComboBox.SelectedItem is ComboBoxItem selectedItem && 
+                selectedItem.IsEnabled && // Don't save the placeholder item
+                selectedItem.Content != null)
+            {
+                _config.LlmModel = selectedItem.Content.ToString() ?? "";
+            }
+            else if (!string.IsNullOrEmpty(LlmModelComboBox.Text))
+            {
+                // Fallback to Text property if available
+                _config.LlmModel = LlmModelComboBox.Text;
+            }
+              // Save paste behavior based on selected index
             if (PasteBehaviorComboBox.SelectedIndex >= 0 && PasteBehaviorComboBox.SelectedIndex <= 2)
             {
                 _config.PasteBehavior = (PasteBehavior)PasteBehaviorComboBox.SelectedIndex;
             }
+            
+            // Save text selection preference
+            _config.EnableTextSelection = EnableTextSelectionCheckBox.IsChecked ?? true;
         }        private void UpdatePasteBehaviorDescription()
         {
             try
@@ -116,11 +131,10 @@ namespace AIAnywhere.Views
                 TestButton.Content = "Testing...";                
                 
                 // Save configuration first, but we need to get the actual API key
-                var tempConfig = new Configuration
-                {
+                var tempConfig = new Configuration                {
                     Hotkey = HotkeyTextBox.Text,
                     ApiBaseUrl = ApiBaseUrlTextBox.Text,
-                    LlmModel = LlmModelComboBox.Text,
+                    LlmModel = GetSelectedLlmModel(),
                     ApiKey = GetActualApiKey()
                 };
 
@@ -167,6 +181,16 @@ namespace AIAnywhere.Views
                     MessageBox.Show("API Key is required. Please enter your API key before saving.", "Validation Error", 
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     ApiKeyPasswordBox.Focus();
+                    return;
+                }
+
+                // Validate LLM model is required
+                string selectedModel = GetSelectedLlmModel();
+                if (string.IsNullOrWhiteSpace(selectedModel))
+                {
+                    MessageBox.Show("LLM Model is required. Please select a model or click 'Get Models' to retrieve available options.", "Validation Error", 
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    LlmModelComboBox.Focus();
                     return;
                 }
 
@@ -222,22 +246,21 @@ namespace AIAnywhere.Views
 
                 var models = await FetchAvailableModelsAsync(ApiBaseUrlTextBox.Text, actualApiKey);
                 
-                if (models.Any())
-                {
+                if (models.Any())                {
                     // Store current selection
-                    var currentSelection = LlmModelComboBox.Text;
+                    var currentSelection = GetSelectedLlmModel();
                     
                     // Clear and populate ComboBox
                     LlmModelComboBox.Items.Clear();
                     foreach (var model in models.OrderBy(m => m))
                     {
-                        LlmModelComboBox.Items.Add(model);
+                        LlmModelComboBox.Items.Add(new ComboBoxItem { Content = model });
                     }
                     
                     // Restore selection if it exists in the new list
                     if (models.Contains(currentSelection))
                     {
-                        LlmModelComboBox.Text = currentSelection;
+                        SetLlmModelSelection(currentSelection);
                     }
                     else if (models.Any())
                     {
@@ -479,6 +502,40 @@ namespace AIAnywhere.Views
             }
               System.Diagnostics.Debug.WriteLine($"GetActualApiKey: returning '{result}' (length={result?.Length ?? 0})");
             return result ?? "";
+        }
+
+        private string GetSelectedLlmModel()
+        {
+            if (LlmModelComboBox.SelectedItem is ComboBoxItem selectedItem && 
+                selectedItem.IsEnabled && 
+                selectedItem.Content != null)
+            {
+                return selectedItem.Content.ToString() ?? "";
+            }
+            return LlmModelComboBox.Text ?? "";
+        }        private void SetLlmModelSelection(string modelName)
+        {
+            if (string.IsNullOrEmpty(modelName))
+            {
+                LlmModelComboBox.SelectedIndex = -1; // No selection for empty ComboBox
+                return;
+            }
+            
+            // Try to find an existing item that matches the model
+            for (int i = 0; i < LlmModelComboBox.Items.Count; i++)
+            {
+                if (LlmModelComboBox.Items[i] is ComboBoxItem item && 
+                    item.Content.ToString() == modelName)
+                {
+                    LlmModelComboBox.SelectedIndex = i;
+                    return;
+                }
+            }
+            
+            // If not found, add the custom model as a new item
+            var customItem = new ComboBoxItem { Content = modelName };
+            LlmModelComboBox.Items.Add(customItem);
+            LlmModelComboBox.SelectedItem = customItem;
         }
     }
 }

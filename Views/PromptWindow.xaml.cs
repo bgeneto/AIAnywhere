@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using AIAnywhere.Models;
 using AIAnywhere.Services;
 
@@ -13,48 +14,102 @@ namespace AIAnywhere.Views
         private readonly List<Operation> _operations;
         private readonly string _selectedText;
         private readonly Configuration _config;
-        private readonly IntPtr _originalWindowHandle;
-
-        public PromptWindow(string selectedText = "", IntPtr originalWindowHandle = default)        {
+        private readonly IntPtr _originalWindowHandle;        public PromptWindow(string selectedText = "", IntPtr originalWindowHandle = default)        {
             InitializeComponent();
               _selectedText = selectedText;
             _originalWindowHandle = originalWindowHandle;
             _config = ConfigurationService.GetConfiguration();
-            _operations = Operation.GetDefaultOperations(_config);
-            
-            InitializeOperations();
-            DisplaySelectedText();
-            PrefillPromptForTranslationAndRewrite();
-            
-            // Focus on prompt textbox
+            _operations = Operation.GetDefaultOperations(_config);            InitializeOperations();            // Defer the prefill operation to ensure UI is fully initialized
+            // This fixes the timing issue where the initial population might not work
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                System.Diagnostics.Debug.WriteLine("DEBUG: Deferred PrefillPromptForAllOperations() executing...");
+                PrefillPromptForAllOperations();
+                
+                // Initialize clear button state
+                ClearButton.IsEnabled = !string.IsNullOrEmpty(PromptTextBox.Text);
+                ClearButton.Opacity = ClearButton.IsEnabled ? 1.0 : 0.5;
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
+              // Focus on prompt textbox
             PromptTextBox.Focus();
-        }
-
-        private void InitializeOperations()
+            
+            // Add keyboard shortcut support
+            KeyDown += PromptWindow_KeyDown;
+        }        private void InitializeOperations()
         {
             OperationComboBox.ItemsSource = _operations;
             OperationComboBox.SelectedIndex = 0;
-        }
-
-        private void DisplaySelectedText()
+        }        private void PrefillPromptForAllOperations()
         {
+            // This function now works for ALL operations, not just translation and rewrite
+            // NOTE: This method is called with Dispatcher.BeginInvoke to fix timing issues
+            // where the PromptTextBox might not be properly initialized during constructor
+            
+            // Check if text selection is enabled in configuration
+            if (!_config.EnableTextSelection)
+            {
+                System.Diagnostics.Debug.WriteLine("DEBUG: Text selection disabled in configuration - skipping prefill");
+                return;
+            }
+            
+            string textToPopulate = "";
+            
+            // Debug output to help diagnose issues
+            System.Diagnostics.Debug.WriteLine($"DEBUG: PrefillPromptForAllOperations called");
+            System.Diagnostics.Debug.WriteLine($"DEBUG: _selectedText = '{_selectedText}' (length: {_selectedText?.Length ?? 0})");
+            
+            // Get clipboard content for comparison (only if text selection is enabled)
+            var clipboardText = TextService.GetClipboardText();
+            System.Diagnostics.Debug.WriteLine($"DEBUG: Clipboard text = '{clipboardText}' (length: {clipboardText?.Length ?? 0})");
+            
+            // Priority order: 1) Selected text, 2) Clipboard content, 3) Empty
             if (!string.IsNullOrEmpty(_selectedText))
             {
-                SelectedTextBlock.Text = _selectedText;
-                SelectedTextGrid.Visibility = Visibility.Visible;
+                textToPopulate = _selectedText;
+                System.Diagnostics.Debug.WriteLine($"DEBUG: ✓ USING SELECTED TEXT: '{textToPopulate}'");
             }
-        }        private void PrefillPromptForTranslationAndRewrite()
-        {
-            // This will be called after operations are initialized
-            var selectedOperation = _operations.FirstOrDefault(); // Default to first operation
+            else
+            {
+                // If no selected text, check clipboard
+                if (!string.IsNullOrEmpty(clipboardText))
+                {
+                    textToPopulate = clipboardText;
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: ✓ USING CLIPBOARD TEXT: '{textToPopulate}'");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("DEBUG: ✓ NO TEXT AVAILABLE - will show empty prompt");
+                }
+            }
             
-            // Check if this is a text translation or text rewrite operation
-            if (selectedOperation != null && 
-                (selectedOperation.Type == OperationType.TextTranslation || selectedOperation.Type == OperationType.TextRewrite))
+            // Populate the prompt text box if we have content (works for all operations)
+            if (!string.IsNullOrEmpty(textToPopulate))
+            {
+                PromptTextBox.Text = textToPopulate;
+                System.Diagnostics.Debug.WriteLine($"DEBUG: ✓ POPULATED PromptTextBox with: '{textToPopulate}'");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("DEBUG: ✓ LEFT PromptTextBox EMPTY - both selected text and clipboard are empty");
+            }
+            
+            // Final verification
+            System.Diagnostics.Debug.WriteLine($"DEBUG: Final PromptTextBox.Text = '{PromptTextBox.Text}' (length: {PromptTextBox.Text?.Length ?? 0})");
+        }        private void OnOperationChanged(Operation operation)
+        {
+            // Check if text selection is enabled in configuration
+            if (!_config.EnableTextSelection)
+            {
+                return; // Skip text prefilling if disabled
+            }
+            
+            // For any operation change, if the prompt is empty, try to populate it
+            // This ensures all operations can benefit from selected text or clipboard content
+            if (string.IsNullOrEmpty(PromptTextBox.Text))
             {
                 string textToPopulate = "";
                 
-                // First, check if there's selected text
+                // Priority order: 1) Selected text, 2) Clipboard content, 3) Empty
                 if (!string.IsNullOrEmpty(_selectedText))
                 {
                     textToPopulate = _selectedText;
@@ -62,7 +117,11 @@ namespace AIAnywhere.Views
                 else
                 {
                     // If no selected text, check clipboard
-                    textToPopulate = TextService.GetClipboardText();
+                    var clipboardText = TextService.GetClipboardText();
+                    if (!string.IsNullOrEmpty(clipboardText))
+                    {
+                        textToPopulate = clipboardText;
+                    }
                 }
                 
                 // Populate the prompt text box if we have content
@@ -71,37 +130,7 @@ namespace AIAnywhere.Views
                     PromptTextBox.Text = textToPopulate;
                 }
             }
-        }
-
-        private void OnOperationChanged(Operation operation)
-        {
-            // Check if this is a text translation or text rewrite operation
-            if (operation.Type == OperationType.TextTranslation || operation.Type == OperationType.TextRewrite)
-            {
-                // Only prefill if the prompt text box is empty
-                if (string.IsNullOrEmpty(PromptTextBox.Text))
-                {
-                    string textToPopulate = "";
-                    
-                    // First, check if there's selected text
-                    if (!string.IsNullOrEmpty(_selectedText))
-                    {
-                        textToPopulate = _selectedText;
-                    }
-                    else
-                    {
-                        // If no selected text, check clipboard
-                        textToPopulate = TextService.GetClipboardText();
-                    }
-                    
-                    // Populate the prompt text box if we have content
-                    if (!string.IsNullOrEmpty(textToPopulate))
-                    {
-                        PromptTextBox.Text = textToPopulate;
-                    }
-                }
-            }
-        }        private void OperationComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        }private void OperationComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (OperationComboBox.SelectedItem is Operation operation)
             {
@@ -274,6 +303,13 @@ namespace AIAnywhere.Views
             {
                 // Configuration was saved, you might want to refresh any settings here
             }
+        }
+
+        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        {
+            PromptTextBox.Text = "";
+            PromptTextBox.Focus();
+            System.Diagnostics.Debug.WriteLine("DEBUG: User cleared prompt text");
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -494,6 +530,172 @@ namespace AIAnywhere.Views
             {
                 MessageBox.Show($"Error showing image review window: {ex.Message}", "Error", 
                     MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ContextMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            if (sender is ContextMenu contextMenu)
+            {
+                // Enable/disable Cut and Copy based on text selection
+                bool hasSelection = !string.IsNullOrEmpty(PromptTextBox.SelectedText);
+                
+                var cutMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "CutMenuItem");
+                var copyMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "CopyMenuItem");
+                var undoMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "UndoMenuItem");
+                var redoMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "RedoMenuItem");
+                var pasteMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "PasteMenuItem");
+                
+                if (cutMenuItem != null) cutMenuItem.IsEnabled = hasSelection;
+                if (copyMenuItem != null) copyMenuItem.IsEnabled = hasSelection;
+                if (undoMenuItem != null) undoMenuItem.IsEnabled = PromptTextBox.CanUndo;
+                if (redoMenuItem != null) redoMenuItem.IsEnabled = PromptTextBox.CanRedo;
+                if (pasteMenuItem != null) pasteMenuItem.IsEnabled = Clipboard.ContainsText();
+            }
+        }
+
+        // Context menu handlers for enhanced prompt text editing
+        private void CutMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(PromptTextBox.SelectedText))
+            {
+                try
+                {
+                    Clipboard.SetText(PromptTextBox.SelectedText);
+                    int selectionStart = PromptTextBox.SelectionStart;
+                    int selectionLength = PromptTextBox.SelectionLength;
+                    PromptTextBox.Text = PromptTextBox.Text.Remove(selectionStart, selectionLength);
+                    PromptTextBox.SelectionStart = selectionStart;
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Cut text: '{PromptTextBox.SelectedText}'");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Error cutting text: {ex.Message}");
+                }
+            }
+        }
+
+        private void CopyMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(PromptTextBox.SelectedText))
+            {
+                try
+                {
+                    Clipboard.SetText(PromptTextBox.SelectedText);
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Copied selected text: '{PromptTextBox.SelectedText}'");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Error copying text: {ex.Message}");
+                }
+            }
+        }
+
+        private void PasteMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (Clipboard.ContainsText())
+                {
+                    string clipboardText = Clipboard.GetText();
+                    int selectionStart = PromptTextBox.SelectionStart;
+                    
+                    // If text is selected, replace it; otherwise, insert at cursor
+                    if (PromptTextBox.SelectionLength > 0)
+                    {
+                        PromptTextBox.Text = PromptTextBox.Text.Remove(selectionStart, PromptTextBox.SelectionLength);
+                    }
+                    
+                    PromptTextBox.Text = PromptTextBox.Text.Insert(selectionStart, clipboardText);
+                    PromptTextBox.SelectionStart = selectionStart + clipboardText.Length;
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Pasted text: '{clipboardText}'");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Error pasting text: {ex.Message}");
+            }
+        }
+
+        private void SelectAllMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            PromptTextBox.SelectAll();
+            PromptTextBox.Focus();
+        }
+
+        private void ClearAllMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            PromptTextBox.Text = "";
+            PromptTextBox.Focus();
+            System.Diagnostics.Debug.WriteLine("DEBUG: User cleared all prompt text via context menu");
+        }
+
+        private void UndoMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (PromptTextBox.CanUndo)
+                {
+                    PromptTextBox.Undo();
+                    System.Diagnostics.Debug.WriteLine("DEBUG: Undo performed");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Error performing undo: {ex.Message}");
+            }
+        }
+
+        private void RedoMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (PromptTextBox.CanRedo)
+                {
+                    PromptTextBox.Redo();
+                    System.Diagnostics.Debug.WriteLine("DEBUG: Redo performed");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Error performing redo: {ex.Message}");
+            }
+        }
+
+        private void PromptTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // Update clear button visibility and style based on text content
+            ClearButton.IsEnabled = !string.IsNullOrEmpty(PromptTextBox.Text);
+            ClearButton.Opacity = ClearButton.IsEnabled ? 1.0 : 0.5;
+        }
+
+        private void PromptWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            // Handle keyboard shortcuts when the PromptTextBox has focus
+            if (PromptTextBox.IsFocused)
+            {
+                switch (e.Key)
+                {
+                    case Key.A when Keyboard.Modifiers == ModifierKeys.Control:
+                        PromptTextBox.SelectAll();
+                        e.Handled = true;
+                        break;
+                    case Key.Z when Keyboard.Modifiers == ModifierKeys.Control:
+                        if (PromptTextBox.CanUndo)
+                        {
+                            PromptTextBox.Undo();
+                            e.Handled = true;
+                        }
+                        break;
+                    case Key.Y when Keyboard.Modifiers == ModifierKeys.Control:
+                        if (PromptTextBox.CanRedo)
+                        {
+                            PromptTextBox.Redo();
+                            e.Handled = true;
+                        }
+                        break;
+                    // Note: Cut (Ctrl+X), Copy (Ctrl+C), and Paste (Ctrl+V) are handled automatically by TextBox
+                }
             }
         }
     }
