@@ -1,0 +1,107 @@
+<Window x:Class="AIAnywhere.Views.ConfigWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        Title="AI Anywhere - Settings" SizeToContent="Height" Width="560"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Icon="../AIAnywhere.ico">    <Grid Margin="32">        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- Title -->
+            <RowDefinition Height="Auto"/>  <!-- Hotkey heading -->
+            <RowDefinition Height="Auto"/>  <!-- Hotkey textbox -->
+            <RowDefinition Height="Auto"/>  <!-- Hotkey description -->
+            <RowDefinition Height="Auto"/>  <!-- Paste Behavior heading -->
+            <RowDefinition Height="Auto"/>  <!-- Paste Behavior combobox -->
+            <RowDefinition Height="Auto"/>  <!-- Paste Behavior description -->
+            <RowDefinition Height="Auto"/>  <!-- API Configuration heading -->
+            <RowDefinition Height="Auto"/>  <!-- API Base URL label -->
+            <RowDefinition Height="Auto"/>  <!-- API Base URL textbox -->
+            <RowDefinition Height="Auto"/>  <!-- API Key label -->
+            <RowDefinition Height="Auto"/>  <!-- API Key passwordbox -->
+            <RowDefinition Height="Auto"/>  <!-- LLM Model label -->
+            <RowDefinition Height="Auto"/>  <!-- LLM Model combobox + button -->
+            <RowDefinition Height="Auto"/>  <!-- Model status text -->
+            <RowDefinition Height="*"/>     <!-- Spacer -->
+            <RowDefinition Height="Auto"/>  <!-- Buttons -->
+        </Grid.RowDefinitions>
+        
+        <!-- Title -->
+        <TextBlock Grid.Row="0" Text="Settings" Style="{StaticResource TitleTextBlock}"/>
+        
+        <!-- Hotkey Section -->
+        <TextBlock Grid.Row="1" Text="Global Hotkey" Style="{StaticResource HeadingTextBlock}"/>        <TextBox Grid.Row="2" Name="HotkeyTextBox" Margin="0,0,0,8"
+                 ToolTip="Click here and press your desired key combination (e.g., Ctrl+Shift+B)"
+                 KeyDown="HotkeyTextBox_KeyDown"
+                 PreviewKeyDown="HotkeyTextBox_PreviewKeyDown"
+                 PreviewTextInput="HotkeyTextBox_PreviewTextInput"
+                 GotFocus="HotkeyTextBox_GotFocus"
+                 LostFocus="HotkeyTextBox_LostFocus"/>        <TextBlock Grid.Row="3" Text="Click in the field above and press your desired key combination (e.g., Ctrl+Shift+B)" 
+                   Style="{StaticResource SubtleTextBlock}" 
+                   Margin="0,0,0,24"/>
+        
+        <!-- Paste Behavior Section -->
+        <TextBlock Grid.Row="4" Text="Paste Behavior" Style="{StaticResource HeadingTextBlock}"/>        <ComboBox Grid.Row="5" Name="PasteBehaviorComboBox" Margin="0,0,0,8"
+                  ToolTip="Choose how AI results are pasted back to your application">
+            <ComboBoxItem>Auto-paste (Replace selected text automatically)</ComboBoxItem>
+            <ComboBoxItem>Clipboard mode (Copy to clipboard, paste manually)</ComboBoxItem>
+            <ComboBoxItem>Review mode (Show preview window for confirmation)</ComboBoxItem>
+        </ComboBox><TextBlock Grid.Row="6" Name="PasteBehaviorDescriptionTextBlock" 
+                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                   Margin="0,0,0,24"
+                   Text="Auto-paste provides the smoothest workflow but requires trust in AI results"/>
+        
+        <!-- API Configuration Section -->
+        <TextBlock Grid.Row="7" Text="API Configuration" Style="{StaticResource HeadingTextBlock}"/>        
+        <TextBlock Grid.Row="8" Text="API Base URL:" Margin="0,0,0,8"/>
+        <TextBox Grid.Row="9" Name="ApiBaseUrlTextBox" Margin="0,0,0,16"
+                 ToolTip="OpenAI compatible API endpoint (e.g., https://api.openai.com/v1)"/>
+        
+        <TextBlock Grid.Row="10" Margin="0,0,0,8">
+            <Run Text="API Key:"/>
+            <Run Text=" *" Foreground="Red" FontWeight="Bold"/>
+        </TextBlock>
+        <PasswordBox Grid.Row="11" Name="ApiKeyPasswordBox" Margin="0,0,0,16"
+                     ToolTip="API Key is required to connect to your LLM service"/>
+          <TextBlock Grid.Row="12" Text="LLM Model:" Margin="0,0,0,8"/>
+        <Grid Grid.Row="13">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <ComboBox Grid.Column="0" Name="LlmModelComboBox" Margin="0,0,8,0" IsEditable="True"
+                      IsReadOnly="False" IsDropDownOpen="False">
+                <ComboBoxItem Content="gpt-4o"/>
+            </ComboBox>
+            <Button Grid.Column="1" Name="RetrieveModelsButton" Content="⤓ Get Models" 
+                    Style="{StaticResource SecondaryButton}" 
+                    Click="RetrieveModelsButton_Click"
+                    ToolTip="Fetch available models from API (requires API key)"/>        </Grid>        <TextBlock Grid.Row="14" Name="ModelStatusTextBlock" 
+                   Style="{StaticResource SubtleTextBlock}" 
+                   Margin="0,4,0,32" 
+                   Visibility="Visible"
+                   Text="Enter API key and base URL first, then click 'Retrieve Models'"/>        <!-- Buttons -->
+        <Grid Grid.Row="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Test Connection button aligned left -->
+            <Button Grid.Column="0" Name="TestButton" Content="📡 Connection Test" 
+                    Style="{StaticResource SecondaryButton}"
+                    Click="TestButton_Click"/>
+            
+            <!-- Save and Cancel buttons aligned right -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button Name="SaveButton" Content="✓ Save" 
+                        Style="{StaticResource SuccessButton}"
+                        Margin="0,0,12,0" Click="SaveButton_Click"/>
+                <Button Name="CancelButton" Content="✕ Cancel" 
+                        Style="{StaticResource DangerButton}"
+                        Click="CancelButton_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

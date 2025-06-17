@@ -1,0 +1,13 @@
+{
+  "Hotkey": "Ctrl+Alt+Shift+A",
+  "ApiBaseUrl": "https://llm.sistema.pro.br/v1",
+  "ApiKey": "o52DTsLNOwA7gwZFT7MK6fQMLI0mzMX/BzDqCK2zMqUjn413YfcU0sbZvlja+b/UBSuL7Ry6hZddN8yr2aCeVTzM/qyqXdUpF0EENnsvsz8=",
+  "LlmModel": "llama-3-small-fast",
+  "PasteBehavior": 2,
+  "SystemPrompts": {
+    "GeneralChat": "You are operating in a non-interactive mode.\nDo NOT use introductory phrases, greetings, or opening messages.\nYou CANNOT ask the user for clarification, additional details, or preferences.\nWhen given a request, make reasonable assumptions based on the context and provide a complete, helpful response immediately.\nIf a request is ambiguous, choose the most common or logical interpretation and proceed accordingly.\nAlways deliver a substantive response rather than asking questions.\nNEVER ask the user for follow-up questions or clarifications.",
+    "ImageGeneration": "Generate an image with the following description",
+    "TextTranslation": "You are a professional translator. Translate the provided text to {language}. Return only the translated text without any explanations.",
+    "TextRewrite": "You are a professional editor. Rewrite the provided text to be more {tone}. Maintain the original meaning but improve clarity and flow."
+  }
+}

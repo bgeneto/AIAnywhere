@@ -1,0 +1,84 @@
+<Window x:Class="AIAnywhere.Views.PromptWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True"        Title="AI Anywhere" SizeToContent="Height" Width="650"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResizeWithGrip" MinHeight="450" MinWidth="550"
+        Topmost="True" ShowInTaskbar="False"
+        Icon="../AIAnywhere.ico">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Title -->
+        <TextBlock Grid.Row="0" Text="AI Anywhere" Style="{StaticResource TitleTextBlock}"/>
+        
+        <!-- Operation Selection -->
+        <TextBlock Grid.Row="1" Text="Select Operation:" Style="{StaticResource HeadingTextBlock}"/>        <ComboBox Grid.Row="2" Name="OperationComboBox" Margin="0,0,0,20"
+                  DisplayMemberPath="Name" SelectionChanged="OperationComboBox_SelectionChanged"
+                  IsReadOnly="False" IsEditable="False" IsDropDownOpen="False"/>
+        
+        <!-- Dynamic Options Panel -->
+        <StackPanel Grid.Row="3" Name="OptionsPanel" Margin="0,0,0,20"/>
+        
+        <!-- Prompt Input -->
+        <Grid Grid.Row="4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <TextBlock Grid.Row="0" Text="Your Prompt:" Style="{StaticResource HeadingTextBlock}"/>
+            <TextBox Grid.Row="1" Name="PromptTextBox" 
+                     TextWrapping="Wrap" AcceptsReturn="True" 
+                     VerticalScrollBarVisibility="Auto"
+                     Margin="0,0,0,20" MinHeight="180"/>
+        </Grid>
+        
+        <!-- Selected Text Display -->
+        <Grid Grid.Row="5" Name="SelectedTextGrid" Visibility="Collapsed" Margin="0,0,0,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+              <TextBlock Grid.Row="0" Text="Selected Text:" Style="{StaticResource HeadingTextBlock}"/>            <Border Grid.Row="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" 
+                    Background="{StaticResource BackgroundBrush}" MaxHeight="120" Padding="12" CornerRadius="2">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <TextBlock Name="SelectedTextBlock" TextWrapping="Wrap" 
+                               FontFamily="Consolas, 'Courier New', monospace" 
+                               FontSize="12" Foreground="{StaticResource SubtleBrush}"/>
+                </ScrollViewer>
+            </Border>
+        </Grid>        <!-- Buttons -->
+        <Grid Grid.Row="6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Settings button aligned left -->
+            <Button Grid.Column="0" Name="SettingsButton" Content="Settings" 
+                    Style="{StaticResource SecondaryButton}"
+                    Click="SettingsButton_Click"/>
+            
+            <!-- Send and Cancel buttons aligned right -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button Name="ProcessButton" Content="✓ Send" 
+                        Style="{StaticResource SuccessButton}"
+                        Margin="0,0,12,0" Click="ProcessButton_Click" IsDefault="True"/>
+                <Button Name="CancelButton" Content="✕ Cancel" 
+                        Style="{StaticResource DangerButton}"
+                        Click="CancelButton_Click" IsCancel="True"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
