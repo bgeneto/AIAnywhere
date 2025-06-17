@@ -17,7 +17,7 @@ namespace AIAnywhere.Models
         private string _hotkey = "Ctrl+Alt+Shift+A";
         private string _apiBaseUrl = "https://api.openai.com/v1";
         private string _apiKey = "";
-        private string _llmModel = "gpt-4.1";
+        private string _llmModel = "";
         private PasteBehavior _pasteBehavior = PasteBehavior.ReviewMode;
         private bool _enableTextSelection = true;
 
