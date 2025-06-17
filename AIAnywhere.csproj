@@ -9,6 +9,11 @@
     <Nullable>enable</Nullable>
     <ApplicationIcon>AIAnywhere.ico</ApplicationIcon>
     
+    <!-- Optimize package size -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <PublishTrimmed>false</PublishTrimmed>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    
     <!-- Version Information -->
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <FileVersion>1.0.0</FileVersion>

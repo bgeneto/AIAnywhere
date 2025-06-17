@@ -30,6 +30,13 @@ bld/
 [Oo]ut/
 [Ll]og/
 [Ll]ogs/
+AIAnywhere-Distribution/
+AIAnywhere-Lightweight/
+AIAnywhere-Optimized/
+AIAnywhere-v1.0.0-Windows-x64.zip
+AIAnywhere-v1.0.0-Windows-x64.zip
+AIAnywhere-v1.0.0-Lightweight.zip
+AIAnywhere-v1.0.0-Optimized.zip
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
