@@ -9,6 +9,8 @@ namespace AIAnywhere.Models
         ImageGeneration,
         TextRewrite,
         TextTranslation,
+        TextSummarization,
+        EmailEnhancement,
     }
 
     public class Operation
@@ -17,7 +19,9 @@ namespace AIAnywhere.Models
         public string Name { get; set; } = "";
         public string Description { get; set; } = "";
         public string SystemPrompt { get; set; } = "";
-        public List<OperationOption> Options { get; set; } = new(); public static List<Operation> GetDefaultOperations()
+        public List<OperationOption> Options { get; set; } = new();
+
+        public static List<Operation> GetDefaultOperations()
         {
             return GetDefaultOperations(null);
         }
@@ -32,25 +36,62 @@ namespace AIAnywhere.Models
                 new Operation
                 {
                     Type = OperationType.GeneralChat,
-                    Name = "General Tasks",
-                    Description = "General AI assistance",
-                    SystemPrompt = systemPrompts.GetValueOrDefault(nameof(OperationType.GeneralChat),
-                        "You are operating in a non-interactive mode.\n" +
-                        "Do NOT use introductory phrases, greetings, or opening messages.\n" +
-                        "You CANNOT ask the user for clarification, additional details, or preferences.\n" +
-                        "When given a request, make reasonable assumptions based on the context and provide a complete, helpful response immediately.\n" +
-                        "If a request is ambiguous, choose the most common or logical interpretation and proceed accordingly.\n" +
-                        "Always deliver a substantive response rather than asking questions.\n" +
-                        "NEVER ask the user for follow-up questions or clarifications."),
-                    Options = new List<OperationOption>()
+                    Name = "Custom AI Task",
+                    Description = "Flexible AI help for any task or question",
+                    SystemPrompt = systemPrompts.GetValueOrDefault(
+                        nameof(OperationType.GeneralChat),
+                        "You are a helpful AI assistant. Answer the user's questions and assist with tasks. You are operating in a non-interactive mode."
+                    ),
+                    Options = new List<OperationOption>(),
+                },
+                new Operation
+                {
+                    Type = OperationType.EmailEnhancement,
+                    Name = "Email Reply",
+                    Description = "Generate professional email replies",
+                    SystemPrompt = systemPrompts.GetValueOrDefault(
+                        nameof(OperationType.EmailEnhancement),
+                        "You are a professional email communication expert. Generate a well-structured reply to the provided email with a {tone} tone and {length} length."
+                    ),
+                    Options = new List<OperationOption>
+                    {
+                        new OperationOption
+                        {
+                            Key = "tone",
+                            Name = "Tone",
+                            Type = OptionType.Select,
+                            Values = new List<string>
+                            {
+                                "PROFESSIONAL",
+                                "FRIENDLY",
+                                "FORMAL",
+                                "URGENT",
+                                "APOLOGETIC",
+                                "ENTHUSIASTIC",
+                            },
+                            DefaultValue = "PROFESSIONAL",
+                            Required = true,
+                        },
+                        new OperationOption
+                        {
+                            Key = "length",
+                            Name = "Length",
+                            Type = OptionType.Select,
+                            Values = new List<string> { "BRIEF", "STANDARD", "DETAILED" },
+                            DefaultValue = "STANDARD",
+                            Required = false,
+                        },
+                    },
                 },
                 new Operation
                 {
                     Type = OperationType.ImageGeneration,
                     Name = "Image Generation",
                     Description = "Generate images with AI",
-                    SystemPrompt = systemPrompts.GetValueOrDefault(nameof(OperationType.ImageGeneration),
-                        "Generate an image with the following description"),
+                    SystemPrompt = systemPrompts.GetValueOrDefault(
+                        nameof(OperationType.ImageGeneration),
+                        "Generate an image with the following description"
+                    ),
                     Options = new List<OperationOption>
                     {
                         new OperationOption
@@ -60,7 +101,7 @@ namespace AIAnywhere.Models
                             Type = OptionType.Select,
                             Values = new List<string> { "1024x1024", "1024x768", "512x512" },
                             DefaultValue = "1024x768",
-                            Required = true
+                            Required = true,
                         },
                         new OperationOption
                         {
@@ -69,17 +110,19 @@ namespace AIAnywhere.Models
                             Type = OptionType.Select,
                             Values = new List<string> { "low", "standard" },
                             DefaultValue = "standard",
-                            Required = false
-                        }
-                    }
+                            Required = false,
+                        },
+                    },
                 },
                 new Operation
                 {
                     Type = OperationType.TextRewrite,
                     Name = "Text Rewrite",
                     Description = "Rewrite and improve text",
-                    SystemPrompt = systemPrompts.GetValueOrDefault(nameof(OperationType.TextRewrite),
-                        "You are a professional editor. Rewrite the provided text to be more {tone}. Maintain the original meaning but improve clarity and flow."),
+                    SystemPrompt = systemPrompts.GetValueOrDefault(
+                        nameof(OperationType.TextRewrite),
+                        "You are a professional editor. Rewrite the provided text to be more {tone}. Maintain the original meaning but improve clarity and flow."
+                    ),
                     Options = new List<OperationOption>
                     {
                         new OperationOption
@@ -87,19 +130,66 @@ namespace AIAnywhere.Models
                             Key = "tone",
                             Name = "Writing Tone",
                             Type = OptionType.Select,
-                            Values = new List<string> { "formal", "informal", "professional", "casual", "academic", "creative" },
+                            Values = new List<string>
+                            {
+                                "academic",
+                                "casual",
+                                "creative",
+                                "formal",
+                                "informal",
+                                "professional",
+                            },
                             DefaultValue = "professional",
-                            Required = true
-                        }
-                    }
+                            Required = true,
+                        },
+                    },
+                },
+                new Operation
+                {
+                    Type = OperationType.TextSummarization,
+                    Name = "Text Summarization",
+                    Description = "Condense text into key points",
+                    SystemPrompt = systemPrompts.GetValueOrDefault(
+                        nameof(OperationType.TextSummarization),
+                        "You are a professional summarization expert. Create a {length} summary in {format} format of the provided text."
+                    ),
+                    Options = new List<OperationOption>
+                    {
+                        new OperationOption
+                        {
+                            Key = "length",
+                            Name = "Summary Length",
+                            Type = OptionType.Select,
+                            Values = new List<string> { "brief", "medium", "detailed" },
+                            DefaultValue = "medium",
+                            Required = true,
+                        },
+                        new OperationOption
+                        {
+                            Key = "format",
+                            Name = "Format",
+                            Type = OptionType.Select,
+                            Values = new List<string>
+                            {
+                                "paragraph",
+                                "bullet points",
+                                "executive summary",
+                                "key takeaways",
+                            },
+                            DefaultValue = "bullet points",
+                            Required = true,
+                        },
+                    },
                 },
                 new Operation
                 {
                     Type = OperationType.TextTranslation,
                     Name = "Text Translation",
                     Description = "Translate text to another language",
-                    SystemPrompt = systemPrompts.GetValueOrDefault(nameof(OperationType.TextTranslation),
-                        "You are a professional translator. Translate the provided text to {language}. Return only the translated text without any explanations."),
+                    SystemPrompt = systemPrompts.GetValueOrDefault(
+                        nameof(OperationType.TextTranslation),
+                        "You are a professional translator. Translate the provided text to {language}. Return only the translated text without any explanations."
+                    ),
                     Options = new List<OperationOption>
                     {
                         new OperationOption
@@ -107,11 +197,27 @@ namespace AIAnywhere.Models
                             Key = "language",
                             Name = "Target Language",
                             Type = OptionType.Select,
-                            Values = new List<string> { "Arabic", "Bengali", "Chinese", "English", "French", "German", "Hindi", "Italian", "Japanese", "Korean", "Portuguese", "Punjabi", "Russian", "Spanish" },
+                            Values = new List<string>
+                            {
+                                "Arabic",
+                                "Bengali",
+                                "Chinese",
+                                "English",
+                                "French",
+                                "German",
+                                "Hindi",
+                                "Italian",
+                                "Japanese",
+                                "Korean",
+                                "Portuguese",
+                                "Punjabi",
+                                "Russian",
+                                "Spanish",
+                            },
                             DefaultValue = "Portuguese",
-                            Required = true
-                        }
-                    }
+                            Required = true,
+                        },
+                    },
                 },
             };
         }
@@ -131,6 +237,6 @@ namespace AIAnywhere.Models
     {
         Select,
         Text,
-        Number
+        Number,
     }
 }

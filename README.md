@@ -11,7 +11,9 @@ A powerful Windows desktop application that provides universal AI assistance thr
 - **Background Operation**: Non-intrusive operation that doesn't interfere with your workflow
 
 ### 🤖 AI Tasks
-- **General Tasks**: General AI assistance for any request or question
+- **Custom AI Task**: Flexible AI help for any task or question
+- **Email Reply**: Generate professional email replies with customizable tone and length
+- **Text Summarization**: Condense long text into key points with various formats and lengths
 - **Text Translation**: Translate to 14+ languages including Spanish, French, German, Chinese, Japanese, Arabic, and more
 - **Text Rewriting**: Improve text with configurable tones (formal, informal, professional, casual, academic, creative)
 - **Image Generation**: Generate images with DALL-E, FLUX.1 or any compatible models with size and quality options
@@ -71,11 +73,35 @@ This ensures maximum compatibility across different applications and scenarios.
 
 ## 🎛️ Available Tasks
 
-### 💬 General Tasks
-**Purpose**: General AI assistance for any request or question
+### 🤖 Custom AI Task
+**Purpose**: Flexible AI help for any task or question
 - **Use Cases**: Writing assistance, code help, explanations, creative tasks, problem-solving
 - **System Prompt**: Optimized for non-interactive, immediate responses without follow-up questions
 - **Best For**: Quick answers, content generation, analysis
+
+### 📧 Email Reply
+**Purpose**: Generate professional email replies to received messages
+- **Features**:
+  - **Smart Reply Generation**: Analyzes the original email and creates contextually appropriate responses
+  - **Tone Options**: Professional, Friendly, Formal, Urgent, Apologetic, Enthusiastic
+  - **Length Control**: Brief (2-4 sentences), Standard (1-2 paragraphs), Detailed (2-3 paragraphs)
+  - **Professional Structure**: Includes greeting, acknowledgment, responses to key points, and closing
+- **Use Cases**: Business correspondence, customer service, follow-up communications
+- **Auto-Format**: Generates complete email with proper greeting and signature placeholder
+
+### 📄 Text Summarization
+**Purpose**: Condense long text into key points and essential information
+- **Summary Lengths**:
+  - **Brief**: 2-3 sentences or 3-5 bullet points maximum
+  - **Medium**: 1 paragraph or 5-8 bullet points
+  - **Detailed**: 2-3 paragraphs or 8-12 bullet points
+- **Format Options**:
+  - **Paragraph**: Flowing, connected sentences
+  - **Bullet Points**: Clear, actionable points with consistent structure
+  - **Executive Summary**: Overview, key findings, and implications
+  - **Key Takeaways**: Most important insights and actionable points
+- **Use Cases**: Research papers, meeting notes, articles, reports, documentation
+- **Features**: Preserves core message, maintains logical flow, focuses on facts and decisions
 
 ### 🌍 Text Translation
 **Purpose**: Professional-quality translation between languages
@@ -169,6 +195,8 @@ Power users can customize AI behavior by editing the `config.json` file directly
   "EnableTextSelection": true,
   "SystemPrompts": {
     "GeneralChat": "Your custom system prompt for general tasks...",
+    "EmailEnhancement": "Custom email reply instructions...",
+    "TextSummarization": "Custom summarization guidelines...",
     "TextTranslation": "Custom translation instructions...",
     "TextRewrite": "Custom rewriting guidelines...",
     "ImageGeneration": "Custom image generation prompt..."
@@ -193,7 +221,7 @@ Power users can customize AI behavior by editing the `config.json` file directly
 ### Anthropic Claude
 - **Base URL**: `https://api.anthropic.com/v1`
 - **Models**: `claude-3-opus`, `claude-3-sonnet`, `claude-3-haiku`
-- **Features**: Text operations (translation, rewriting, general tasks)
+- **Features**: Text operations (email replies, summarization, translation, rewriting, general tasks)
 - **Note**: Image generation not supported
 
 ### Local LLMs
@@ -201,7 +229,7 @@ Power users can customize AI behavior by editing the `config.json` file directly
 - **LM Studio**: `http://localhost:1234/v1`
 - **Text Generation WebUI**: `http://localhost:5000/v1`
 - **Models**: Any local model compatible with OpenAI API format like `gemma3`, `llama3.2`...
-- **Features**: Text operations, image generation (varies by model capabilities)
+- **Features**: Text operations (email replies, summarization, translation, rewriting, general tasks), image generation (varies by model capabilities)
 
 ### Other Compatible Services
 - **Azure OpenAI**: Use your Azure endpoint URL
@@ -244,9 +272,11 @@ Power users can customize AI behavior by editing the `config.json` file directly
 ### Pro Tips
 1. **Quick Translation**: Select text → Hotkey → Choose "Text Translation" → Process
 2. **Improve Writing**: Select text → Hotkey → "Text Rewrite" → Choose tone → Process
-3. **Clipboard Mode**: Perfect for protected fields where auto-paste doesn't work
-4. **Review Mode**: Great for checking AI responses before applying them
-5. **Custom Prompts**: Combine operations/tasks (e.g., "Translate to Spanish and make it formal")
+3. **Email Replies**: Select received email → Hotkey → "Email Reply" → Choose tone → Process
+4. **Summarize Content**: Select long text → Hotkey → "Text Summarization" → Choose format → Process
+5. **Clipboard Mode**: Perfect for protected fields where auto-paste doesn't work
+6. **Review Mode**: Great for checking AI responses before applying them
+7. **Custom Prompts**: Combine operations/tasks (e.g., "Translate to Spanish and make it formal")
 
 ## 🤝 Contributing
 
