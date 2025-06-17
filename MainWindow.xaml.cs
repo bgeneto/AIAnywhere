@@ -58,12 +58,12 @@ namespace AIAnywhere
             catch
             {
                 _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
-            }
-
-            // Create context menu for right-click
+            }            // Create context menu for right-click
             var contextMenu = new ContextMenuStrip();
             contextMenu.Items.Add("Open AI Anywhere", null, (s, e) => OpenPromptWindow("", IntPtr.Zero));
             contextMenu.Items.Add("Settings", null, (s, e) => OpenConfigWindow());
+            contextMenu.Items.Add("-");
+            contextMenu.Items.Add("About", null, (s, e) => OpenAboutWindow());
             contextMenu.Items.Add("-");
             contextMenu.Items.Add("Exit", null, (s, e) => ExitApplication());
 
@@ -154,6 +154,22 @@ namespace AIAnywhere
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show($"Error opening settings window: {ex.Message}", 
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void OpenAboutWindow()
+        {
+            try
+            {
+                var aboutWindow = new Views.AboutWindow();
+                aboutWindow.Owner = this;
+                aboutWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                aboutWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Error opening about window: {ex.Message}", 
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

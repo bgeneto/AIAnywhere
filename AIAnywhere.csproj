@@ -8,6 +8,17 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <ApplicationIcon>AIAnywhere.ico</ApplicationIcon>
+    
+    <!-- Version Information -->
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+    <Version>1.0.0</Version>
+    <AssemblyTitle>AI Anywhere</AssemblyTitle>
+    <AssemblyDescription>A powerful AI assistant that works anywhere on your desktop</AssemblyDescription>
+    <AssemblyConfiguration>Release</AssemblyConfiguration>
+    <AssemblyCompany>Bernhard Enders</AssemblyCompany>
+    <AssemblyProduct>AI Anywhere</AssemblyProduct>
+    <AssemblyCopyright>© 2025 Bernhard Enders. All rights reserved.</AssemblyCopyright>
   </PropertyGroup>
   
   <ItemGroup>
