@@ -92,12 +92,26 @@ namespace AIAnywhere.Services
 
                 // Get chat client and make request
                 var chatClient = _openAIClient.GetChatClient(_config.LlmModel);
-                var completion = await chatClient.CompleteChatAsync(messages, chatOptions);
-
-                if (completion.Value?.Content?.Count > 0)
+                var completion = await chatClient.CompleteChatAsync(messages, chatOptions);                if (completion.Value?.Content?.Count > 0)
                 {
-                    var content = string.Join("", completion.Value.Content.Select(c => c.Text));
-                    return new LLMResponse { Success = true, Content = content };
+                    var rawContent = string.Join("", completion.Value.Content.Select(c => c.Text));
+
+                    // DEBUG: Test with your example to see what's happening
+                    var testExample = "Olá [Nome do destinatário],\\n\\nEspero que esteja bem. Sim, como coordenador de área, é você quem deve iniciar os trâmites no SEI para o processo de concurso de professor substituto de química.\\n\\nAtenciosamente,\\n";
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Test example BEFORE processing: {TextProcessor.DebugText(testExample)}");
+                    var processedExample = TextProcessor.ProcessLLMResponse(testExample);
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Test example AFTER processing: {TextProcessor.DebugText(processedExample)}");
+
+                    // DEBUG: Log the raw content to understand what we're getting
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Raw LLM response: {TextProcessor.DebugText(rawContent)}");
+
+                    // Process the raw response to normalize formatting and line breaks
+                    var processedContent = TextProcessor.ProcessLLMResponse(rawContent);
+
+                    // DEBUG: Log the processed content
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Processed LLM response: {TextProcessor.DebugText(processedContent)}");
+
+                    return new LLMResponse { Success = true, Content = processedContent };
                 }
 
                 return new LLMResponse { Success = false, Error = "No response received from API" };

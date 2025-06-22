@@ -409,13 +409,13 @@ namespace AIAnywhere.Views
         {
             try
             {
-                Hide();
-
-                // Small delay to ensure the window is hidden
+                Hide(); // Small delay to ensure the window is hidden
                 await System.Threading.Tasks.Task.Delay(200);
 
-                // Copy to clipboard and paste
-                Clipboard.SetText(responseContent);
+                // Format and copy to clipboard for pasting
+                var formattedContent = TextProcessor.FormatForAutoPaste(responseContent);
+                Clipboard.SetText(formattedContent);
+
                 // Restore focus and paste
                 if (_originalWindowHandle != IntPtr.Zero)
                 {
@@ -425,11 +425,11 @@ namespace AIAnywhere.Views
 
                 if (!string.IsNullOrEmpty(_selectedText))
                 {
-                    TextService.ReplaceSelectedText(responseContent);
+                    TextService.ReplaceSelectedText(formattedContent);
                 }
                 else
                 {
-                    TextService.InsertText(responseContent);
+                    TextService.InsertText(formattedContent);
                 }
 
                 Close();
@@ -449,7 +449,9 @@ namespace AIAnywhere.Views
         {
             try
             {
-                Clipboard.SetText(responseContent);
+                // Format text for clipboard use
+                var formattedContent = TextProcessor.FormatForClipboard(responseContent);
+                Clipboard.SetText(formattedContent);
 
                 MessageBox.Show(
                     "Text has been copied to clipboard!\n\nPress Ctrl+V to paste where you want it.",

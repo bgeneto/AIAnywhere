@@ -94,8 +94,9 @@ namespace AIAnywhere.Views
             }
             else
             {
-                // Handle text content
-                ResultTextBox.Text = _resultText;
+                // Handle text content - format for proper display
+                var formattedText = TextProcessor.FormatForDisplay(_resultText);
+                ResultTextBox.Text = formattedText;
                 OperationTypeTextBlock.Text = _operationType;
                 CharacterCountTextBlock.Text = $"{_resultText.Length} characters";
 
@@ -282,7 +283,9 @@ namespace AIAnywhere.Views
                 }
                 else
                 {
-                    Clipboard.SetText(_resultText);
+                    // Format text for clipboard and paste
+                    var formattedText = TextProcessor.FormatForClipboard(_resultText);
+                    Clipboard.SetText(formattedText);
                 }
             }
             catch (Exception ex)
@@ -327,8 +330,9 @@ namespace AIAnywhere.Views
                 }
                 else
                 {
-                    // Copy text to clipboard
-                    Clipboard.SetText(_resultText);
+                    // Copy text to clipboard - format for clipboard use
+                    var formattedText = TextProcessor.FormatForClipboard(_resultText);
+                    Clipboard.SetText(formattedText);
                 }
 
                 // Briefly change button text to show feedback

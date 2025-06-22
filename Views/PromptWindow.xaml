@@ -68,7 +68,8 @@
                 <TextBlock
                     Grid.Column="0"
                     Style="{StaticResource HeadingTextBlock}"
-                    Text="Your Prompt:" />
+                    Text="Your Prompt"
+                    ToolTip="Press Ctrl+ENTER to send" />
                 <Button
                     Name="ClearButton"
                     Grid.Column="1"
@@ -102,6 +103,7 @@
                 AcceptsReturn="True"
                 TextChanged="PromptTextBox_TextChanged"
                 TextWrapping="Wrap"
+                ToolTip="Press Ctrl+ENTER to send"
                 VerticalScrollBarVisibility="Auto">
                 <TextBox.ContextMenu>
                     <ContextMenu Opened="ContextMenu_Opened">
