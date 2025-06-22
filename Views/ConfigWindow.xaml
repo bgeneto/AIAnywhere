@@ -64,8 +64,7 @@
         <TextBlock
             Grid.Row="1"
             Style="{StaticResource HeadingTextBlock}"
-            Text="Global Hotkey" />
-        <TextBox
+            Text="Global Hotkey" />        <TextBox
             Name="HotkeyTextBox"
             Grid.Row="2"
             Margin="0,0,0,8"
@@ -74,7 +73,38 @@
             LostFocus="HotkeyTextBox_LostFocus"
             PreviewKeyDown="HotkeyTextBox_PreviewKeyDown"
             PreviewTextInput="HotkeyTextBox_PreviewTextInput"
-            ToolTip="Click here and press your desired key combination (e.g., Ctrl+Shift+B)" />
+            ToolTip="Click here and press your desired key combination (e.g., Ctrl+Shift+B)">
+            <TextBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem
+                        Header="✂️ Cu_t"
+                        InputGestureText="Ctrl+X"
+                        Command="ApplicationCommands.Cut" />
+                    <MenuItem
+                        Header="📋 _Copy"
+                        InputGestureText="Ctrl+C"
+                        Command="ApplicationCommands.Copy" />
+                    <MenuItem
+                        Header="📄 _Paste"
+                        InputGestureText="Ctrl+V"
+                        Command="ApplicationCommands.Paste" />
+                    <Separator />
+                    <MenuItem
+                        Header="🔍 Select _All"
+                        InputGestureText="Ctrl+A"
+                        Command="ApplicationCommands.SelectAll" />
+                    <Separator />
+                    <MenuItem
+                        Header="↶ _Undo"
+                        InputGestureText="Ctrl+Z"
+                        Command="ApplicationCommands.Undo" />
+                    <MenuItem
+                        Header="↷ _Redo"
+                        InputGestureText="Ctrl+Y"
+                        Command="ApplicationCommands.Redo" />
+                </ContextMenu>
+            </TextBox.ContextMenu>
+        </TextBox>
         <TextBlock
             Grid.Row="3"
             Margin="0,0,0,24"
@@ -129,12 +159,42 @@
         <TextBlock
             Grid.Row="11"
             Margin="0,0,0,8"
-            Text="API Base URL:" />
-        <TextBox
+            Text="API Base URL:" />        <TextBox
             Name="ApiBaseUrlTextBox"
             Grid.Row="12"
             Margin="0,0,0,16"
-            ToolTip="OpenAI compatible API endpoint (e.g., https://api.openai.com/v1)" />
+            ToolTip="OpenAI compatible API endpoint (e.g., https://api.openai.com/v1)">
+            <TextBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem
+                        Header="✂️ Cu_t"
+                        InputGestureText="Ctrl+X"
+                        Command="ApplicationCommands.Cut" />
+                    <MenuItem
+                        Header="📋 _Copy"
+                        InputGestureText="Ctrl+C"
+                        Command="ApplicationCommands.Copy" />
+                    <MenuItem
+                        Header="📄 _Paste"
+                        InputGestureText="Ctrl+V"
+                        Command="ApplicationCommands.Paste" />
+                    <Separator />
+                    <MenuItem
+                        Header="🔍 Select _All"
+                        InputGestureText="Ctrl+A"
+                        Command="ApplicationCommands.SelectAll" />
+                    <Separator />
+                    <MenuItem
+                        Header="↶ _Undo"
+                        InputGestureText="Ctrl+Z"
+                        Command="ApplicationCommands.Undo" />
+                    <MenuItem
+                        Header="↷ _Redo"
+                        InputGestureText="Ctrl+Y"
+                        Command="ApplicationCommands.Redo" />
+                </ContextMenu>
+            </TextBox.ContextMenu>
+        </TextBox>
 
         <TextBlock Grid.Row="13" Margin="0,0,0,8">
             <Run Text="API Key:" />
@@ -142,12 +202,29 @@
                 FontWeight="Bold"
                 Foreground="Red"
                 Text=" *" />
-        </TextBlock>
-        <PasswordBox
+        </TextBlock>        <PasswordBox
             Name="ApiKeyPasswordBox"
             Grid.Row="14"
             Margin="0,0,0,16"
-            ToolTip="API Key is required to connect to your LLM service" />
+            ToolTip="API Key is required to connect to your LLM service">
+            <PasswordBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem
+                        Header="📋 _Copy"
+                        InputGestureText="Ctrl+C"
+                        Command="ApplicationCommands.Copy" />
+                    <MenuItem
+                        Header="📄 _Paste"
+                        InputGestureText="Ctrl+V"
+                        Command="ApplicationCommands.Paste" />
+                    <Separator />
+                    <MenuItem
+                        Header="🔍 Select _All"
+                        InputGestureText="Ctrl+A"
+                        Command="ApplicationCommands.SelectAll" />
+                </ContextMenu>
+            </PasswordBox.ContextMenu>
+        </PasswordBox>
         <TextBlock Grid.Row="15" Margin="0,0,0,8">
             <Run Text="LLM Model:" />
             <Run Foreground="Red" Text="*" />
@@ -156,13 +233,30 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <ComboBox
+            </Grid.ColumnDefinitions>            <ComboBox
                 Name="LlmModelComboBox"
                 Grid.Column="0"
                 Margin="0,0,8,0"
                 ui:ControlHelper.PlaceholderText="Click 'Get Models' to populate..."
-                ToolTip="Select your LLM model or click 'Get Models' to retrieve available options" />
+                ToolTip="Select your LLM model or click 'Get Models' to retrieve available options">
+                <ComboBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem
+                            Header="📋 _Copy"
+                            InputGestureText="Ctrl+C"
+                            Command="ApplicationCommands.Copy" />
+                        <MenuItem
+                            Header="📄 _Paste"
+                            InputGestureText="Ctrl+V"
+                            Command="ApplicationCommands.Paste" />
+                        <Separator />
+                        <MenuItem
+                            Header="🔍 Select _All"
+                            InputGestureText="Ctrl+A"
+                            Command="ApplicationCommands.SelectAll" />
+                    </ContextMenu>
+                </ComboBox.ContextMenu>
+            </ComboBox>
             <Button
                 Name="RetrieveModelsButton"
                 Grid.Column="1"
