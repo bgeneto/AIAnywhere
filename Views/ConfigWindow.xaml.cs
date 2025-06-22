@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -449,44 +450,52 @@ namespace AIAnywhere.Views
             if (!_isCapturingHotkey)
                 return;
 
-            e.Handled = true; // Prevent default text input behavior            // Allow Escape to cancel capture
+            e.Handled = true; // Prevent default text input behavior
+
+            // Allow Escape to cancel capture
             if (e.Key == Key.Escape)
             {
                 HotkeyTextBox.Text = _originalHotkeyValue;
                 _isCapturingHotkey = false;
-                HotkeyTextBox.Background = System.Windows.SystemColors.WindowBrush; // Use system default background
-                HotkeyTextBox.Foreground = System.Windows.SystemColors.ControlTextBrush; // Ensure visible text
+                HotkeyTextBox.Background = System.Windows.SystemColors.WindowBrush;
+                HotkeyTextBox.Foreground = System.Windows.SystemColors.ControlTextBrush;
                 return;
             }
 
+            // Get current modifier states directly from Win32 API for more reliable detection
+            bool ctrlPressed =
+                (System.Windows.Forms.Control.ModifierKeys & System.Windows.Forms.Keys.Control)
+                != 0;
+            bool altPressed =
+                (System.Windows.Forms.Control.ModifierKeys & System.Windows.Forms.Keys.Alt) != 0;
+            bool shiftPressed =
+                (System.Windows.Forms.Control.ModifierKeys & System.Windows.Forms.Keys.Shift) != 0;
+            bool winPressed = IsWindowsKeyPressed();
+
+            // Also check WPF's modifier detection as backup
+            var wpfModifiers = Keyboard.Modifiers;
+            ctrlPressed = ctrlPressed || (wpfModifiers & ModifierKeys.Control) != 0;
+            altPressed = altPressed || (wpfModifiers & ModifierKeys.Alt) != 0;
+            shiftPressed = shiftPressed || (wpfModifiers & ModifierKeys.Shift) != 0;
+            winPressed = winPressed || (wpfModifiers & ModifierKeys.Windows) != 0;
+
             // Ignore standalone modifier keys
-            if (
-                e.Key == Key.LeftCtrl
-                || e.Key == Key.RightCtrl
-                || e.Key == Key.LeftAlt
-                || e.Key == Key.RightAlt
-                || e.Key == Key.LeftShift
-                || e.Key == Key.RightShift
-                || e.Key == Key.LWin
-                || e.Key == Key.RWin
-                || e.Key == Key.System
-            ) // Alt key variations
+            if (IsModifierKey(e.Key))
             {
                 return;
             }
 
+            // Handle Alt+Key combinations where the key might be reported as System
+            Key actualKey = e.Key;
+            if (e.Key == Key.System && e.SystemKey != Key.None)
+            {
+                actualKey = e.SystemKey;
+                altPressed = true; // Alt is definitely pressed if we get Key.System
+            }
+
             // Require at least one modifier key for hotkeys (except function keys)
-            bool hasModifier =
-                (
-                    Keyboard.Modifiers
-                    & (
-                        ModifierKeys.Control
-                        | ModifierKeys.Alt
-                        | ModifierKeys.Shift
-                        | ModifierKeys.Windows
-                    )
-                ) != 0;
-            bool isFunctionKey = e.Key >= Key.F1 && e.Key <= Key.F12;
+            bool hasModifier = ctrlPressed || altPressed || shiftPressed || winPressed;
+            bool isFunctionKey = actualKey >= Key.F1 && actualKey <= Key.F12;
 
             if (!hasModifier && !isFunctionKey)
             {
@@ -498,22 +507,24 @@ namespace AIAnywhere.Views
             var hotkeyBuilder = new StringBuilder();
 
             // Add modifiers in consistent order
-            if ((Keyboard.Modifiers & ModifierKeys.Control) != 0)
+            if (ctrlPressed)
                 hotkeyBuilder.Append("Ctrl+");
-            if ((Keyboard.Modifiers & ModifierKeys.Alt) != 0)
+            if (altPressed)
                 hotkeyBuilder.Append("Alt+");
-            if ((Keyboard.Modifiers & ModifierKeys.Shift) != 0)
+            if (shiftPressed)
                 hotkeyBuilder.Append("Shift+");
-            if ((Keyboard.Modifiers & ModifierKeys.Windows) != 0)
+            if (winPressed)
                 hotkeyBuilder.Append("Win+");
 
             // Add the main key
-            string keyName = GetKeyName(e.Key);
-            hotkeyBuilder.Append(keyName); // Set the text and finish capturing
+            string keyName = GetKeyName(actualKey);
+            hotkeyBuilder.Append(keyName);
+
+            // Set the text and finish capturing
             HotkeyTextBox.Text = hotkeyBuilder.ToString();
             _isCapturingHotkey = false;
-            HotkeyTextBox.Background = System.Windows.SystemColors.WindowBrush; // Use system default background
-            HotkeyTextBox.Foreground = System.Windows.SystemColors.ControlTextBrush; // Ensure visible text
+            HotkeyTextBox.Background = System.Windows.SystemColors.WindowBrush;
+            HotkeyTextBox.Foreground = System.Windows.SystemColors.ControlTextBrush;
 
             // Move focus away to indicate we're done
             this.Dispatcher.BeginInvoke(
@@ -687,5 +698,38 @@ namespace AIAnywhere.Views
             LlmModelComboBox.Items.Add(customItem);
             LlmModelComboBox.SelectedItem = customItem;
         }
+
+        private bool IsModifierKey(Key key)
+        {
+            return key == Key.LeftCtrl
+                || key == Key.RightCtrl
+                || key == Key.LeftAlt
+                || key == Key.RightAlt
+                || key == Key.LeftShift
+                || key == Key.RightShift
+                || key == Key.LWin
+                || key == Key.RWin
+                || key == Key.System;
+        }
+
+        private bool IsWindowsKeyPressed()
+        {
+            // Use Win32 API to check Windows key state more reliably
+            try
+            {
+                const int VK_LWIN = 0x5B;
+                const int VK_RWIN = 0x5C;
+
+                return (GetAsyncKeyState(VK_LWIN) & 0x8000) != 0
+                    || (GetAsyncKeyState(VK_RWIN) & 0x8000) != 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(int vKey);
     }
 }
