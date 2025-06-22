@@ -26,7 +26,13 @@ namespace AIAnywhere.Views
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
-        public bool ShouldPaste { get; private set; } = false; public ReviewWindow(string resultText, string operationType, IntPtr originalWindowHandle = default)
+        public bool ShouldPaste { get; private set; } = false;
+
+        public ReviewWindow(
+            string resultText,
+            string operationType,
+            IntPtr originalWindowHandle = default
+        )
         {
             InitializeComponent();
 
@@ -42,7 +48,12 @@ namespace AIAnywhere.Views
             KeyDown += ReviewWindow_KeyDown;
         }
 
-        public ReviewWindow(string resultText, string operationType, string imageUrl, IntPtr originalWindowHandle = default)
+        public ReviewWindow(
+            string resultText,
+            string operationType,
+            string imageUrl,
+            IntPtr originalWindowHandle = default
+        )
         {
             InitializeComponent();
 
@@ -57,6 +68,7 @@ namespace AIAnywhere.Views
             // Handle keyboard shortcuts
             KeyDown += ReviewWindow_KeyDown;
         }
+
         private async void InitializeWindow()
         {
             if (_isImage && !string.IsNullOrEmpty(_imageUrl))
@@ -101,7 +113,8 @@ namespace AIAnywhere.Views
             PasteButton.Focus();
         }
 
-        private void ShowLoadingState()        {
+        private void ShowLoadingState()
+        {
             LoadingPanel.Visibility = Visibility.Visible;
             ResultImage.Visibility = Visibility.Collapsed;
             ResultTextBox.Visibility = Visibility.Collapsed;
@@ -111,7 +124,8 @@ namespace AIAnywhere.Views
         {
             // Stop loading animation
             var loadingStoryboard = (Storyboard)FindResource("LoadingAnimation");
-            loadingStoryboard.Stop();            LoadingPanel.Visibility = Visibility.Collapsed;
+            loadingStoryboard.Stop();
+            LoadingPanel.Visibility = Visibility.Collapsed;
             ResultImage.Visibility = Visibility.Visible;
             ResultTextBox.Visibility = Visibility.Collapsed;
         }
@@ -120,11 +134,13 @@ namespace AIAnywhere.Views
         {
             // Stop loading animation
             var loadingStoryboard = (Storyboard)FindResource("LoadingAnimation");
-            loadingStoryboard.Stop();            LoadingPanel.Visibility = Visibility.Collapsed;
+            loadingStoryboard.Stop();
+            LoadingPanel.Visibility = Visibility.Collapsed;
             ResultImage.Visibility = Visibility.Collapsed;
             ResultTextBox.Visibility = Visibility.Visible;
             ResultTextBox.Text = errorMessage;
         }
+
         private async Task LoadAndDisplayImage()
         {
             try
@@ -169,9 +185,12 @@ namespace AIAnywhere.Views
                 case Key.Escape:
                     CancelAndClose();
                     e.Handled = true;
-                    break;                case Key.C when Keyboard.Modifiers == ModifierKeys.Control:
+                    break;
+                case Key.C when Keyboard.Modifiers == ModifierKeys.Control:
                     // If text is selected in the TextBox, copy only selected text
-                    if (ResultTextBox.IsFocused && !string.IsNullOrEmpty(ResultTextBox.SelectedText))
+                    if (
+                        ResultTextBox.IsFocused && !string.IsNullOrEmpty(ResultTextBox.SelectedText)
+                    )
                     {
                         // Let the TextBox handle Ctrl+C for selected text
                         break;
@@ -182,7 +201,8 @@ namespace AIAnywhere.Views
                         CopyToClipboard();
                         e.Handled = true;
                     }
-                    break;                case Key.A when Keyboard.Modifiers == ModifierKeys.Control:
+                    break;
+                case Key.A when Keyboard.Modifiers == ModifierKeys.Control:
                     // Select all text in the TextBox if it's focused
                     if (ResultTextBox.IsFocused)
                     {
@@ -216,11 +236,15 @@ namespace AIAnywhere.Views
                 try
                 {
                     Clipboard.SetText(ResultTextBox.SelectedText);
-                    System.Diagnostics.Debug.WriteLine($"DEBUG: Copied selected text: '{ResultTextBox.SelectedText}'");
+                    System.Diagnostics.Debug.WriteLine(
+                        $"DEBUG: Copied selected text: '{ResultTextBox.SelectedText}'"
+                    );
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"DEBUG: Error copying selected text: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine(
+                        $"DEBUG: Error copying selected text: {ex.Message}"
+                    );
                 }
             }
         }
@@ -263,7 +287,9 @@ namespace AIAnywhere.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error copying to clipboard in ReviewWindow: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"Error copying to clipboard in ReviewWindow: {ex.Message}"
+                );
             }
 
             Close();
@@ -279,6 +305,7 @@ namespace AIAnywhere.Views
             ShouldPaste = false;
             Close();
         }
+
         private async void CopyToClipboard()
         {
             try
@@ -312,7 +339,7 @@ namespace AIAnywhere.Views
                 // Reset after 1 second
                 var timer = new System.Windows.Threading.DispatcherTimer
                 {
-                    Interval = TimeSpan.FromSeconds(1)
+                    Interval = TimeSpan.FromSeconds(1),
                 };
                 timer.Tick += (s, e) =>
                 {
@@ -324,8 +351,12 @@ namespace AIAnywhere.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to copy to clipboard: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    $"Failed to copy to clipboard: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
             }
         }
 

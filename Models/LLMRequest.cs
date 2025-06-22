@@ -8,7 +8,9 @@ namespace AIAnywhere.Models
         public string Prompt { get; set; } = "";
         public string SelectedText { get; set; } = "";
         public Dictionary<string, string> Options { get; set; } = new();
-    }    public class LLMResponse
+    }
+
+    public class LLMResponse
     {
         public bool Success { get; set; }
         public string Content { get; set; } = "";

@@ -7,7 +7,7 @@ namespace AIAnywhere.Models
     {
         [JsonProperty("data")]
         public List<ModelInfo> Data { get; set; } = new List<ModelInfo>();
-        
+
         [JsonProperty("object")]
         public string Object { get; set; } = "";
     }
@@ -16,13 +16,13 @@ namespace AIAnywhere.Models
     {
         [JsonProperty("id")]
         public string Id { get; set; } = "";
-        
+
         [JsonProperty("object")]
         public string Object { get; set; } = "";
-        
+
         [JsonProperty("created")]
         public long Created { get; set; }
-        
+
         [JsonProperty("owned_by")]
         public string OwnedBy { get; set; } = "";
     }

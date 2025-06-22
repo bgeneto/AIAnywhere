@@ -13,7 +13,7 @@ namespace AIAnywhere.Services
     {
         // Base entropy for key derivation - can be changed to invalidate all existing encrypted data
         private static readonly string _baseEntropy = "AIAnywhere_Portable_v1.0";
-        
+
         /// <summary>
         /// Generates a deterministic key for encryption/decryption
         /// This provides reasonable security while maintaining portability
@@ -23,7 +23,7 @@ namespace AIAnywhere.Services
             // Create a deterministic key that's reasonably secure but portable
             // Uses the application identifier + a fixed secret
             var keySource = _baseEntropy + "SecurePortableKey2025";
-            
+
             using (var sha256 = SHA256.Create())
             {
                 return sha256.ComputeHash(Encoding.UTF8.GetBytes(keySource));
@@ -53,13 +53,19 @@ namespace AIAnywhere.Services
                     {
                         // Prepend IV to the encrypted data
                         msEncrypt.Write(aes.IV, 0, aes.IV.Length);
-                        
-                        using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+
+                        using (
+                            var csEncrypt = new CryptoStream(
+                                msEncrypt,
+                                encryptor,
+                                CryptoStreamMode.Write
+                            )
+                        )
                         using (var swEncrypt = new StreamWriter(csEncrypt))
                         {
                             swEncrypt.Write(plainText);
                         }
-                        
+
                         return Convert.ToBase64String(msEncrypt.ToArray());
                     }
                 }
@@ -84,23 +90,29 @@ namespace AIAnywhere.Services
             try
             {
                 var fullCipherBytes = Convert.FromBase64String(encryptedText);
-                
+
                 using (var aes = Aes.Create())
                 {
                     aes.Key = GetEncryptionKey();
-                    
+
                     // Extract IV from the beginning of the encrypted data
                     var iv = new byte[aes.IV.Length];
                     var cipherBytes = new byte[fullCipherBytes.Length - iv.Length];
-                    
+
                     Array.Copy(fullCipherBytes, 0, iv, 0, iv.Length);
                     Array.Copy(fullCipherBytes, iv.Length, cipherBytes, 0, cipherBytes.Length);
-                    
+
                     aes.IV = iv;
 
                     using (var decryptor = aes.CreateDecryptor())
                     using (var msDecrypt = new MemoryStream(cipherBytes))
-                    using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    using (
+                        var csDecrypt = new CryptoStream(
+                            msDecrypt,
+                            decryptor,
+                            CryptoStreamMode.Read
+                        )
+                    )
                     using (var srDecrypt = new StreamReader(csDecrypt))
                     {
                         return srDecrypt.ReadToEnd();
@@ -151,7 +163,8 @@ namespace AIAnywhere.Services
             if (sensitiveText.Length <= visibleChars)
                 return new string('•', Math.Max(8, sensitiveText.Length));
 
-            return sensitiveText.Substring(0, visibleChars) + new string('•', Math.Max(8, sensitiveText.Length - visibleChars));
+            return sensitiveText.Substring(0, visibleChars)
+                + new string('•', Math.Max(8, sensitiveText.Length - visibleChars));
         }
 
         /// <summary>

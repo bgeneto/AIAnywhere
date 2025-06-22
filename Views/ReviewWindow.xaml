@@ -62,7 +62,7 @@
                     Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                     Text="Text Translation" />
             </StackPanel>
-        </Grid>          
+        </Grid>
         <!--  Preview Content  -->
         <Border
             Grid.Row="1"
@@ -70,11 +70,13 @@
             Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
             BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
             BorderThickness="1"
-            CornerRadius="8">            
+            CornerRadius="8">
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                <Grid>                    
-                    <!--  Text Content - Now selectable  -->                      <TextBox
+                <Grid>
+                    <!--  Text Content - Now selectable  -->
+                    <TextBox
                         Name="ResultTextBox"
+                        MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
                         Margin="0"
                         Padding="0"
                         AcceptsReturn="True"
@@ -87,8 +89,7 @@
                         IsReadOnly="True"
                         IsTabStop="True"
                         TextWrapping="Wrap"
-                        VerticalScrollBarVisibility="Disabled"
-                        MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+                        VerticalScrollBarVisibility="Disabled">
                         <TextBox.ContextMenu>
                             <ContextMenu>
                                 <MenuItem

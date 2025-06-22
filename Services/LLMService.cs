@@ -1,12 +1,12 @@
 using System;
+using System.ClientModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.ClientModel;
+using AIAnywhere.Models;
 using OpenAI;
 using OpenAI.Chat;
 using OpenAI.Images;
-using AIAnywhere.Models;
 
 namespace AIAnywhere.Services
 {
@@ -18,14 +18,17 @@ namespace AIAnywhere.Services
         public LLMService(Configuration config)
         {
             _config = config;
-            
+
             // Create OpenAI client with custom endpoint support
             var clientOptions = new OpenAIClientOptions();
-            if (!string.IsNullOrEmpty(_config.ApiBaseUrl) && _config.ApiBaseUrl != "https://api.openai.com/v1")
+            if (
+                !string.IsNullOrEmpty(_config.ApiBaseUrl)
+                && _config.ApiBaseUrl != "https://api.openai.com/v1"
+            )
             {
                 clientOptions.Endpoint = new Uri(_config.ApiBaseUrl.TrimEnd('/'));
             }
-            
+
             _openAIClient = new OpenAIClient(new ApiKeyCredential(_config.ApiKey), clientOptions);
         }
 
@@ -44,24 +47,19 @@ namespace AIAnywhere.Services
             }
             catch (Exception ex)
             {
-                return new LLMResponse
-                {
-                    Success = false,
-                    Error = ex.Message
-                };
+                return new LLMResponse { Success = false, Error = ex.Message };
             }
-        }        private async Task<LLMResponse> ProcessTextRequestAsync(LLMRequest request)
+        }
+
+        private async Task<LLMResponse> ProcessTextRequestAsync(LLMRequest request)
         {
-            var operation = Operation.GetDefaultOperations(_config)
+            var operation = Operation
+                .GetDefaultOperations(_config)
                 .FirstOrDefault(o => o.Type == request.OperationType);
 
             if (operation == null)
             {
-                return new LLMResponse
-                {
-                    Success = false,
-                    Error = "Unknown operation type"
-                };
+                return new LLMResponse { Success = false, Error = "Unknown operation type" };
             }
 
             try
@@ -84,12 +82,12 @@ namespace AIAnywhere.Services
                 var messages = new List<ChatMessage>
                 {
                     ChatMessage.CreateSystemMessage(systemPrompt),
-                    ChatMessage.CreateUserMessage(userPrompt)
-                };                // Create chat completion options
+                    ChatMessage.CreateUserMessage(userPrompt),
+                }; // Create chat completion options
                 var chatOptions = new ChatCompletionOptions
                 {
                     MaxOutputTokenCount = 2000,
-                    Temperature = 0.7f
+                    Temperature = 0.7f,
                 };
 
                 // Get chat client and make request
@@ -99,28 +97,18 @@ namespace AIAnywhere.Services
                 if (completion.Value?.Content?.Count > 0)
                 {
                     var content = string.Join("", completion.Value.Content.Select(c => c.Text));
-                    return new LLMResponse
-                    {
-                        Success = true,
-                        Content = content
-                    };
+                    return new LLMResponse { Success = true, Content = content };
                 }
 
-                return new LLMResponse
-                {
-                    Success = false,
-                    Error = "No response received from API"
-                };
+                return new LLMResponse { Success = false, Error = "No response received from API" };
             }
             catch (Exception ex)
             {
-                return new LLMResponse
-                {
-                    Success = false,
-                    Error = $"API Error: {ex.Message}"
-                };
+                return new LLMResponse { Success = false, Error = $"API Error: {ex.Message}" };
             }
-        }        private async Task<LLMResponse> ProcessImageGenerationAsync(LLMRequest request)
+        }
+
+        private async Task<LLMResponse> ProcessImageGenerationAsync(LLMRequest request)
         {
             try
             {
@@ -128,19 +116,26 @@ namespace AIAnywhere.Services
                 var sizeString = request.Options.GetValueOrDefault("size", "1024x1024");
                 var imageSize = ParseImageSize(sizeString);
                 var quality = request.Options.GetValueOrDefault("quality", "standard");
-                var imageQuality = quality == "standard" ? GeneratedImageQuality.High : GeneratedImageQuality.Standard;
+                var imageQuality =
+                    quality == "standard"
+                        ? GeneratedImageQuality.High
+                        : GeneratedImageQuality.Standard;
 
                 // Create image generation options
                 var imageOptions = new ImageGenerationOptions
                 {
                     Size = imageSize,
                     Quality = imageQuality,
-                    ResponseFormat = GeneratedImageFormat.Uri
+                    ResponseFormat = GeneratedImageFormat.Uri,
                 };
 
                 // Get image client with FLUX.1-schnell model and generate image
                 var imageClient = _openAIClient.GetImageClient("FLUX.1-schnell");
-                var imageResult = await imageClient.GenerateImageAsync(request.Prompt, imageOptions);                if (imageResult.Value?.ImageUri != null)
+                var imageResult = await imageClient.GenerateImageAsync(
+                    request.Prompt,
+                    imageOptions
+                );
+                if (imageResult.Value?.ImageUri != null)
                 {
                     var imageUrl = imageResult.Value.ImageUri.ToString();
                     return new LLMResponse
@@ -148,22 +143,18 @@ namespace AIAnywhere.Services
                         Success = true,
                         Content = imageUrl,
                         IsImage = true,
-                        ImageUrl = imageUrl
+                        ImageUrl = imageUrl,
                     };
                 }
 
-                return new LLMResponse
-                {
-                    Success = false,
-                    Error = "No image generated"
-                };
+                return new LLMResponse { Success = false, Error = "No image generated" };
             }
             catch (Exception ex)
             {
                 return new LLMResponse
                 {
                     Success = false,
-                    Error = $"Image Generation Error: {ex.Message}"
+                    Error = $"Image Generation Error: {ex.Message}",
                 };
             }
         }
@@ -179,7 +170,7 @@ namespace AIAnywhere.Services
                 "1024x1024" => GeneratedImageSize.W1024xH1024,
                 "1792x1024" => GeneratedImageSize.W1792xH1024,
                 "1024x1792" => GeneratedImageSize.W1024xH1792,
-                _ => GeneratedImageSize.W1024xH1024
+                _ => GeneratedImageSize.W1024xH1024,
             };
         }
     }

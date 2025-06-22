@@ -66,7 +66,9 @@ namespace AIAnywhere.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error converting bytes to BitmapImage: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"Error converting bytes to BitmapImage: {ex.Message}"
+                );
                 return null;
             }
         }
@@ -82,7 +84,9 @@ namespace AIAnywhere.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error copying image to clipboard: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"Error copying image to clipboard: {ex.Message}"
+                );
                 throw;
             }
         }
@@ -104,7 +108,9 @@ namespace AIAnywhere.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error copying image from URL to clipboard: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"Error copying image from URL to clipboard: {ex.Message}"
+                );
                 return false;
             }
         }
@@ -126,7 +132,9 @@ namespace AIAnywhere.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error converting BitmapImage to Bitmap: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"Error converting BitmapImage to Bitmap: {ex.Message}"
+                );
                 return null;
             }
         }

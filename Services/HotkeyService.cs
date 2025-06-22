@@ -42,7 +42,7 @@ namespace AIAnywhere.Services
 
                 var (modifiers, key) = ParseHotkey(hotkey);
                 _isRegistered = RegisterHotKey(_windowHandle, _hotkeyId, modifiers, (uint)key);
-                
+
                 return _isRegistered;
             }
             catch
@@ -68,7 +68,9 @@ namespace AIAnywhere.Services
                 return true;
             }
             return false;
-        }        private (uint modifiers, Keys key) ParseHotkey(string hotkey)
+        }
+
+        private (uint modifiers, Keys key) ParseHotkey(string hotkey)
         {
             uint modifiers = 0;
             Keys key = Keys.None;

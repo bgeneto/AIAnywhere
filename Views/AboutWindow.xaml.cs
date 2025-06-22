@@ -20,12 +20,13 @@ namespace AIAnywhere.Views
                 // Get version from assembly
                 var assembly = Assembly.GetExecutingAssembly();
                 var version = assembly.GetName().Version;
-                
+
                 if (version != null)
                 {
-                    VersionTextBlock.Text = $"Version {version.Major}.{version.Minor}.{version.Build}";
+                    VersionTextBlock.Text =
+                        $"Version {version.Major}.{version.Minor}.{version.Build}";
                 }
-                
+
                 // Update copyright year
                 var currentYear = DateTime.Now.Year;
                 CopyrightTextBlock.Text = $"© {currentYear} Bernhard Enders. All rights reserved.";
@@ -50,14 +51,18 @@ namespace AIAnywhere.Views
                 var psi = new ProcessStartInfo
                 {
                     FileName = "https://github.com/bgeneto/AIAnywhere",
-                    UseShellExecute = true
+                    UseShellExecute = true,
                 };
                 Process.Start(psi);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Could not open GitHub link: {ex.Message}", 
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    $"Could not open GitHub link: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
             }
         }
 
@@ -69,14 +74,18 @@ namespace AIAnywhere.Views
                 var psi = new ProcessStartInfo
                 {
                     FileName = "https://github.com/bgeneto/AIAnywhere/issues",
-                    UseShellExecute = true
+                    UseShellExecute = true,
                 };
                 Process.Start(psi);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Could not open issues link: {ex.Message}", 
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    $"Could not open issues link: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
             }
         }
     }

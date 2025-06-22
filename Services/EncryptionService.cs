@@ -11,7 +11,11 @@ namespace AIAnywhere.Services
     /// </summary>
     public static class EncryptionService
     {
-        private static readonly byte[] _entropy = Encoding.UTF8.GetBytes("AIAnywhere_SecureKey_v1.0");        /// <summary>
+        private static readonly byte[] _entropy = Encoding.UTF8.GetBytes(
+            "AIAnywhere_SecureKey_v1.0"
+        );
+
+        /// <summary>
         /// Encrypts a plain text string using Windows Data Protection API (DPAPI).
         /// This ensures the encrypted data can only be decrypted on the same machine by the same user.
         /// </summary>
@@ -25,7 +29,11 @@ namespace AIAnywhere.Services
             try
             {
                 byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
-                byte[] encryptedBytes = ProtectedData.Protect(plainTextBytes, _entropy, DataProtectionScope.CurrentUser);
+                byte[] encryptedBytes = ProtectedData.Protect(
+                    plainTextBytes,
+                    _entropy,
+                    DataProtectionScope.CurrentUser
+                );
                 return Convert.ToBase64String(encryptedBytes);
             }
             catch
@@ -48,7 +56,11 @@ namespace AIAnywhere.Services
             try
             {
                 byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
-                byte[] decryptedBytes = ProtectedData.Unprotect(encryptedBytes, _entropy, DataProtectionScope.CurrentUser);
+                byte[] decryptedBytes = ProtectedData.Unprotect(
+                    encryptedBytes,
+                    _entropy,
+                    DataProtectionScope.CurrentUser
+                );
                 return Encoding.UTF8.GetString(decryptedBytes);
             }
             catch
@@ -94,7 +106,8 @@ namespace AIAnywhere.Services
             if (sensitiveText.Length <= visibleChars)
                 return new string('•', sensitiveText.Length);
 
-            return sensitiveText.Substring(0, visibleChars) + new string('•', Math.Max(8, sensitiveText.Length - visibleChars));
+            return sensitiveText.Substring(0, visibleChars)
+                + new string('•', Math.Max(8, sensitiveText.Length - visibleChars));
         }
     }
 }

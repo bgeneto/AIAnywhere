@@ -1,8 +1,8 @@
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Automation;
-using System.Linq;
 
 namespace AIAnywhere.Services
 {
@@ -24,13 +24,21 @@ namespace AIAnywhere.Services
                 var focusedElement = AutomationElement.FocusedElement;
                 if (focusedElement == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("DEBUG: No focused element found via UI Automation");
+                    System.Diagnostics.Debug.WriteLine(
+                        "DEBUG: No focused element found via UI Automation"
+                    );
                     return "";
                 }
 
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Focused element found: {focusedElement.Current.Name} ({focusedElement.Current.ControlType.LocalizedControlType})");
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Element AutomationId: {focusedElement.Current.AutomationId}");
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Element ClassName: {focusedElement.Current.ClassName}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"DEBUG: Focused element found: {focusedElement.Current.Name} ({focusedElement.Current.ControlType.LocalizedControlType})"
+                );
+                System.Diagnostics.Debug.WriteLine(
+                    $"DEBUG: Element AutomationId: {focusedElement.Current.AutomationId}"
+                );
+                System.Diagnostics.Debug.WriteLine(
+                    $"DEBUG: Element ClassName: {focusedElement.Current.ClassName}"
+                );
 
                 // Try to get selected text using TextPattern
                 var selectedText = GetSelectedTextFromTextPattern(focusedElement);
@@ -57,15 +65,19 @@ namespace AIAnywhere.Services
                 if (element.TryGetCurrentPattern(TextPattern.Pattern, out object textPatternObj))
                 {
                     var textPattern = (TextPattern)textPatternObj;
-                    System.Diagnostics.Debug.WriteLine("DEBUG: TextPattern found on focused element");
+                    System.Diagnostics.Debug.WriteLine(
+                        "DEBUG: TextPattern found on focused element"
+                    );
 
                     // Get the selection
                     var selection = textPattern.GetSelection();
                     if (selection != null && selection.Length > 0)
                     {
                         var selectedText = selection[0].GetText(-1);
-                        System.Diagnostics.Debug.WriteLine($"DEBUG: UI Automation found selected text: '{selectedText}'");
-                        
+                        System.Diagnostics.Debug.WriteLine(
+                            $"DEBUG: UI Automation found selected text: '{selectedText}'"
+                        );
+
                         if (!string.IsNullOrEmpty(selectedText))
                         {
                             return selectedText;
@@ -73,19 +85,25 @@ namespace AIAnywhere.Services
                     }
                     else
                     {
-                        System.Diagnostics.Debug.WriteLine("DEBUG: No text selection found in TextPattern");
+                        System.Diagnostics.Debug.WriteLine(
+                            "DEBUG: No text selection found in TextPattern"
+                        );
                     }
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("DEBUG: Element doesn't support TextPattern");
+                    System.Diagnostics.Debug.WriteLine(
+                        "DEBUG: Element doesn't support TextPattern"
+                    );
                 }
 
                 return "";
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Error getting text from TextPattern: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"DEBUG: Error getting text from TextPattern: {ex.Message}"
+                );
                 return "";
             }
         }
@@ -94,7 +112,9 @@ namespace AIAnywhere.Services
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("DEBUG: Attempting to get selected text from foreground window");
+                System.Diagnostics.Debug.WriteLine(
+                    "DEBUG: Attempting to get selected text from foreground window"
+                );
 
                 // Get the foreground window
                 var foregroundWindow = GetForegroundWindow();
@@ -108,18 +128,24 @@ namespace AIAnywhere.Services
                 var windowElement = AutomationElement.FromHandle(foregroundWindow);
                 if (windowElement == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("DEBUG: Could not get AutomationElement from window handle");
+                    System.Diagnostics.Debug.WriteLine(
+                        "DEBUG: Could not get AutomationElement from window handle"
+                    );
                     return "";
                 }
 
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Window element: {windowElement.Current.Name}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"DEBUG: Window element: {windowElement.Current.Name}"
+                );
 
                 // Search for text controls that might have selections
                 return SearchForSelectedTextInElement(windowElement);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Error getting selected text from window: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"DEBUG: Error getting selected text from window: {ex.Message}"
+                );
                 return "";
             }
         }
@@ -136,10 +162,15 @@ namespace AIAnywhere.Services
                 }
 
                 // Find all descendant elements that support TextPattern
-                var condition = new PropertyCondition(AutomationElement.IsTextPatternAvailableProperty, true);
+                var condition = new PropertyCondition(
+                    AutomationElement.IsTextPatternAvailableProperty,
+                    true
+                );
                 var textElements = element.FindAll(TreeScope.Descendants, condition);
 
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Found {textElements.Count} elements with TextPattern");
+                System.Diagnostics.Debug.WriteLine(
+                    $"DEBUG: Found {textElements.Count} elements with TextPattern"
+                );
 
                 foreach (AutomationElement textElement in textElements)
                 {
@@ -148,22 +179,31 @@ namespace AIAnywhere.Services
                         selectedText = GetSelectedTextFromTextPattern(textElement);
                         if (!string.IsNullOrEmpty(selectedText))
                         {
-                            System.Diagnostics.Debug.WriteLine($"DEBUG: Found selected text in descendant element: '{selectedText}'");
+                            System.Diagnostics.Debug.WriteLine(
+                                $"DEBUG: Found selected text in descendant element: '{selectedText}'"
+                            );
                             return selectedText;
                         }
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"DEBUG: Error checking text element: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine(
+                            $"DEBUG: Error checking text element: {ex.Message}"
+                        );
                         continue;
                     }
                 }
 
                 // Also try looking for focused elements within the window
-                var focusCondition = new PropertyCondition(AutomationElement.HasKeyboardFocusProperty, true);
+                var focusCondition = new PropertyCondition(
+                    AutomationElement.HasKeyboardFocusProperty,
+                    true
+                );
                 var focusedElements = element.FindAll(TreeScope.Descendants, focusCondition);
 
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Found {focusedElements.Count} focused elements");
+                System.Diagnostics.Debug.WriteLine(
+                    $"DEBUG: Found {focusedElements.Count} focused elements"
+                );
 
                 foreach (AutomationElement focusedElement in focusedElements)
                 {
@@ -172,13 +212,17 @@ namespace AIAnywhere.Services
                         selectedText = GetSelectedTextFromTextPattern(focusedElement);
                         if (!string.IsNullOrEmpty(selectedText))
                         {
-                            System.Diagnostics.Debug.WriteLine($"DEBUG: Found selected text in focused element: '{selectedText}'");
+                            System.Diagnostics.Debug.WriteLine(
+                                $"DEBUG: Found selected text in focused element: '{selectedText}'"
+                            );
                             return selectedText;
                         }
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"DEBUG: Error checking focused element: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine(
+                            $"DEBUG: Error checking focused element: {ex.Message}"
+                        );
                         continue;
                     }
                 }
@@ -187,7 +231,9 @@ namespace AIAnywhere.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Error searching for selected text: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"DEBUG: Error searching for selected text: {ex.Message}"
+                );
                 return "";
             }
         }
@@ -202,11 +248,15 @@ namespace AIAnywhere.Services
                 var uiAutomationText = GetSelectedTextViaUIAutomation();
                 if (!string.IsNullOrEmpty(uiAutomationText))
                 {
-                    System.Diagnostics.Debug.WriteLine($"DEBUG: UI Automation succeeded: '{uiAutomationText}'");
+                    System.Diagnostics.Debug.WriteLine(
+                        $"DEBUG: UI Automation succeeded: '{uiAutomationText}'"
+                    );
                     return uiAutomationText;
                 }
 
-                System.Diagnostics.Debug.WriteLine("DEBUG: UI Automation found no selection, checking if there might be clipboard-accessible selection");
+                System.Diagnostics.Debug.WriteLine(
+                    "DEBUG: UI Automation found no selection, checking if there might be clipboard-accessible selection"
+                );
 
                 // If UI Automation didn't find anything, it could mean:
                 // 1. There's actually no selection
@@ -219,7 +269,9 @@ namespace AIAnywhere.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"DEBUG: GetSelectedTextWithFallback() exception: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"DEBUG: GetSelectedTextWithFallback() exception: {ex.Message}"
+                );
                 return "";
             }
         }

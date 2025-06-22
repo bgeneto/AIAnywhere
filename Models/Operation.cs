@@ -40,7 +40,7 @@ namespace AIAnywhere.Models
                     Description = "Flexible AI help for any task or question",
                     SystemPrompt = systemPrompts.GetValueOrDefault(
                         nameof(OperationType.GeneralChat),
-                        "You are a helpful AI assistant. Answer the user's questions and assist with tasks. You are operating in a non-interactive mode."
+                        "You are a helpful AI assistant. Answer the user's questions and assist with tasks. You are operating in a non-interactive mode. /no_think"
                     ),
                     Options = new List<OperationOption>(),
                 },
@@ -51,7 +51,7 @@ namespace AIAnywhere.Models
                     Description = "Generate professional email replies",
                     SystemPrompt = systemPrompts.GetValueOrDefault(
                         nameof(OperationType.EmailEnhancement),
-                        "You are a professional email communication expert. Generate a well-structured reply to the provided email with a {tone} tone and {length} length."
+                        "You are a professional email communication expert. Generate a well-structured reply to the provided email with a {tone} tone and {length} length. /no_think"
                     ),
                     Options = new List<OperationOption>
                     {
@@ -121,7 +121,7 @@ namespace AIAnywhere.Models
                     Description = "Rewrite and improve text",
                     SystemPrompt = systemPrompts.GetValueOrDefault(
                         nameof(OperationType.TextRewrite),
-                        "You are a professional editor. Rewrite the provided text to be more {tone}. Maintain the original meaning but improve clarity and flow."
+                        "You are a professional editor. Rewrite the provided text to be more {tone}. Maintain the original meaning but improve clarity and flow. /no_think"
                     ),
                     Options = new List<OperationOption>
                     {
@@ -151,7 +151,7 @@ namespace AIAnywhere.Models
                     Description = "Condense text into key points",
                     SystemPrompt = systemPrompts.GetValueOrDefault(
                         nameof(OperationType.TextSummarization),
-                        "You are a professional summarization expert. Create a {length} summary in {format} format of the provided text."
+                        "You are a professional summarization expert. Create a {length} summary in {format} format of the provided text. /no_think"
                     ),
                     Options = new List<OperationOption>
                     {
@@ -188,7 +188,7 @@ namespace AIAnywhere.Models
                     Description = "Translate text to another language",
                     SystemPrompt = systemPrompts.GetValueOrDefault(
                         nameof(OperationType.TextTranslation),
-                        "You are a professional translator. Translate the provided text to {language}. Return only the translated text without any explanations."
+                        "You are a professional translator. Translate the provided text to {language}. Return only the translated text without any explanations. /no_think"
                     ),
                     Options = new List<OperationOption>
                     {

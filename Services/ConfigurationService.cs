@@ -17,20 +17,24 @@ namespace AIAnywhere.Services
                 LoadConfiguration();
             }
             return _configuration!;
-        }        public static void LoadConfiguration()
+        }
+
+        public static void LoadConfiguration()
         {
             try
             {
                 if (File.Exists(CONFIG_FILE))
                 {
                     var json = File.ReadAllText(CONFIG_FILE);
-                    _configuration = JsonSerializer.Deserialize<Configuration>(json) ?? new Configuration();
-                    
+                    _configuration =
+                        JsonSerializer.Deserialize<Configuration>(json) ?? new Configuration();
+
                     // Handle migration from old plain text API key format
                     MigrateApiKeyIfNeeded();
-                    
+
                     // Ensure SystemPrompts are populated with defaults if missing
-                    EnsureSystemPromptsArePopulated();                }
+                    EnsureSystemPromptsArePopulated();
+                }
                 else
                 {
                     _configuration = new Configuration();
@@ -78,7 +82,9 @@ namespace AIAnywhere.Services
                     SaveConfiguration();
                 }
             }
-        }/// <summary>
+        }
+
+        /// <summary>
         /// Migrates plain text API keys to encrypted format for existing configurations
         /// </summary>
         private static void MigrateApiKeyIfNeeded()
@@ -94,14 +100,16 @@ namespace AIAnywhere.Services
                     SaveConfiguration(); // Save the migrated configuration
                 }
             }
-        }public static async Task SaveConfigurationAsync()
+        }
+
+        public static async Task SaveConfigurationAsync()
         {
             if (_configuration != null)
             {
-                var options = new JsonSerializerOptions 
-                { 
+                var options = new JsonSerializerOptions
+                {
                     WriteIndented = true,
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                 };
                 var json = JsonSerializer.Serialize(_configuration, options);
                 await File.WriteAllTextAsync(CONFIG_FILE, json);
@@ -112,10 +120,10 @@ namespace AIAnywhere.Services
         {
             if (_configuration != null)
             {
-                var options = new JsonSerializerOptions 
-                { 
+                var options = new JsonSerializerOptions
+                {
                     WriteIndented = true,
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                 };
                 var json = JsonSerializer.Serialize(_configuration, options);
                 File.WriteAllText(CONFIG_FILE, json);
