@@ -11,6 +11,7 @@ namespace AIAnywhere.Models
         TextTranslation,
         TextSummarization,
         EmailEnhancement,
+        WhatsAppResponse,
     }
 
     public class Operation
@@ -36,7 +37,7 @@ namespace AIAnywhere.Models
                 new Operation
                 {
                     Type = OperationType.GeneralChat,
-                    Name = "Custom AI Task",
+                    Name = "Custom Task",
                     Description = "Flexible AI help for any task or question",
                     SystemPrompt =
                         "/no_think\n"
@@ -226,6 +227,47 @@ namespace AIAnywhere.Models
                             },
                             DefaultValue = "Portuguese",
                             Required = true,
+                        },
+                    },
+                },
+                new Operation
+                {
+                    Type = OperationType.WhatsAppResponse,
+                    Name = "WhatsApp Response",
+                    Description = "Generate casual WhatsApp-style responses",
+                    SystemPrompt =
+                        "/no_think\n"
+                        + systemPrompts.GetValueOrDefault(
+                            nameof(OperationType.WhatsAppResponse),
+                            "You are a casual messaging expert. Generate a WhatsApp-style response with {tone} tone and {length} length to the provided message."
+                        ),
+                    Options = new List<OperationOption>
+                    {
+                        new OperationOption
+                        {
+                            Key = "tone",
+                            Name = "Response Tone",
+                            Type = OptionType.Select,
+                            Values = new List<string>
+                            {
+                                "CASUAL",
+                                "FRIENDLY",
+                                "ENTHUSIASTIC",
+                                "SUPPORTIVE",
+                                "HUMOROUS",
+                                "PROFESSIONAL",
+                            },
+                            DefaultValue = "FRIENDLY",
+                            Required = true,
+                        },
+                        new OperationOption
+                        {
+                            Key = "length",
+                            Name = "Response Length",
+                            Type = OptionType.Select,
+                            Values = new List<string> { "SHORT", "MEDIUM", "LONG" },
+                            DefaultValue = "SHORT",
+                            Required = false,
                         },
                     },
                 },

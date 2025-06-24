@@ -129,8 +129,9 @@
             Name="PasteBehaviorDescriptionTextBlock"
             Grid.Row="6"
             Margin="0,0,0,24"
-            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-            Text="Auto-paste provides the smoothest workflow but requires trust in AI results" />
+            FontSize="11"
+            Foreground="DarkGray"
+            Text="(Auto-paste provides the smoothest workflow but requires trust in AI results)" />
 
         <!--  Performance Settings Section  -->
         <TextBlock

@@ -11,7 +11,7 @@ A powerful Windows desktop application that provides universal AI assistance thr
 - **Background Operation**: Non-intrusive operation that doesn't interfere with your workflow
 
 ### 🤖 AI Tasks
-- **Custom AI Task**: Flexible AI help for any task or question
+- **Custom Task**: Flexible AI help for any task or question
 - **Email Reply**: Generate professional email replies with customizable tone and length
 - **Text Summarization**: Condense long text into key points with various formats and lengths
 - **Text Translation**: Translate to 14+ languages including Spanish, French, German, Chinese, Japanese, Arabic, and more
@@ -44,7 +44,7 @@ A powerful Windows desktop application that provides universal AI assistance thr
    - **Global Hotkey**: Set your preferred keyboard shortcut (default: `Ctrl+Alt+Shift+A`)
    - **API Base URL**: Enter your LLM API endpoint
      - OpenAI: `https://api.openai.com/v1`
-     - Anthropic: `https://api.anthropic.com/v1` 
+     - Anthropic: `https://api.anthropic.com/v1`
      - Local LLMs: Your local endpoint URL, e.g. `http://localhost:11434/v1` (Ollama)
    - **API Key**: Your API key (encrypted automatically) **(Required)**
    - **LLM Model**: Click "Get Models" to populate available options, then select your preferred model **(Required)**
@@ -59,7 +59,7 @@ A powerful Windows desktop application that provides universal AI assistance thr
 2. **Press your hotkey** (default: `Ctrl+Alt+Shift+A`)
 3. **Select task** from the dropdown menu
 4. **Configure options** (language for translation, tone for rewriting, etc.)
-5. **Add or edit your prompt** (selected text is automatically prefilled)
+5. **Add or edit prompt content** (selected text is automatically prefilled)
 6. **Click "Process"** to send to AI
 7. **Review and apply** the response based on your paste behavior setting
 
@@ -105,21 +105,21 @@ This ensures maximum compatibility across different applications and scenarios.
 
 ### 🌍 Text Translation
 **Purpose**: Professional-quality translation between languages
-- **Supported Languages**: 
+- **Supported Languages**:
   - **European**: English, Spanish, French, German, Italian, Portuguese, Russian
   - **Asian**: Chinese, Japanese, Korean, Hindi, Bengali, Punjabi
   - **Middle Eastern/African**: Arabic
-- **Features**: 
+- **Features**:
   - Maintains original writing style and formatting
   - Context-aware translation
   - Professional translator-quality output
 - **Auto-Replace**: Automatically replaces selected text with translation
 
-### ✍️ Text Rewriting  
+### ✍️ Text Rewriting
 **Purpose**: Improve and refine existing text with different tones
 - **Available Tones**:
   - **Formal**: Professional, structured language
-  - **Informal**: Conversational, relaxed tone  
+  - **Informal**: Conversational, relaxed tone
   - **Professional**: Business-appropriate, polished
   - **Casual**: Friendly, approachable style
   - **Academic**: Scholarly, research-oriented
@@ -134,7 +134,7 @@ This ensures maximum compatibility across different applications and scenarios.
 **Purpose**: Create images from text descriptions using AI
 - **Supported Sizes**:
   - `1024x1024` - Square format, ideal for social media
-  - `1024x768` - Landscape format, great for presentations  
+  - `1024x768` - Landscape format, great for presentations
   - `512x512` - Smaller square format, faster generation
 - **Quality Options**:
   - **Standard**: Higher quality, more detailed images
@@ -188,7 +188,7 @@ Power users can customize AI behavior by editing the `config.json` file directly
 ```json
 {
   "Hotkey": "Ctrl+Alt+Shift+A",
-  "ApiBaseUrl": "https://api.openai.com/v1", 
+  "ApiBaseUrl": "https://api.openai.com/v1",
   "ApiKey": "encrypted_key_here",
   "LlmModel": "gpt-4o",
   "PasteBehavior": "ReviewMode",

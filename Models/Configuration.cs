@@ -187,6 +187,21 @@ namespace AIAnywhere.Models
                     + "7. NO subject line (replies keep original subject)\n"
                     + "8. NO explanations or meta-commentary\n\n"
                     + "Write a proper reply for this email message:\n",
+                [nameof(OperationType.WhatsAppResponse)] =
+                    "LANGUAGE RULE: Respond in the EXACT same language as the original message.\n\n"
+                    + "TASK: Generate a WhatsApp-style response with {tone} tone and {length} length.\n\n"
+                    + "WHATSAPP RESPONSE RULES:\n"
+                    + "1. Use the SAME language as the original message\n"
+                    + "2. Apply {tone} tone: CASUAL=relaxed everyday chat, FRIENDLY=warm and welcoming, ENTHUSIASTIC=excited and energetic, SUPPORTIVE=encouraging and helpful, HUMOROUS=light and funny, PROFESSIONAL=polite but approachable\n"
+                    + "3. Length: {length} (SHORT=1-2 sentences, MEDIUM=2-4 sentences, LONG=4-6 sentences)\n"
+                    + "4. Use natural, conversational language typical of WhatsApp\n"
+                    + "5. Include appropriate emojis when they fit naturally (don't overuse)\n"
+                    + "6. Match the informality level of the original message\n"
+                    + "7. Be responsive to the context and emotion of the message\n"
+                    + "8. NO formal greetings or closings unless appropriate\n"
+                    + "9. Keep it authentic and human-like\n"
+                    + "10. NO explanations or meta-commentary\n\n"
+                    + "Generate a natural WhatsApp response to this message:\n",
             };
         }
 

@@ -147,19 +147,19 @@ namespace AIAnywhere.Views
                 {
                     case 0: // AutoPaste
                         PasteBehaviorDescriptionTextBlock.Text =
-                            "Auto-paste provides the smoothest workflow but requires trust in AI results. Press Ctrl+Z to undo if needed.";
+                            "(Auto-paste provides the smoothest workflow but requires trust in AI results.\nPress Ctrl+Z to undo if needed)";
                         break;
                     case 1: // ClipboardMode
                         PasteBehaviorDescriptionTextBlock.Text =
-                            "Copy to clipboard mode gives you full control. You manually paste (Ctrl+V) where you want the result.";
+                            "(Copy to clipboard mode gives you full control.\nYou manually paste (Ctrl+V) where you want the result)";
                         break;
                     case 2: // ReviewMode
                         PasteBehaviorDescriptionTextBlock.Text =
-                            "Review mode shows a beautiful preview window where you can review and confirm before pasting.";
+                            "(Review mode shows a beautiful preview window where you can review and confirm before pasting)";
                         break;
                     default:
                         PasteBehaviorDescriptionTextBlock.Text =
-                            "Choose how AI results are handled after processing.";
+                            "(Choose how AI results are handled after processing)";
                         break;
                 }
             }
@@ -441,7 +441,8 @@ namespace AIAnywhere.Views
             }
 
             return models;
-        }        private bool _isCapturingHotkey = false;
+        }
+        private bool _isCapturingHotkey = false;
         private string _originalHotkeyValue = "";
 
         private void HotkeyTextBox_GotFocus(object sender, RoutedEventArgs e)
@@ -506,11 +507,13 @@ namespace AIAnywhere.Views
                     System.Windows.Threading.DispatcherPriority.Input
                 );
             }
-        }        private void HotkeyTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        }
+        private void HotkeyTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             // Always prevent normal text input - we only want hotkey combinations
             e.Handled = true;
-        }private string GetActualApiKey()
+        }
+        private string GetActualApiKey()
         {
             string result = "";
 
@@ -579,7 +582,8 @@ namespace AIAnywhere.Views
             var customItem = new ComboBoxItem { Content = modelName };
             LlmModelComboBox.Items.Add(customItem);
             LlmModelComboBox.SelectedItem = customItem;
-        }        private void LoadModelsIntoComboBox()
+        }
+        private void LoadModelsIntoComboBox()
         {
             // Clear existing items
             LlmModelComboBox.Items.Clear();

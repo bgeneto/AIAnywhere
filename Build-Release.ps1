@@ -2,7 +2,7 @@
 # Creates both self-contained and lightweight/optimized distributions
 
 param(
-    [string]$Version = "1.0.1"
+    [string]$Version = "1.0.2"
 )
 
 Write-Host "Building AI Anywhere v$Version..." -ForegroundColor Green

@@ -68,7 +68,7 @@
                 <TextBlock
                     Grid.Column="0"
                     Style="{StaticResource HeadingTextBlock}"
-                    Text="Your Prompt"
+                    Text="Prompt Content:"
                     ToolTip="Press Ctrl+ENTER to send" />
                 <Button
                     Name="ClearButton"
