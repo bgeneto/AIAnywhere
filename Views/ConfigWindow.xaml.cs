@@ -72,10 +72,11 @@ namespace AIAnywhere.Views
                 PasteBehaviorComboBox.SelectedIndex = 0; // Default to Auto-paste
             }
 
-            UpdatePasteBehaviorDescription();
-
-            // Set text selection preference
+            UpdatePasteBehaviorDescription(); // Set text selection preference
             EnableTextSelectionCheckBox.IsChecked = _config.EnableTextSelection;
+
+            // Set disable thinking preference
+            DisableThinkingCheckBox.IsChecked = _config.DisableThinking;
 
             // Handle selection change event
             PasteBehaviorComboBox.SelectionChanged += PasteBehaviorComboBox_SelectionChanged;
@@ -114,10 +115,11 @@ namespace AIAnywhere.Views
             )
             {
                 _config.PasteBehavior = (PasteBehavior)PasteBehaviorComboBox.SelectedIndex;
-            }
-
-            // Save text selection preference
+            } // Save text selection preference
             _config.EnableTextSelection = EnableTextSelectionCheckBox.IsChecked ?? true;
+
+            // Save disable thinking preference
+            _config.DisableThinking = DisableThinkingCheckBox.IsChecked ?? false;
 
             // Save current models list from ComboBox
             var currentModels = new List<string>();
@@ -442,6 +444,7 @@ namespace AIAnywhere.Views
 
             return models;
         }
+
         private bool _isCapturingHotkey = false;
         private string _originalHotkeyValue = "";
 
@@ -508,11 +511,13 @@ namespace AIAnywhere.Views
                 );
             }
         }
+
         private void HotkeyTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             // Always prevent normal text input - we only want hotkey combinations
             e.Handled = true;
         }
+
         private string GetActualApiKey()
         {
             string result = "";
@@ -583,6 +588,7 @@ namespace AIAnywhere.Views
             LlmModelComboBox.Items.Add(customItem);
             LlmModelComboBox.SelectedItem = customItem;
         }
+
         private void LoadModelsIntoComboBox()
         {
             // Clear existing items

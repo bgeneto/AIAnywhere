@@ -16,6 +16,11 @@ namespace AIAnywhere.Models
 
     public class Operation
     {
+        /// <summary>
+        /// Constant for disabling thinking mode in LLM models
+        /// </summary>
+        public const string NO_THINK_PREFIX = "/no_think\n";
+
         public OperationType Type { get; set; }
         public string Name { get; set; } = "";
         public string Description { get; set; } = "";
@@ -32,6 +37,9 @@ namespace AIAnywhere.Models
             // Get system prompts from config or use defaults
             var systemPrompts = config?.SystemPrompts ?? Configuration.GetDefaultSystemPrompts();
 
+            // Get no-think prefix if thinking is disabled
+            var noThinkPrefix = (config?.DisableThinking == true) ? NO_THINK_PREFIX : "";
+
             return new List<Operation>
             {
                 new Operation
@@ -40,7 +48,7 @@ namespace AIAnywhere.Models
                     Name = "Custom Task",
                     Description = "Flexible AI help for any task or question",
                     SystemPrompt =
-                        "/no_think\n"
+                        noThinkPrefix
                         + systemPrompts.GetValueOrDefault(
                             nameof(OperationType.GeneralChat),
                             "You are a helpful AI assistant. Answer the user's questions and assist with tasks. You are operating in a non-interactive mode."
@@ -53,7 +61,7 @@ namespace AIAnywhere.Models
                     Name = "Email Reply",
                     Description = "Generate professional email replies",
                     SystemPrompt =
-                        "/no_think\n"
+                        noThinkPrefix
                         + systemPrompts.GetValueOrDefault(
                             nameof(OperationType.EmailEnhancement),
                             "You are a professional email communication expert. Generate a well-structured reply to the provided email with a {tone} tone and {length} length."
@@ -125,7 +133,7 @@ namespace AIAnywhere.Models
                     Name = "Text Rewrite",
                     Description = "Rewrite and improve text",
                     SystemPrompt =
-                        "/no_think\n"
+                        noThinkPrefix
                         + systemPrompts.GetValueOrDefault(
                             nameof(OperationType.TextRewrite),
                             "You are a professional editor. Rewrite the provided text to be more {tone}. Maintain the original meaning but improve clarity and flow."
@@ -157,7 +165,7 @@ namespace AIAnywhere.Models
                     Name = "Text Summarization",
                     Description = "Condense text into key points",
                     SystemPrompt =
-                        "/no_think\n"
+                        noThinkPrefix
                         + systemPrompts.GetValueOrDefault(
                             nameof(OperationType.TextSummarization),
                             "You are a professional summarization expert. Create a {length} summary in {format} format of the provided text."
@@ -196,7 +204,7 @@ namespace AIAnywhere.Models
                     Name = "Text Translation",
                     Description = "Translate text to another language",
                     SystemPrompt =
-                        "/no_think\n"
+                        noThinkPrefix
                         + systemPrompts.GetValueOrDefault(
                             nameof(OperationType.TextTranslation),
                             "You are a professional translator. Translate the provided text to {language}. Return only the translated text without any explanations."
@@ -236,7 +244,7 @@ namespace AIAnywhere.Models
                     Name = "WhatsApp Response",
                     Description = "Generate casual WhatsApp-style responses",
                     SystemPrompt =
-                        "/no_think\n"
+                        noThinkPrefix
                         + systemPrompts.GetValueOrDefault(
                             nameof(OperationType.WhatsAppResponse),
                             "You are a casual messaging expert. Generate a WhatsApp-style response with {tone} tone and {length} length to the provided message."

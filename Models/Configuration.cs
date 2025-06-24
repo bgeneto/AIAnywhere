@@ -20,6 +20,7 @@ namespace AIAnywhere.Models
         private string _llmModel = "";
         private PasteBehavior _pasteBehavior = PasteBehavior.ReviewMode;
         private bool _enableTextSelection = true;
+        private bool _disableThinking = false;
 
         public string Hotkey
         {
@@ -98,6 +99,20 @@ namespace AIAnywhere.Models
             {
                 _enableTextSelection = value;
                 OnPropertyChanged(nameof(EnableTextSelection));
+            }
+        }
+
+        /// <summary>
+        /// Disable thinking mode for LLM models that support it.
+        /// When enabled, adds "/no_think\n" prefix to system prompts (except image generation).
+        /// </summary>
+        public bool DisableThinking
+        {
+            get => _disableThinking;
+            set
+            {
+                _disableThinking = value;
+                OnPropertyChanged(nameof(DisableThinking));
             }
         }
 
