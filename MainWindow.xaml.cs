@@ -58,7 +58,7 @@ namespace AIAnywhere
             catch
             {
                 _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
-            }            // Create context menu for right-click
+            }
             var contextMenu = new ContextMenuStrip();
             contextMenu.Items.Add("Open AI Anywhere", null, (s, e) => OpenPromptWindow("", IntPtr.Zero));
             contextMenu.Items.Add("Settings", null, (s, e) => OpenConfigWindow());
@@ -68,9 +68,9 @@ namespace AIAnywhere
             contextMenu.Items.Add("Exit", null, (s, e) => ExitApplication());
 
             _notifyIcon.ContextMenuStrip = contextMenu;
-            
+
             // Left click to open prompt window
-            _notifyIcon.MouseClick += (s, e) => 
+            _notifyIcon.MouseClick += (s, e) =>
             {
                 if (e.Button == MouseButtons.Left)
                 {
@@ -90,7 +90,7 @@ namespace AIAnywhere
                 var config = ConfigurationService.GetConfiguration();
                 if (!_hotkeyService.RegisterHotkey(config.Hotkey))
                 {
-                    System.Windows.MessageBox.Show($"Failed to register hotkey: {config.Hotkey}\n\nPlease check the configuration.", 
+                    System.Windows.MessageBox.Show($"Failed to register hotkey: {config.Hotkey}\n\nPlease check the configuration.",
                         "Hotkey Registration Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
 
@@ -100,7 +100,7 @@ namespace AIAnywhere
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Error initializing hotkey service: {ex.Message}", 
+                System.Windows.MessageBox.Show($"Error initializing hotkey service: {ex.Message}",
                     "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -117,26 +117,20 @@ namespace AIAnywhere
         {
             // Capture the currently active window before we show our app
             var originalWindowHandle = TextService.GetCurrentForegroundWindow();
-            System.Diagnostics.Debug.WriteLine($"DEBUG: Original window handle: {originalWindowHandle}");
-            
+
             string selectedText = "";
-            
+
             // Check if text selection is enabled in configuration
             var config = ConfigurationService.GetConfiguration();
             if (config.EnableTextSelection)
             {
                 // Small delay to ensure the hotkey processing doesn't interfere with text selection
                 System.Threading.Thread.Sleep(50);
-                
+
                 // Get selected text from the active application (this should happen while original app still has focus)
                 selectedText = TextService.GetSelectedText();
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Retrieved selected text in MainWindow: '{selectedText}'");
             }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("DEBUG: Text selection disabled in configuration - opening window immediately");
-            }
-            
+
             // Open prompt window with original window handle
             OpenPromptWindow(selectedText, originalWindowHandle);
         }
@@ -151,7 +145,7 @@ namespace AIAnywhere
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Error opening prompt window: {ex.Message}", 
+                System.Windows.MessageBox.Show($"Error opening prompt window: {ex.Message}",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }private void OpenConfigWindow()
@@ -169,7 +163,7 @@ namespace AIAnywhere
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Error opening settings window: {ex.Message}", 
+                System.Windows.MessageBox.Show($"Error opening settings window: {ex.Message}",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -185,7 +179,7 @@ namespace AIAnywhere
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Error opening about window: {ex.Message}", 
+                System.Windows.MessageBox.Show($"Error opening about window: {ex.Message}",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -199,14 +193,14 @@ namespace AIAnywhere
                     var config = ConfigurationService.GetConfiguration();
                     if (!_hotkeyService.RegisterHotkey(config.Hotkey))
                     {
-                        System.Windows.MessageBox.Show($"Failed to register new hotkey: {config.Hotkey}", 
+                        System.Windows.MessageBox.Show($"Failed to register new hotkey: {config.Hotkey}",
                             "Hotkey Registration Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                 }
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Error refreshing hotkey: {ex.Message}", 
+                System.Windows.MessageBox.Show($"Error refreshing hotkey: {ex.Message}",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

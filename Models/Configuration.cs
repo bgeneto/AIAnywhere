@@ -107,6 +107,11 @@ namespace AIAnywhere.Models
         public Dictionary<string, string> SystemPrompts { get; set; } = GetDefaultSystemPrompts();
 
         /// <summary>
+        /// List of available models retrieved from the API. Updated when user clicks 'Get Models' button.
+        /// </summary>
+        public List<string> Models { get; set; } = new List<string>();
+
+        /// <summary>
         /// Get default system prompts for all operation types
         /// </summary>
         public static Dictionary<string, string> GetDefaultSystemPrompts()

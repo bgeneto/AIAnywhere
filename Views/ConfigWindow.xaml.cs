@@ -38,12 +38,15 @@ namespace AIAnywhere.Views
             {
                 ApiKeyPasswordBox.Password = PortableEncryptionService.MaskSensitiveTextFully(
                     _config.ApiKey
-                ); // Show all dots
+                );
             }
             else
             {
                 ApiKeyPasswordBox.Password = "";
             }
+
+            // Load available models from config and populate ComboBox
+            LoadModelsIntoComboBox();
 
             // Set LLM Model - find matching item or add custom one
             SetLlmModelSelection(_config.LlmModel);
@@ -115,6 +118,21 @@ namespace AIAnywhere.Views
 
             // Save text selection preference
             _config.EnableTextSelection = EnableTextSelectionCheckBox.IsChecked ?? true;
+
+            // Save current models list from ComboBox
+            var currentModels = new List<string>();
+            foreach (var item in LlmModelComboBox.Items)
+            {
+                if (item is ComboBoxItem comboItem && comboItem.Content != null)
+                {
+                    var modelName = comboItem.Content.ToString();
+                    if (!string.IsNullOrEmpty(modelName))
+                    {
+                        currentModels.Add(modelName);
+                    }
+                }
+            }
+            _config.Models = currentModels;
 
             // NOTE: SystemPrompts are intentionally NOT modified here
             // This allows users to customize them directly in config.json
@@ -222,7 +240,7 @@ namespace AIAnywhere.Views
             }
         }
 
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -259,7 +277,7 @@ namespace AIAnywhere.Views
                 if (string.IsNullOrWhiteSpace(selectedModel))
                 {
                     MessageBox.Show(
-                        "LLM Model is required. Please select a model or click 'Get Models' to retrieve available options.",
+                        "LLM Model is required. Please select a model or click '⤓ Get Models' to retrieve available options.",
                         "Validation Error",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning
@@ -267,6 +285,10 @@ namespace AIAnywhere.Views
                     LlmModelComboBox.Focus();
                     return;
                 }
+
+                // Try to refresh models if API settings are valid
+                await TryRefreshModelsAsync(actualApiKey, ApiBaseUrlTextBox.Text);
+
                 SaveConfiguration();
 
                 // Preserve SystemPrompts from the current configuration file
@@ -340,7 +362,6 @@ namespace AIAnywhere.Views
                 ModelStatusTextBlock.Visibility = Visibility.Visible;
 
                 var models = await FetchAvailableModelsAsync(ApiBaseUrlTextBox.Text, actualApiKey);
-
                 if (models.Any())
                 {
                     // Store current selection
@@ -352,6 +373,9 @@ namespace AIAnywhere.Views
                     {
                         LlmModelComboBox.Items.Add(new ComboBoxItem { Content = model });
                     }
+
+                    // Update the configuration's Models list
+                    _config.Models = models.ToList();
 
                     // Restore selection if it exists in the new list
                     if (models.Contains(currentSelection))
@@ -387,7 +411,7 @@ namespace AIAnywhere.Views
             finally
             {
                 RetrieveModelsButton.IsEnabled = true;
-                RetrieveModelsButton.Content = "Retrieve Models";
+                RetrieveModelsButton.Content = "⤓ Get Models";
             }
         }
 
@@ -417,9 +441,7 @@ namespace AIAnywhere.Views
             }
 
             return models;
-        }
-
-        private bool _isCapturingHotkey = false;
+        }        private bool _isCapturingHotkey = false;
         private string _originalHotkeyValue = "";
 
         private void HotkeyTextBox_GotFocus(object sender, RoutedEventArgs e)
@@ -450,7 +472,8 @@ namespace AIAnywhere.Views
             if (!_isCapturingHotkey)
                 return;
 
-            e.Handled = true; // Prevent default text input behavior
+            // Always mark the event as handled to prevent default textbox behavior
+            e.Handled = true;
 
             // Allow Escape to cancel capture
             if (e.Key == Key.Escape)
@@ -462,162 +485,34 @@ namespace AIAnywhere.Views
                 return;
             }
 
-            // Get current modifier states directly from Win32 API for more reliable detection
-            bool ctrlPressed =
-                (System.Windows.Forms.Control.ModifierKeys & System.Windows.Forms.Keys.Control)
-                != 0;
-            bool altPressed =
-                (System.Windows.Forms.Control.ModifierKeys & System.Windows.Forms.Keys.Alt) != 0;
-            bool shiftPressed =
-                (System.Windows.Forms.Control.ModifierKeys & System.Windows.Forms.Keys.Shift) != 0;
-            bool winPressed = IsWindowsKeyPressed();
+            // Capture the key combination using our improved service
+            string hotkey = HotkeyCapture.CaptureKeyCombo(e);
 
-            // Also check WPF's modifier detection as backup
-            var wpfModifiers = Keyboard.Modifiers;
-            ctrlPressed = ctrlPressed || (wpfModifiers & ModifierKeys.Control) != 0;
-            altPressed = altPressed || (wpfModifiers & ModifierKeys.Alt) != 0;
-            shiftPressed = shiftPressed || (wpfModifiers & ModifierKeys.Shift) != 0;
-            winPressed = winPressed || (wpfModifiers & ModifierKeys.Windows) != 0;
-
-            // Ignore standalone modifier keys
-            if (IsModifierKey(e.Key))
+            // Only update if we got a valid hotkey (not just a modifier key)
+            if (!string.IsNullOrEmpty(hotkey))
             {
-                return;
+                HotkeyTextBox.Text = hotkey;
+                _isCapturingHotkey = false;
+                HotkeyTextBox.Background = System.Windows.SystemColors.WindowBrush;
+                HotkeyTextBox.Foreground = System.Windows.SystemColors.ControlTextBrush;
+                HotkeyTextBox.CaretIndex = HotkeyTextBox.Text.Length; // Move cursor to end
+
+                // Move focus away to indicate we're done
+                this.Dispatcher.BeginInvoke(
+                    new Action(() =>
+                    {
+                        ApiBaseUrlTextBox.Focus();
+                    }),
+                    System.Windows.Threading.DispatcherPriority.Input
+                );
             }
-
-            // Handle Alt+Key combinations where the key might be reported as System
-            Key actualKey = e.Key;
-            if (e.Key == Key.System && e.SystemKey != Key.None)
-            {
-                actualKey = e.SystemKey;
-                altPressed = true; // Alt is definitely pressed if we get Key.System
-            }
-
-            // Require at least one modifier key for hotkeys (except function keys)
-            bool hasModifier = ctrlPressed || altPressed || shiftPressed || winPressed;
-            bool isFunctionKey = actualKey >= Key.F1 && actualKey <= Key.F12;
-
-            if (!hasModifier && !isFunctionKey)
-            {
-                // For non-function keys, require at least one modifier
-                return;
-            }
-
-            // Build the hotkey string
-            var hotkeyBuilder = new StringBuilder();
-
-            // Add modifiers in consistent order
-            if (ctrlPressed)
-                hotkeyBuilder.Append("Ctrl+");
-            if (altPressed)
-                hotkeyBuilder.Append("Alt+");
-            if (shiftPressed)
-                hotkeyBuilder.Append("Shift+");
-            if (winPressed)
-                hotkeyBuilder.Append("Win+");
-
-            // Add the main key
-            string keyName = GetKeyName(actualKey);
-            hotkeyBuilder.Append(keyName);
-
-            // Set the text and finish capturing
-            HotkeyTextBox.Text = hotkeyBuilder.ToString();
-            _isCapturingHotkey = false;
-            HotkeyTextBox.Background = System.Windows.SystemColors.WindowBrush;
-            HotkeyTextBox.Foreground = System.Windows.SystemColors.ControlTextBrush;
-
-            // Move focus away to indicate we're done
-            this.Dispatcher.BeginInvoke(
-                new Action(() =>
-                {
-                    ApiBaseUrlTextBox.Focus();
-                }),
-                System.Windows.Threading.DispatcherPriority.Input
-            );
-        }
-
-        private void HotkeyTextBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            // This is handled by PreviewKeyDown, but we need to suppress normal key handling
-            if (_isCapturingHotkey)
-            {
-                e.Handled = true;
-            }
-        }
-
-        private void HotkeyTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        }        private void HotkeyTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             // Always prevent normal text input - we only want hotkey combinations
             e.Handled = true;
-        }
-
-        private string GetKeyName(Key key)
-        {
-            // Handle special keys
-            switch (key)
-            {
-                case Key.Space:
-                    return "Space";
-                case Key.Enter:
-                    return "Enter";
-                case Key.Escape:
-                    return "Escape";
-                case Key.Tab:
-                    return "Tab";
-                case Key.Back:
-                    return "Backspace";
-                case Key.Delete:
-                    return "Delete";
-                case Key.Insert:
-                    return "Insert";
-                case Key.Home:
-                    return "Home";
-                case Key.End:
-                    return "End";
-                case Key.PageUp:
-                    return "PageUp";
-                case Key.PageDown:
-                    return "PageDown";
-                case Key.Up:
-                    return "Up";
-                case Key.Down:
-                    return "Down";
-                case Key.Left:
-                    return "Left";
-                case Key.Right:
-                    return "Right";
-                case Key.F1:
-                case Key.F2:
-                case Key.F3:
-                case Key.F4:
-                case Key.F5:
-                case Key.F6:
-                case Key.F7:
-                case Key.F8:
-                case Key.F9:
-                case Key.F10:
-                case Key.F11:
-                case Key.F12:
-                    return key.ToString();
-                default:
-                    // For alphanumeric keys, convert to uppercase
-                    return key.ToString().ToUpper();
-            }
-        }
-
-        private string GetActualApiKey()
+        }private string GetActualApiKey()
         {
             string result = "";
-
-            System.Diagnostics.Debug.WriteLine(
-                $"GetActualApiKey: _isApiKeyModified={_isApiKeyModified}"
-            );
-            System.Diagnostics.Debug.WriteLine(
-                $"GetActualApiKey: ApiKeyPasswordBox.Password='{ApiKeyPasswordBox.Password}' (length={ApiKeyPasswordBox.Password?.Length ?? 0})"
-            );
-            System.Diagnostics.Debug.WriteLine(
-                $"GetActualApiKey: _config.ApiKey='{_config.ApiKey}' (length={_config.ApiKey?.Length ?? 0})"
-            );
 
             if (_isApiKeyModified)
             {
@@ -626,36 +521,23 @@ namespace AIAnywhere.Views
                 {
                     // User cleared the field
                     result = "";
-                    System.Diagnostics.Debug.WriteLine(
-                        "GetActualApiKey: User cleared the field -> empty string"
-                    );
                 }
                 else if (ApiKeyPasswordBox.Password.All(c => c == '•'))
                 {
                     // User didn't change the masked key, use existing key from config
                     result = _config.ApiKey ?? "";
-                    System.Diagnostics.Debug.WriteLine(
-                        "GetActualApiKey: Masked key unchanged -> using config key"
-                    );
                 }
                 else
                 {
                     // User entered a new key
                     result = ApiKeyPasswordBox.Password;
-                    System.Diagnostics.Debug.WriteLine("GetActualApiKey: User entered new key");
                 }
             }
             else
             {
                 // User didn't modify the field, use existing key from config
                 result = _config.ApiKey ?? "";
-                System.Diagnostics.Debug.WriteLine(
-                    "GetActualApiKey: Field not modified -> using config key"
-                );
             }
-            System.Diagnostics.Debug.WriteLine(
-                $"GetActualApiKey: returning '{result}' (length={result?.Length ?? 0})"
-            );
             return result ?? "";
         }
 
@@ -697,39 +579,79 @@ namespace AIAnywhere.Views
             var customItem = new ComboBoxItem { Content = modelName };
             LlmModelComboBox.Items.Add(customItem);
             LlmModelComboBox.SelectedItem = customItem;
+        }        private void LoadModelsIntoComboBox()
+        {
+            // Clear existing items
+            LlmModelComboBox.Items.Clear();
+
+            // Add models from config if any exist
+            if (_config.Models != null && _config.Models.Any())
+            {
+                foreach (var model in _config.Models.OrderBy(m => m))
+                {
+                    LlmModelComboBox.Items.Add(new ComboBoxItem { Content = model });
+                }
+
+                // Update status message
+                ModelStatusTextBlock.Text =
+                    $"Loaded {_config.Models.Count} models from configuration";
+                ModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Colors.Green
+                );
+                ModelStatusTextBlock.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                // No models in config, show instruction
+                ModelStatusTextBlock.Text =
+                    "Enter API key and base URL first, then click '⤓ Get Models'";
+                ModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Colors.Gray
+                );
+                ModelStatusTextBlock.Visibility = Visibility.Visible;
+            }
         }
 
-        private bool IsModifierKey(Key key)
+        private async Task TryRefreshModelsAsync(string apiKey, string apiBaseUrl)
         {
-            return key == Key.LeftCtrl
-                || key == Key.RightCtrl
-                || key == Key.LeftAlt
-                || key == Key.RightAlt
-                || key == Key.LeftShift
-                || key == Key.RightShift
-                || key == Key.LWin
-                || key == Key.RWin
-                || key == Key.System;
-        }
-
-        private bool IsWindowsKeyPressed()
-        {
-            // Use Win32 API to check Windows key state more reliably
             try
             {
-                const int VK_LWIN = 0x5B;
-                const int VK_RWIN = 0x5C;
+                // Only attempt to refresh if we have the required parameters
+                if (!string.IsNullOrWhiteSpace(apiKey) && !string.IsNullOrWhiteSpace(apiBaseUrl))
+                {
+                    var models = await FetchAvailableModelsAsync(apiBaseUrl, apiKey);
+                    if (models.Any())
+                    {
+                        // Store current selection
+                        var currentSelection = GetSelectedLlmModel();
 
-                return (GetAsyncKeyState(VK_LWIN) & 0x8000) != 0
-                    || (GetAsyncKeyState(VK_RWIN) & 0x8000) != 0;
+                        // Update the ComboBox with new models
+                        LlmModelComboBox.Items.Clear();
+                        foreach (var model in models.OrderBy(m => m))
+                        {
+                            LlmModelComboBox.Items.Add(new ComboBoxItem { Content = model });
+                        }
+
+                        // Update the configuration's Models list
+                        _config.Models = models.ToList();
+
+                        // Restore selection if it exists in the new list
+                        if (models.Contains(currentSelection))
+                        {
+                            SetLlmModelSelection(currentSelection);
+                        }
+                        else if (models.Any())
+                        {
+                            LlmModelComboBox.SelectedIndex = 0;
+                        }
+                    }
+                }
             }
             catch
             {
-                return false;
+                // Silently fail for model refresh during save - not critical
+                // The user can always manually refresh models if needed
             }
         }
-
-        [DllImport("user32.dll")]
-        private static extern short GetAsyncKeyState(int vKey);
     }
 }

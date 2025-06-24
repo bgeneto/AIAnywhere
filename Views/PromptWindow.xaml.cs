@@ -21,17 +21,13 @@ namespace AIAnywhere.Views
         {
             InitializeComponent();
             _selectedText = selectedText;
-            _originalWindowHandle = originalWindowHandle;
-            _config = ConfigurationService.GetConfiguration();
+            _originalWindowHandle = originalWindowHandle;            _config = ConfigurationService.GetConfiguration();
             _operations = Operation.GetDefaultOperations(_config);
             InitializeOperations(); // Defer the prefill operation to ensure UI is fully initialized
             // This fixes the timing issue where the initial population might not work
             Dispatcher.BeginInvoke(
                 new Action(() =>
                 {
-                    System.Diagnostics.Debug.WriteLine(
-                        "DEBUG: Deferred PrefillPromptForAllOperations() executing..."
-                    );
                     PrefillPromptForAllOperations();
 
                     // Initialize clear button state
@@ -60,35 +56,19 @@ namespace AIAnywhere.Views
             // where the PromptTextBox might not be properly initialized during constructor
 
             // Check if text selection is enabled in configuration
-            if (!_config.EnableTextSelection)
-            {
-                System.Diagnostics.Debug.WriteLine(
-                    "DEBUG: Text selection disabled in configuration - skipping prefill"
-                );
+            if (!_config.EnableTextSelection)            {
                 return;
             }
 
             string textToPopulate = "";
 
-            // Debug output to help diagnose issues
-            System.Diagnostics.Debug.WriteLine($"DEBUG: PrefillPromptForAllOperations called");
-            System.Diagnostics.Debug.WriteLine(
-                $"DEBUG: _selectedText = '{_selectedText}' (length: {_selectedText?.Length ?? 0})"
-            );
-
             // Get clipboard content for comparison (only if text selection is enabled)
             var clipboardText = TextService.GetClipboardText();
-            System.Diagnostics.Debug.WriteLine(
-                $"DEBUG: Clipboard text = '{clipboardText}' (length: {clipboardText?.Length ?? 0})"
-            );
 
             // Priority order: 1) Selected text, 2) Clipboard content, 3) Empty
             if (!string.IsNullOrEmpty(_selectedText))
             {
                 textToPopulate = _selectedText;
-                System.Diagnostics.Debug.WriteLine(
-                    $"DEBUG: ✓ USING SELECTED TEXT: '{textToPopulate}'"
-                );
             }
             else
             {
@@ -96,15 +76,6 @@ namespace AIAnywhere.Views
                 if (!string.IsNullOrEmpty(clipboardText))
                 {
                     textToPopulate = clipboardText;
-                    System.Diagnostics.Debug.WriteLine(
-                        $"DEBUG: ✓ USING CLIPBOARD TEXT: '{textToPopulate}'"
-                    );
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine(
-                        "DEBUG: ✓ NO TEXT AVAILABLE - will show empty prompt"
-                    );
                 }
             }
 
@@ -112,21 +83,7 @@ namespace AIAnywhere.Views
             if (!string.IsNullOrEmpty(textToPopulate))
             {
                 PromptTextBox.Text = textToPopulate;
-                System.Diagnostics.Debug.WriteLine(
-                    $"DEBUG: ✓ POPULATED PromptTextBox with: '{textToPopulate}'"
-                );
             }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine(
-                    "DEBUG: ✓ LEFT PromptTextBox EMPTY - both selected text and clipboard are empty"
-                );
-            }
-
-            // Final verification
-            System.Diagnostics.Debug.WriteLine(
-                $"DEBUG: Final PromptTextBox.Text = '{PromptTextBox.Text}' (length: {PromptTextBox.Text?.Length ?? 0})"
-            );
         }
 
         private void OnOperationChanged(Operation operation)
@@ -363,13 +320,10 @@ namespace AIAnywhere.Views
             {
                 // Configuration was saved, you might want to refresh any settings here
             }
-        }
-
-        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        }        private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             PromptTextBox.Text = "";
             PromptTextBox.Focus();
-            System.Diagnostics.Debug.WriteLine("DEBUG: User cleared prompt text");
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -682,21 +636,17 @@ namespace AIAnywhere.Views
         private void CutMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (!string.IsNullOrEmpty(PromptTextBox.SelectedText))
-            {
-                try
+            {                try
                 {
                     Clipboard.SetText(PromptTextBox.SelectedText);
                     int selectionStart = PromptTextBox.SelectionStart;
                     int selectionLength = PromptTextBox.SelectionLength;
                     PromptTextBox.Text = PromptTextBox.Text.Remove(selectionStart, selectionLength);
                     PromptTextBox.SelectionStart = selectionStart;
-                    System.Diagnostics.Debug.WriteLine(
-                        $"DEBUG: Cut text: '{PromptTextBox.SelectedText}'"
-                    );
                 }
-                catch (Exception ex)
+                catch
                 {
-                    System.Diagnostics.Debug.WriteLine($"DEBUG: Error cutting text: {ex.Message}");
+                    // Silently handle clipboard errors
                 }
             }
         }
@@ -708,13 +658,10 @@ namespace AIAnywhere.Views
                 try
                 {
                     Clipboard.SetText(PromptTextBox.SelectedText);
-                    System.Diagnostics.Debug.WriteLine(
-                        $"DEBUG: Copied selected text: '{PromptTextBox.SelectedText}'"
-                    );
                 }
-                catch (Exception ex)
+                catch
                 {
-                    System.Diagnostics.Debug.WriteLine($"DEBUG: Error copying text: {ex.Message}");
+                    // Silently handle clipboard errors
                 }
             }
         }
@@ -739,12 +686,11 @@ namespace AIAnywhere.Views
 
                     PromptTextBox.Text = PromptTextBox.Text.Insert(selectionStart, clipboardText);
                     PromptTextBox.SelectionStart = selectionStart + clipboardText.Length;
-                    System.Diagnostics.Debug.WriteLine($"DEBUG: Pasted text: '{clipboardText}'");
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Error pasting text: {ex.Message}");
+                // Silently handle clipboard errors
             }
         }
 
@@ -752,30 +698,22 @@ namespace AIAnywhere.Views
         {
             PromptTextBox.SelectAll();
             PromptTextBox.Focus();
-        }
-
-        private void ClearAllMenuItem_Click(object sender, RoutedEventArgs e)
+        }        private void ClearAllMenuItem_Click(object sender, RoutedEventArgs e)
         {
             PromptTextBox.Text = "";
             PromptTextBox.Focus();
-            System.Diagnostics.Debug.WriteLine(
-                "DEBUG: User cleared all prompt text via context menu"
-            );
-        }
-
-        private void UndoMenuItem_Click(object sender, RoutedEventArgs e)
+        }        private void UndoMenuItem_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 if (PromptTextBox.CanUndo)
                 {
                     PromptTextBox.Undo();
-                    System.Diagnostics.Debug.WriteLine("DEBUG: Undo performed");
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Error performing undo: {ex.Message}");
+                // Silently handle undo errors
             }
         }
 
@@ -786,12 +724,11 @@ namespace AIAnywhere.Views
                 if (PromptTextBox.CanRedo)
                 {
                     PromptTextBox.Redo();
-                    System.Diagnostics.Debug.WriteLine("DEBUG: Redo performed");
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Error performing redo: {ex.Message}");
+                // Silently handle redo errors
             }
         }
 

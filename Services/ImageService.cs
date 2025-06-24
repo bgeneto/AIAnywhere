@@ -23,9 +23,8 @@ namespace AIAnywhere.Services
                 var imageBytes = await _httpClient.GetByteArrayAsync(imageUrl);
                 return ConvertBytesToBitmapImage(imageBytes);
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Error downloading image: {ex.Message}");
                 return null;
             }
         }
@@ -39,9 +38,8 @@ namespace AIAnywhere.Services
             {
                 return await _httpClient.GetByteArrayAsync(imageUrl);
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Error downloading image bytes: {ex.Message}");
                 return null;
             }
         }
@@ -64,11 +62,8 @@ namespace AIAnywhere.Services
                 bitmapImage.Freeze(); // Make it thread-safe
                 return bitmapImage;
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine(
-                    $"Error converting bytes to BitmapImage: {ex.Message}"
-                );
                 return null;
             }
         }
@@ -82,11 +77,8 @@ namespace AIAnywhere.Services
             {
                 Clipboard.SetImage(bitmapImage);
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine(
-                    $"Error copying image to clipboard: {ex.Message}"
-                );
                 throw;
             }
         }
@@ -106,11 +98,8 @@ namespace AIAnywhere.Services
                 }
                 return false;
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine(
-                    $"Error copying image from URL to clipboard: {ex.Message}"
-                );
                 return false;
             }
         }
@@ -130,11 +119,8 @@ namespace AIAnywhere.Services
                     return new Bitmap(outStream);
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine(
-                    $"Error converting BitmapImage to Bitmap: {ex.Message}"
-                );
                 return null;
             }
         }

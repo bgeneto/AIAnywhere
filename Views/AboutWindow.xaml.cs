@@ -29,12 +29,10 @@ namespace AIAnywhere.Views
 
                 // Update copyright year
                 var currentYear = DateTime.Now.Year;
-                CopyrightTextBlock.Text = $"© {currentYear} Bernhard Enders. All rights reserved.";
-            }
-            catch (Exception ex)
+                CopyrightTextBlock.Text = $"© {currentYear} Bernhard Enders. All rights reserved.";            }
+            catch
             {
                 // If version info can't be loaded, keep default values
-                System.Diagnostics.Debug.WriteLine($"Error loading version info: {ex.Message}");
             }
         }
 

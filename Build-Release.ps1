@@ -2,7 +2,7 @@
 # Creates both self-contained and lightweight/optimized distributions
 
 param(
-    [string]$Version = "1.0.0"
+    [string]$Version = "1.0.1"
 )
 
 Write-Host "Building AI Anywhere v$Version..." -ForegroundColor Green
@@ -39,7 +39,7 @@ AI Anywhere - Installation Instructions
 Try running "AIAnywhere.exe" first. If it works, you're all set!
 
 If you see an error about missing .NET:
-1. Download .NET 9.0 Desktop Runtime: 
+1. Download .NET 9.0 Desktop Runtime:
    https://dotnet.microsoft.com/download/dotnet/9.0
 2. Install the "Desktop Runtime" (not SDK)
 3. Restart and run AIAnywhere.exe

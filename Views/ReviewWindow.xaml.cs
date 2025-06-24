@@ -165,11 +165,9 @@ namespace AIAnywhere.Views
                 {
                     ShowErrorState("No image URL provided");
                     CharacterCountTextBlock.Text = "No image URL";
-                }
-            }
+                }            }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading image: {ex.Message}");
                 ShowErrorState($"Error loading image: {ex.Message}\n\nImage URL: {_imageUrl}");
                 CharacterCountTextBlock.Text = "Image load error";
             }
@@ -233,19 +231,13 @@ namespace AIAnywhere.Views
         private void CopySelectedMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (!string.IsNullOrEmpty(ResultTextBox.SelectedText))
-            {
-                try
+            {                try
                 {
                     Clipboard.SetText(ResultTextBox.SelectedText);
-                    System.Diagnostics.Debug.WriteLine(
-                        $"DEBUG: Copied selected text: '{ResultTextBox.SelectedText}'"
-                    );
                 }
-                catch (Exception ex)
+                catch
                 {
-                    System.Diagnostics.Debug.WriteLine(
-                        $"DEBUG: Error copying selected text: {ex.Message}"
-                    );
+                    // Silently handle clipboard errors
                 }
             }
         }
@@ -286,13 +278,10 @@ namespace AIAnywhere.Views
                     // Format text for clipboard and paste
                     var formattedText = TextProcessor.FormatForClipboard(_resultText);
                     Clipboard.SetText(formattedText);
-                }
-            }
-            catch (Exception ex)
+                }            }
+            catch
             {
-                System.Diagnostics.Debug.WriteLine(
-                    $"Error copying to clipboard in ReviewWindow: {ex.Message}"
-                );
+                // Silently handle clipboard errors
             }
 
             Close();
