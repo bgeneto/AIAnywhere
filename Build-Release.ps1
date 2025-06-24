@@ -31,26 +31,26 @@ Copy-Item "README.md" "AIAnywhere-Optimized\"
 AI Anywhere - Installation Instructions
 ==========================================
 
-📋 SYSTEM REQUIREMENTS:
-✅ Windows 10/11 (64-bit)
-✅ .NET 9.0 Runtime (Desktop) - Download link below if needed
+- SYSTEM REQUIREMENTS:
+  - Windows 10/11 (64-bit)
+  - .NET 9.0 Runtime (Desktop) - Download link below if needed
 
-📥 STEP 1: CHECK .NET INSTALLATION
-Try running "AIAnywhere.exe" first. If it works, you're all set!
+- STEP 1: CHECK .NET INSTALLATION
+  Try running "AIAnywhere.exe" first. If it works, you're all set!
 
-If you see an error about missing .NET:
-1. Download .NET 9.0 Desktop Runtime:
-   https://dotnet.microsoft.com/download/dotnet/9.0
-2. Install the "Desktop Runtime" (not SDK)
-3. Restart and run AIAnywhere.exe
+  If you see an error about missing .NET:
 
-🚀 QUICK START:
-1. Extract all files to your preferred location
-2. Run "AIAnywhere.exe" or use "Check and Start.bat"
-3. Configure your AI settings in the system tray
+    1. Download .NET 9.0 Desktop Runtime:
+       https://dotnet.microsoft.com/download/dotnet/9.0
+    2. Install the "Desktop Runtime" (not SDK)
+    3. Restart and run AIAnywhere.exe
+
+- QUICK START:
+  1. Extract all files to your preferred location
+  2. Run "AIAnywhere.exe" or use "Check and Start.bat"
+  3. Configure your AI settings in the system tray
 
 Package Size: ~6MB (Lightweight/Optimized - requires .NET 9.0)
-Self-contained version available separately (~54MB)
 
 © 2025 Bernhard Enders - AI Anywhere v$Version
 "@ | Out-File "AIAnywhere-Optimized\INSTALL.txt" -Encoding UTF8
