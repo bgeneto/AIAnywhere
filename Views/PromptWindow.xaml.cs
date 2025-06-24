@@ -16,12 +16,21 @@ namespace AIAnywhere.Views
         private readonly string _selectedText;
         private readonly Configuration _config;
         private readonly IntPtr _originalWindowHandle;
+        private string? _selectedAudioFile;
+
+        // Add field to reference the prompt content grid
+        private Grid? _promptContentGrid;
 
         public PromptWindow(string selectedText = "", IntPtr originalWindowHandle = default)
         {
             InitializeComponent();
             _selectedText = selectedText;
-            _originalWindowHandle = originalWindowHandle;            _config = ConfigurationService.GetConfiguration();
+            _originalWindowHandle = originalWindowHandle;
+
+            // Initialize the prompt content grid reference
+            _promptContentGrid = this.FindName("PromptContentGrid") as Grid;
+
+            _config = ConfigurationService.GetConfiguration();
             _operations = Operation.GetDefaultOperations(_config);
             InitializeOperations(); // Defer the prefill operation to ensure UI is fully initialized
             // This fixes the timing issue where the initial population might not work
@@ -45,8 +54,10 @@ namespace AIAnywhere.Views
 
         private void InitializeOperations()
         {
-            OperationComboBox.ItemsSource = _operations;
-            OperationComboBox.SelectedIndex = 0;
+            OperationComboBox.ItemsSource = _operations; // Set operation list
+            // Default to "Custom Task" (GeneralChat) if available, else fallback to first item
+            var defaultIndex = _operations.FindIndex(op => op.Type == OperationType.GeneralChat);
+            OperationComboBox.SelectedIndex = defaultIndex >= 0 ? defaultIndex : 0;
         }
 
         private void PrefillPromptForAllOperations()
@@ -56,7 +67,8 @@ namespace AIAnywhere.Views
             // where the PromptTextBox might not be properly initialized during constructor
 
             // Check if text selection is enabled in configuration
-            if (!_config.EnableTextSelection)            {
+            if (!_config.EnableTextSelection)
+            {
                 return;
             }
 
@@ -88,6 +100,21 @@ namespace AIAnywhere.Views
 
         private void OnOperationChanged(Operation operation)
         {
+            // Show/hide audio upload panel based on operation type
+            AudioUploadPanel.Visibility =
+                operation.Type == OperationType.AudioTranscription
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+
+            // Show/hide prompt content panel - hide for audio transcription
+            if (_promptContentGrid != null)
+            {
+                _promptContentGrid.Visibility =
+                    operation.Type == OperationType.AudioTranscription
+                        ? Visibility.Collapsed
+                        : Visibility.Visible;
+            }
+
             // Check if text selection is enabled in configuration
             if (!_config.EnableTextSelection)
             {
@@ -96,7 +123,11 @@ namespace AIAnywhere.Views
 
             // For any operation change, if the prompt is empty, try to populate it
             // This ensures all operations can benefit from selected text or clipboard content
-            if (string.IsNullOrEmpty(PromptTextBox.Text))
+            // Skip for audio transcription since prompt is hidden
+            if (
+                operation.Type != OperationType.AudioTranscription
+                && string.IsNullOrEmpty(PromptTextBox.Text)
+            )
             {
                 string textToPopulate = "";
 
@@ -210,17 +241,6 @@ namespace AIAnywhere.Views
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(PromptTextBox.Text))
-                {
-                    MessageBox.Show(
-                        "Please enter a prompt.",
-                        "Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning
-                    );
-                    return;
-                }
-
                 if (OperationComboBox.SelectedItem is not Operation selectedOperation)
                 {
                     MessageBox.Show(
@@ -230,6 +250,38 @@ namespace AIAnywhere.Views
                         MessageBoxImage.Warning
                     );
                     return;
+                }
+
+                // For audio transcription, check if file is selected
+                if (selectedOperation.Type == OperationType.AudioTranscription)
+                {
+                    if (
+                        string.IsNullOrEmpty(_selectedAudioFile)
+                        || !System.IO.File.Exists(_selectedAudioFile)
+                    )
+                    {
+                        MessageBox.Show(
+                            "Please select an audio file to transcribe.",
+                            "Error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning
+                        );
+                        return;
+                    }
+                }
+                else
+                {
+                    // For non-audio operations, check if prompt is provided
+                    if (string.IsNullOrWhiteSpace(PromptTextBox.Text))
+                    {
+                        MessageBox.Show(
+                            "Please enter a prompt.",
+                            "Error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning
+                        );
+                        return;
+                    }
                 }
 
                 // Validate API configuration
@@ -256,6 +308,10 @@ namespace AIAnywhere.Views
                     Prompt = PromptTextBox.Text,
                     SelectedText = _selectedText,
                     Options = GetSelectedOptions(),
+                    AudioFilePath =
+                        selectedOperation.Type == OperationType.AudioTranscription
+                            ? _selectedAudioFile
+                            : null,
                 };
 
                 var response = await llmService.ProcessRequestAsync(request);
@@ -320,7 +376,9 @@ namespace AIAnywhere.Views
             {
                 // Configuration was saved, you might want to refresh any settings here
             }
-        }        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        }
+
+        private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             PromptTextBox.Text = "";
             PromptTextBox.Focus();
@@ -636,7 +694,8 @@ namespace AIAnywhere.Views
         private void CutMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (!string.IsNullOrEmpty(PromptTextBox.SelectedText))
-            {                try
+            {
+                try
                 {
                     Clipboard.SetText(PromptTextBox.SelectedText);
                     int selectionStart = PromptTextBox.SelectionStart;
@@ -698,11 +757,15 @@ namespace AIAnywhere.Views
         {
             PromptTextBox.SelectAll();
             PromptTextBox.Focus();
-        }        private void ClearAllMenuItem_Click(object sender, RoutedEventArgs e)
+        }
+
+        private void ClearAllMenuItem_Click(object sender, RoutedEventArgs e)
         {
             PromptTextBox.Text = "";
             PromptTextBox.Focus();
-        }        private void UndoMenuItem_Click(object sender, RoutedEventArgs e)
+        }
+
+        private void UndoMenuItem_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -766,6 +829,65 @@ namespace AIAnywhere.Views
                         break;
                     // Note: Cut (Ctrl+X), Copy (Ctrl+C), and Paste (Ctrl+V) are handled automatically by TextBox
                 }
+            }
+        }
+
+        private void BrowseAudioButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var openFileDialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Title = "Select Audio File",
+                    Filter =
+                        "Audio Files|*.mp3;*.mp4;*.wav;*.m4a;*.ogg;*.aac;*.flac;*.wma;*.webm|"
+                        + "MP3 Files|*.mp3|"
+                        + "MP4 Files|*.mp4|"
+                        + "WAV Files|*.wav|"
+                        + "M4A Files|*.m4a|"
+                        + "OGG Files|*.ogg|"
+                        + "AAC Files|*.aac|"
+                        + "FLAC Files|*.flac|"
+                        + "WMA Files|*.wma|"
+                        + "WebM Files|*.webm|"
+                        + "All Files|*.*",
+                    DefaultExt = "mp3",
+                    Multiselect = false,
+                };
+
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    var selectedFile = openFileDialog.FileName;
+
+                    // Check file size (25MB limit for OpenAI Whisper)
+                    var fileInfo = new System.IO.FileInfo(selectedFile);
+                    const long maxSizeInBytes = 25 * 1024 * 1024; // 25MB
+
+                    if (fileInfo.Length > maxSizeInBytes)
+                    {
+                        MessageBox.Show(
+                            $"The selected file is too large ({fileInfo.Length / (1024 * 1024):F1} MB). "
+                                + "Maximum file size is 25 MB.",
+                            "File Too Large",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning
+                        );
+                        return;
+                    }
+
+                    _selectedAudioFile = selectedFile;
+                    AudioFileTextBox.Text = System.IO.Path.GetFileName(selectedFile);
+                    AudioFileTextBox.ToolTip = selectedFile;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error selecting audio file: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
             }
         }
     }

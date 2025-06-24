@@ -14,10 +14,12 @@ namespace AIAnywhere.Models
 
     public class Configuration : INotifyPropertyChanged
     {
-        private string _hotkey = "Ctrl+Alt+Shift+A";
+        private string _hotkey = "Ctrl+Space";
         private string _apiBaseUrl = "https://api.openai.com/v1";
         private string _apiKey = "";
         private string _llmModel = "";
+        private string _imageModel = "";
+        private string _audioModel = "";
         private PasteBehavior _pasteBehavior = PasteBehavior.ReviewMode;
         private bool _enableTextSelection = true;
         private bool _disableThinking = false;
@@ -78,6 +80,26 @@ namespace AIAnywhere.Models
             }
         }
 
+        public string ImageModel
+        {
+            get => _imageModel;
+            set
+            {
+                _imageModel = value;
+                OnPropertyChanged(nameof(ImageModel));
+            }
+        }
+
+        public string AudioModel
+        {
+            get => _audioModel;
+            set
+            {
+                _audioModel = value;
+                OnPropertyChanged(nameof(AudioModel));
+            }
+        }
+
         public PasteBehavior PasteBehavior
         {
             get => _pasteBehavior;
@@ -125,6 +147,16 @@ namespace AIAnywhere.Models
         /// List of available models retrieved from the API. Updated when user clicks 'Get Models' button.
         /// </summary>
         public List<string> Models { get; set; } = new List<string>();
+
+        /// <summary>
+        /// List of available image models retrieved from the API. Updated when user clicks 'Get Models' button.
+        /// </summary>
+        public List<string> ImageModels { get; set; } = new List<string>();
+
+        /// <summary>
+        /// List of available audio models retrieved from the API. Updated when user clicks 'Get Models' button.
+        /// </summary>
+        public List<string> AudioModels { get; set; } = new List<string>();
 
         /// <summary>
         /// Get default system prompts for all operation types
@@ -217,6 +249,15 @@ namespace AIAnywhere.Models
                     + "9. Keep it authentic and human-like\n"
                     + "10. NO explanations or meta-commentary\n\n"
                     + "Generate a natural WhatsApp response to this message:\n",
+                [nameof(OperationType.AudioTranscription)] =
+                    "TASK: Transcribe the provided audio file to text.\n\n"
+                    + "TRANSCRIPTION RULES:\n"
+                    + "1. Return only the transcribed text, no explanations\n"
+                    + "2. Use proper punctuation and formatting\n"
+                    + "3. Maintain speaker distinctions if multiple speakers\n"
+                    + "4. Keep the same language as the audio\n"
+                    + "5. Include relevant non-speech sounds in [brackets] if significant\n\n"
+                    + "Transcribe this audio:\n",
             };
         }
 

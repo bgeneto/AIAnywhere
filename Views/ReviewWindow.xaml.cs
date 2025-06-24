@@ -98,7 +98,10 @@ namespace AIAnywhere.Views
                 var formattedText = TextProcessor.FormatForDisplay(_resultText);
                 ResultTextBox.Text = formattedText;
                 OperationTypeTextBlock.Text = _operationType;
-                CharacterCountTextBlock.Text = $"{_resultText.Length} characters";
+                CharacterCountTextBlock.Text = $"{ResultTextBox.Text.Length} characters";
+
+                // Add text changed event handler to update character count
+                ResultTextBox.TextChanged += ResultTextBox_TextChanged;
 
                 // Show text block, hide image and loading
                 ResultTextBox.Visibility = Visibility.Visible;
@@ -253,6 +256,15 @@ namespace AIAnywhere.Views
             ResultTextBox.Focus();
         }
 
+        private void ResultTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            // Update character count when text changes
+            if (CharacterCountTextBlock != null)
+            {
+                CharacterCountTextBlock.Text = $"{ResultTextBox.Text.Length} characters";
+            }
+        }
+
         private async void PasteAndClose()
         {
             ShouldPaste = true;
@@ -275,8 +287,8 @@ namespace AIAnywhere.Views
                 }
                 else
                 {
-                    // Format text for clipboard and paste
-                    var formattedText = TextProcessor.FormatForClipboard(_resultText);
+                    // Format text for clipboard and paste - use current TextBox content
+                    var formattedText = TextProcessor.FormatForClipboard(ResultTextBox.Text);
                     Clipboard.SetText(formattedText);
                 }            }
             catch
@@ -319,8 +331,8 @@ namespace AIAnywhere.Views
                 }
                 else
                 {
-                    // Copy text to clipboard - format for clipboard use
-                    var formattedText = TextProcessor.FormatForClipboard(_resultText);
+                    // Copy text to clipboard - format for clipboard use - use current TextBox content
+                    var formattedText = TextProcessor.FormatForClipboard(ResultTextBox.Text);
                     Clipboard.SetText(formattedText);
                 }
 

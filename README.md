@@ -5,7 +5,7 @@ A powerful Windows desktop application that provides universal AI assistance thr
 ## ✨ Key Features
 
 ### 🚀 Global Access
-- **Universal Hotkey**: Press `Ctrl+Alt+Shift+A` (fully configurable) from any application
+- **Universal Hotkey**: Press `Ctrl+Space` (fully configurable) from any application
 - **Smart Text Capture**: Automatically detects selected text using UI Automation and clipboard fallback
 - **System Tray Integration**: Runs minimized in system tray with right-click context menu
 - **Background Operation**: Non-intrusive operation that doesn't interfere with your workflow
@@ -41,7 +41,7 @@ A powerful Windows desktop application that provides universal AI assistance thr
 1. **Right-click** the AI Anywhere icon in your system tray
 2. Select **"Settings"** from the context menu
 3. Configure your settings:
-   - **Global Hotkey**: Set your preferred keyboard shortcut (default: `Ctrl+Alt+Shift+A`)
+   - **Global Hotkey**: Set your preferred keyboard shortcut (default: `Ctrl+Space`)
    - **API Base URL**: Enter your LLM API endpoint
      - OpenAI: `https://api.openai.com/v1`
      - Anthropic: `https://api.anthropic.com/v1`
@@ -56,7 +56,7 @@ A powerful Windows desktop application that provides universal AI assistance thr
 
 ### Basic Workflow
 1. **Select text** in any application (optional - will fallback to clipboard, then empty)
-2. **Press your hotkey** (default: `Ctrl+Alt+Shift+A`)
+2. **Press your hotkey** (default: `Ctrl+Space`)
 3. **Select task** from the dropdown menu
 4. **Configure options** (language for translation, tone for rewriting, etc.)
 5. **Add or edit prompt content** (selected text is automatically prefilled)
@@ -147,7 +147,7 @@ This ensures maximum compatibility across different applications and scenarios.
 ### Basic Settings
 | Setting | Description | Default | Examples |
 |---------|-------------|---------|----------|
-| **Global Hotkey** | Keyboard combination to activate | `Ctrl+Alt+Shift+A` | `Ctrl+Shift+A`, `Alt+Space` |
+| **Global Hotkey** | Keyboard combination to activate | `Ctrl+Space` | `Ctrl+Space`, `Alt+Space` |
 | **API Base URL** | Your LLM service endpoint | `https://api.openai.com/v1` | Local: `http://localhost:11434/v1` |
 | **API Key*** | Authentication key (encrypted) | _(empty)_ | `sk-...` (OpenAI format) |
 | **LLM Model*** | Model name to use (required) | _(empty)_ | `gpt-4o`, `claude-3-opus`, `llama3.2` |
@@ -187,7 +187,7 @@ Power users can customize AI behavior by editing the `config.json` file directly
 
 ```json
 {
-  "Hotkey": "Ctrl+Alt+Shift+A",
+  "Hotkey": "Ctrl+Space",
   "ApiBaseUrl": "https://api.openai.com/v1",
   "ApiKey": "encrypted_key_here",
   "LlmModel": "gpt-4o",
@@ -264,7 +264,7 @@ Power users can customize AI behavior by editing the `config.json` file directly
 ## ⌨️ Keyboard Shortcuts & Tips
 
 ### Default Shortcuts
-- **`Ctrl+Alt+Shift+A`**: Activate AI Anywhere (globally configurable)
+- **`Ctrl+Space`**: Activate AI Anywhere (globally configurable)
 - **`Ctrl+C`**: Copy text before using hotkey (if selection doesn't work)
 - **`Esc`**: Close any AI Anywhere window
 - **`Ctrl+Enter`**: Submit prompt (in prompt window)

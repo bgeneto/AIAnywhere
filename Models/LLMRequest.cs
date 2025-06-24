@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 
 namespace AIAnywhere.Models
-{
-    public class LLMRequest
+{    public class LLMRequest
     {
         public OperationType OperationType { get; set; }
         public string Prompt { get; set; } = "";
         public string SelectedText { get; set; } = "";
         public Dictionary<string, string> Options { get; set; } = new();
+        public string? AudioFilePath { get; set; }
     }
 
     public class LLMResponse

@@ -4,54 +4,18 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.modernwpf.com/2019"
     Title="AI Anywhere - Settings"
-    Width="560"
+    Width="640"
     ui:WindowHelper.UseModernWindowStyle="True"
     Icon="../AIAnywhere.ico"
     ResizeMode="NoResize"
     SizeToContent="Height"
     WindowStartupLocation="CenterScreen">
-    <Grid Margin="32">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <!--  Title  -->
             <RowDefinition Height="Auto" />
-            <!--  Hotkey heading  -->
-            <RowDefinition Height="Auto" />
-            <!--  Hotkey textbox  -->
-            <RowDefinition Height="Auto" />
-            <!--  Hotkey description  -->
-            <RowDefinition Height="Auto" />
-            <!--  Paste Behavior heading  -->
-            <RowDefinition Height="Auto" />
-            <!--  Paste Behavior combobox  -->
-            <RowDefinition Height="Auto" />
-            <!--  Paste Behavior description  -->
-            <RowDefinition Height="Auto" />
-            <!--  Performance Settings heading  -->
-            <RowDefinition Height="Auto" />
-            <!--  Text Selection checkbox  -->
-            <RowDefinition Height="Auto" />
-            <!--  Text Selection description  -->
-            <RowDefinition Height="Auto" />
-            <!--  Disable Thinking checkbox  -->
-            <RowDefinition Height="Auto" />
-            <!--  Disable Thinking description  -->
-            <RowDefinition Height="Auto" />
-            <!--  API Configuration heading  -->
-            <RowDefinition Height="Auto" />
-            <!--  API Base URL label  -->
-            <RowDefinition Height="Auto" />
-            <!--  API Base URL textbox  -->
-            <RowDefinition Height="Auto" />
-            <!--  API Key label  -->
-            <RowDefinition Height="Auto" />
-            <!--  API Key passwordbox  -->
-            <RowDefinition Height="Auto" />
-            <!--  LLM Model label  -->
-            <RowDefinition Height="Auto" />
-            <!--  LLM Model combobox + button  -->
-            <RowDefinition Height="Auto" />
-            <!--  Model status text  -->
+            <!--  Settings Content  -->
             <RowDefinition Height="*" />
             <!--  Spacer  -->
             <RowDefinition Height="Auto" />
@@ -63,237 +27,275 @@
             Grid.Row="0"
             Style="{StaticResource TitleTextBlock}"
             Text="Settings" />
-
-        <!--  Hotkey Section  -->
-        <TextBlock
+        <!--  Main Settings Content in ScrollViewer  -->
+        <ScrollViewer
             Grid.Row="1"
-            Style="{StaticResource HeadingTextBlock}"
-            Text="Global Hotkey" />
-        <TextBox
-            Name="HotkeyTextBox"
-            Grid.Row="2"
-            Margin="0,0,0,8"
-            GotFocus="HotkeyTextBox_GotFocus"
-            LostFocus="HotkeyTextBox_LostFocus"
-            PreviewKeyDown="HotkeyTextBox_PreviewKeyDown"
-            PreviewTextInput="HotkeyTextBox_PreviewTextInput"
-            ToolTip="Click here and press your desired key combination (e.g., Ctrl+Alt+Space)">
-            <TextBox.ContextMenu>
-                <ContextMenu>
-                    <MenuItem
-                        Command="ApplicationCommands.Cut"
-                        Header="✂️ Cu_t"
-                        InputGestureText="Ctrl+X" />
-                    <MenuItem
-                        Command="ApplicationCommands.Copy"
-                        Header="📋 _Copy"
-                        InputGestureText="Ctrl+C" />
-                    <MenuItem
-                        Command="ApplicationCommands.Paste"
-                        Header="📄 _Paste"
-                        InputGestureText="Ctrl+V" />
-                    <Separator />
-                    <MenuItem
-                        Command="ApplicationCommands.SelectAll"
-                        Header="🔍 Select _All"
-                        InputGestureText="Ctrl+A" />
-                    <Separator />
-                    <MenuItem
-                        Command="ApplicationCommands.Undo"
-                        Header="↶ _Undo"
-                        InputGestureText="Ctrl+Z" />
-                    <MenuItem
-                        Command="ApplicationCommands.Redo"
-                        Header="↷ _Redo"
-                        InputGestureText="Ctrl+Y" />
-                </ContextMenu>
-            </TextBox.ContextMenu>
-        </TextBox>
-        <TextBlock
-            Grid.Row="3"
-            Margin="0,0,0,24"
-            Style="{StaticResource SubtleTextBlock}"
-            Text="Click in the field above and press your desired key combination (e.g., Ctrl+Shift+B)" />
+            MaxHeight="600"
+            VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,4,0,0">
+                <!--  General Settings Group  -->
+                <Border
+                    Margin="0,0,0,1"
+                    Padding="12"
+                    Background="{DynamicResource SystemControlBackgroundChromeLowBrush}"
+                    CornerRadius="8">
+                    <StackPanel>
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            Style="{StaticResource HeadingTextBlock}"
+                            Text="⚙️ General Settings" />
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <!--  Hotkey  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="0,0,12,8">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontWeight="SemiBold"
+                                    Text="Global Hotkey" />
+                                <TextBox
+                                    Name="HotkeyTextBox"
+                                    Margin="0,0,0,2"
+                                    GotFocus="HotkeyTextBox_GotFocus"
+                                    LostFocus="HotkeyTextBox_LostFocus"
+                                    PreviewKeyDown="HotkeyTextBox_PreviewKeyDown"
+                                    PreviewTextInput="HotkeyTextBox_PreviewTextInput"
+                                    ToolTip="Click here and press your desired key combination" />
+                                <TextBlock
+                                    FontSize="10"
+                                    Foreground="DarkGray"
+                                    Text="Click and press key combination" />
+                            </StackPanel>
+                            <!--  Paste Behavior  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="12,0,0,8">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontWeight="SemiBold"
+                                    Text="Paste Behavior" />
+                                <ComboBox
+                                    Name="PasteBehaviorComboBox"
+                                    Margin="0,0,0,2"
+                                    ToolTip="Choose how AI results are pasted back">
+                                    <ComboBoxItem>Auto-paste (Replace selected text automatically)</ComboBoxItem>
+                                    <ComboBoxItem>Clipboard mode (Copy to clipboard, paste manually)</ComboBoxItem>
+                                    <ComboBoxItem>Review mode (Show preview window for confirmation)</ComboBoxItem>
+                                </ComboBox>
+                                <TextBlock
+                                    Name="PasteBehaviorDescriptionTextBlock"
+                                    FontSize="10"
+                                    Foreground="DarkGray"
+                                    Text="(Auto-paste provides smoothest workflow)" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                <!--  API Configuration Group  -->
+                <Border
+                    Margin="0,0,0,1"
+                    Padding="12"
+                    Background="{DynamicResource SystemControlBackgroundChromeLowBrush}"
+                    CornerRadius="8">
+                    <StackPanel>
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            Style="{StaticResource HeadingTextBlock}"
+                            Text="🔑 API Configuration" />
 
-        <!--  Paste Behavior Section  -->
-        <TextBlock
-            Grid.Row="4"
-            Style="{StaticResource HeadingTextBlock}"
-            Text="Paste Behavior" />
-        <ComboBox
-            Name="PasteBehaviorComboBox"
-            Grid.Row="5"
-            Margin="0,0,0,8"
-            ToolTip="Choose how AI results are pasted back to your application">
-            <ComboBoxItem>Auto-paste (Replace selected text automatically)</ComboBoxItem>
-            <ComboBoxItem>Clipboard mode (Copy to clipboard, paste manually)</ComboBoxItem>
-            <ComboBoxItem>Review mode (Show preview window for confirmation)</ComboBoxItem>
-        </ComboBox>
-        <TextBlock
-            Name="PasteBehaviorDescriptionTextBlock"
-            Grid.Row="6"
-            Margin="0,0,0,24"
-            FontSize="11"
-            Foreground="DarkGray"
-            Text="(Auto-paste provides the smoothest workflow but requires trust in AI results)" />
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <!--  API Base URL  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="0,0,12,8">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontWeight="SemiBold"
+                                    Text="API Base URL" />
+                                <TextBox Name="ApiBaseUrlTextBox" ToolTip="OpenAI compatible API endpoint" />
+                            </StackPanel>
+                            <!--  API Key  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="12,0,0,8">
+                                <TextBlock Margin="0,0,0,2" FontWeight="SemiBold">
+                                    <Run Text="API Key" />
+                                    <Run Foreground="Red" Text=" *" />
+                                </TextBlock>
+                                <PasswordBox Name="ApiKeyPasswordBox" ToolTip="API Key is required to connect to your LLM service" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                <!--  Performance Settings Group  -->
+                <Border
+                    Margin="0,0,0,1"
+                    Padding="12"
+                    Background="{DynamicResource SystemControlBackgroundChromeLowBrush}"
+                    CornerRadius="8">
+                    <StackPanel>
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            Style="{StaticResource HeadingTextBlock}"
+                            Text="⚡ Performance Settings" />
 
-        <!--  Performance Settings Section  -->
-        <TextBlock
-            Grid.Row="7"
-            Style="{StaticResource HeadingTextBlock}"
-            Text="Performance Settings" />
-        <CheckBox
-            Name="EnableTextSelectionCheckBox"
-            Grid.Row="8"
-            Margin="0,0,0,8"
-            Content="📋 Enable automatic text selection and clipboard detection"
-            ToolTip="When enabled, the app will detect selected text and clipboard content to prefill prompts. Disable for faster window opening." />
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <!--  Text Selection Option  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="0,0,0,6">
+                                <CheckBox
+                                    Name="EnableTextSelectionCheckBox"
+                                    Content="📋 Enable automatic text selection and clipboard detection"
+                                    FontWeight="SemiBold"
+                                    ToolTip="When enabled, detects selected text to prefill prompts" />
+                                <TextBlock
+                                    Margin="24,2,0,0"
+                                    FontSize="10"
+                                    Foreground="DarkGray"
+                                    Text="Disabling this feature makes the app more responsive but less productive" />
+                            </StackPanel>
 
-        <TextBlock
-            Grid.Row="9"
-            Margin="0,0,0,16"
-            FontSize="11"
-            Foreground="DarkGray"
-            Text="(Disabling this feature makes the app more responsive but less productive)" />
+                            <!--  Thinking Mode Option  -->
+                            <StackPanel Grid.Row="1" Grid.Column="0">
+                                <CheckBox
+                                    Name="DisableThinkingCheckBox"
+                                    Content="🧠 Disable thinking mode (for compatible models)"
+                                    FontWeight="SemiBold"
+                                    ToolTip="Adds '/no_think' prefix to prompts for models that support it" />
+                                <TextBlock
+                                    Margin="24,2,0,0"
+                                    FontSize="10"
+                                    Foreground="DarkGray"
+                                    Text="Only applies to models that allow disabling the thinking mode, such as Qwen3" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                <!--  Model Configuration Group  -->
+                <Border
+                    Margin="0,0,0,1"
+                    Padding="12"
+                    Background="{DynamicResource SystemControlBackgroundChromeLowBrush}"
+                    CornerRadius="8">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Grid.Column="0"
+                                Style="{StaticResource HeadingTextBlock}"
+                                Text="🤖 Model Configuration" />
+                            <Button
+                                Name="RetrieveModelsButton"
+                                Grid.Column="1"
+                                Click="RetrieveModelsButton_Click"
+                                Content="⤓ Get Models"
+                                Style="{StaticResource SecondaryButton}"
+                                ToolTip="Fetch available models from API (requires API key)" />
+                        </Grid>
 
-        <CheckBox
-            Name="DisableThinkingCheckBox"
-            Grid.Row="10"
-            Margin="0,0,0,8"
-            Content="🧠 Disable thinking mode (for compatible models)"
-            ToolTip="When enabled, adds '/no_think' prefix to prompts to prevent models from showing their reasoning process." />
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <!--  Text Model  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="0,0,8,8">
+                                <TextBlock Margin="0,0,0,2" FontWeight="SemiBold">
+                                    <Run Text="Text Model" />
+                                    <Run Foreground="Red" Text=" *" />
+                                </TextBlock>
+                                <ComboBox
+                                    Name="LlmModelComboBox"
+                                    ui:ControlHelper.PlaceholderText="Select text model..."
+                                    ToolTip="Select your text/LLM model" />
+                            </StackPanel>
+                            <!--  Image Model  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="8,0,8,8">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontWeight="SemiBold"
+                                    Text="Image Model" />
+                                <ComboBox
+                                    Name="ImageModelComboBox"
+                                    ui:ControlHelper.PlaceholderText="Select image model..."
+                                    ToolTip="Select your image generation model" />
+                            </StackPanel>
+                            <!--  Audio Model  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Margin="8,0,0,8">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontWeight="SemiBold"
+                                    Text="Audio Model" />
+                                <ComboBox
+                                    Name="AudioModelComboBox"
+                                    ui:ControlHelper.PlaceholderText="Select audio model..."
+                                    ToolTip="Select your audio transcription model" />
+                            </StackPanel>
+                            <!--  Status Text  -->
+                            <TextBlock
+                                Name="ModelStatusTextBlock"
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="3"
+                                Margin="0,0,0,4"
+                                HorizontalAlignment="Center"
+                                Style="{StaticResource SubtleTextBlock}"
+                                Text="Enter API key and base URL first, then click 'Get Models'"
+                                Visibility="Visible" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
 
-        <TextBlock
-            Grid.Row="11"
-            Margin="0,0,0,24"
-            FontSize="11"
-            Foreground="DarkGray"
-            Text="(Only applies to models that allow disabling the thinking mode, such as Qwen3)" />
-        <!--  API Configuration Section  -->
-        <TextBlock
-            Grid.Row="12"
-            Style="{StaticResource HeadingTextBlock}"
-            Text="API Configuration" />
-        <TextBlock
-            Grid.Row="13"
-            Margin="0,0,0,8"
-            Text="API Base URL:" />
-        <TextBox
-            Name="ApiBaseUrlTextBox"
-            Grid.Row="14"
-            Margin="0,0,0,16"
-            ToolTip="OpenAI compatible API endpoint (e.g., https://api.openai.com/v1)">
-            <TextBox.ContextMenu>
-                <ContextMenu>
-                    <MenuItem
-                        Command="ApplicationCommands.Cut"
-                        Header="✂️ Cu_t"
-                        InputGestureText="Ctrl+X" />
-                    <MenuItem
-                        Command="ApplicationCommands.Copy"
-                        Header="📋 _Copy"
-                        InputGestureText="Ctrl+C" />
-                    <MenuItem
-                        Command="ApplicationCommands.Paste"
-                        Header="📄 _Paste"
-                        InputGestureText="Ctrl+V" />
-                    <Separator />
-                    <MenuItem
-                        Command="ApplicationCommands.SelectAll"
-                        Header="🔍 Select _All"
-                        InputGestureText="Ctrl+A" />
-                    <Separator />
-                    <MenuItem
-                        Command="ApplicationCommands.Undo"
-                        Header="↶ _Undo"
-                        InputGestureText="Ctrl+Z" />
-                    <MenuItem
-                        Command="ApplicationCommands.Redo"
-                        Header="↷ _Redo"
-                        InputGestureText="Ctrl+Y" />
-                </ContextMenu>
-            </TextBox.ContextMenu>
-        </TextBox>
-        <TextBlock Grid.Row="15" Margin="0,0,0,8">
-            <Run Text="API Key:" />
-            <Run
-                FontWeight="Bold"
-                Foreground="Red"
-                Text=" *" />
-        </TextBlock>
-        <PasswordBox
-            Name="ApiKeyPasswordBox"
-            Grid.Row="16"
-            Margin="0,0,0,16"
-            ToolTip="API Key is required to connect to your LLM service">
-            <PasswordBox.ContextMenu>
-                <ContextMenu>
-                    <MenuItem
-                        Command="ApplicationCommands.Copy"
-                        Header="📋 _Copy"
-                        InputGestureText="Ctrl+C" />
-                    <MenuItem
-                        Command="ApplicationCommands.Paste"
-                        Header="📄 _Paste"
-                        InputGestureText="Ctrl+V" />
-                    <Separator />
-                    <MenuItem
-                        Command="ApplicationCommands.SelectAll"
-                        Header="🔍 Select _All"
-                        InputGestureText="Ctrl+A" />
-                </ContextMenu>
-            </PasswordBox.ContextMenu>
-        </PasswordBox>
-        <TextBlock Grid.Row="17" Margin="0,0,0,8">
-            <Run Text="LLM Model:" />
-            <Run Foreground="Red" Text="*" />
-        </TextBlock>
-        <Grid Grid.Row="18">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <ComboBox
-                Name="LlmModelComboBox"
-                Grid.Column="0"
-                Margin="0,0,8,0"
-                ui:ControlHelper.PlaceholderText="Click 'Get Models' to populate..."
-                ToolTip="Select your LLM model or click 'Get Models' to retrieve available options">
-                <ComboBox.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem
-                            Command="ApplicationCommands.Copy"
-                            Header="📋 _Copy"
-                            InputGestureText="Ctrl+C" />
-                        <MenuItem
-                            Command="ApplicationCommands.Paste"
-                            Header="📄 _Paste"
-                            InputGestureText="Ctrl+V" />
-                        <Separator />
-                        <MenuItem
-                            Command="ApplicationCommands.SelectAll"
-                            Header="🔍 Select _All"
-                            InputGestureText="Ctrl+A" />
-                    </ContextMenu>
-                </ComboBox.ContextMenu>
-            </ComboBox>
-            <Button
-                Name="RetrieveModelsButton"
-                Grid.Column="1"
-                Click="RetrieveModelsButton_Click"
-                Content="⤓ Get Models"
-                Style="{StaticResource SecondaryButton}"
-                ToolTip="Fetch available models from API (requires API key)" />
-        </Grid>
-        <TextBlock
-            Name="ModelStatusTextBlock"
-            Grid.Row="19"
-            Margin="0,4,0,32"
-            Style="{StaticResource SubtleTextBlock}"
-            Text="Enter API key and base URL first, then click '⤓ Get Models'"
-            Visibility="Visible" />
+            </StackPanel>
+        </ScrollViewer>
         <!--  Buttons  -->
-        <Grid Grid.Row="21">
+        <Grid Grid.Row="3" Margin="0,8,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />

@@ -20,6 +20,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -45,14 +46,60 @@
             IsEditable="False"
             IsReadOnly="False"
             SelectionChanged="OperationComboBox_SelectionChanged" />
-
         <!--  Dynamic Options Panel  -->
         <StackPanel
             Name="OptionsPanel"
             Grid.Row="3"
             Margin="0,0,0,20" />
+
+        <!--  Audio File Upload Section (visible only for Audio Transcription)  -->
+        <Grid
+            Name="AudioUploadPanel"
+            Grid.Row="4"
+            Margin="0,0,0,20"
+            Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock
+                Grid.Row="0"
+                Style="{StaticResource HeadingTextBlock}"
+                Text="Audio File:" />
+
+            <Grid Grid.Row="1" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox
+                    Name="AudioFileTextBox"
+                    Grid.Column="0"
+                    Margin="0,0,8,0"
+                    ui:ControlHelper.PlaceholderText="No file selected..."
+                    IsReadOnly="True"
+                    ToolTip="Select an audio file to transcribe" />
+
+                <Button
+                    Name="BrowseAudioButton"
+                    Grid.Column="1"
+                    Click="BrowseAudioButton_Click"
+                    Content="📁 Browse"
+                    Style="{StaticResource SecondaryButton}"
+                    ToolTip="Browse for audio file" />
+            </Grid>
+
+            <TextBlock
+                Grid.Row="2"
+                FontSize="11"
+                Foreground="DarkGray"
+                Text="Supported formats: MP3, MP4, WAV, M4A, OGG, AAC, FLAC (max 25MB)" />
+        </Grid>
         <!--  Prompt Input  -->
-        <Grid Grid.Row="4">
+        <Grid Name="PromptContentGrid" Grid.Row="5">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -146,7 +193,6 @@
                 </TextBox.ContextMenu>
             </TextBox>
         </Grid>
-
         <!--  Buttons  -->
         <Grid Grid.Row="6">
             <Grid.ColumnDefinitions>

@@ -12,6 +12,7 @@ namespace AIAnywhere.Models
         TextSummarization,
         EmailEnhancement,
         WhatsAppResponse,
+        AudioTranscription,
     }
 
     public class Operation
@@ -42,6 +43,45 @@ namespace AIAnywhere.Models
 
             return new List<Operation>
             {
+                new Operation
+                {
+                    Type = OperationType.AudioTranscription,
+                    Name = "Audio Transcription",
+                    Description = "Convert audio files to text",
+                    SystemPrompt =
+                        noThinkPrefix
+                        + systemPrompts.GetValueOrDefault(
+                            nameof(OperationType.AudioTranscription),
+                            "Transcribe the provided audio file to text with proper punctuation and formatting."
+                        ),
+                    Options = new List<OperationOption>
+                    {
+                        new OperationOption
+                        {
+                            Key = "language",
+                            Name = "Language (optional)",
+                            Type = OptionType.Select,
+                            Values = new List<string>
+                            {
+                                "auto",
+                                "en",
+                                "es",
+                                "fr",
+                                "de",
+                                "it",
+                                "pt",
+                                "ru",
+                                "ja",
+                                "ko",
+                                "zh",
+                                "ar",
+                                "hi",
+                            },
+                            DefaultValue = "auto",
+                            Required = false,
+                        },
+                    },
+                },
                 new Operation
                 {
                     Type = OperationType.GeneralChat,
@@ -275,10 +315,9 @@ namespace AIAnywhere.Models
                             Type = OptionType.Select,
                             Values = new List<string> { "SHORT", "MEDIUM", "LONG" },
                             DefaultValue = "SHORT",
-                            Required = false,
-                        },
+                            Required = false,                        },
                     },
-                },
+                }
             };
         }
     }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
@@ -44,9 +43,7 @@ namespace AIAnywhere.Views
             else
             {
                 ApiKeyPasswordBox.Password = "";
-            }
-
-            // Load available models from config and populate ComboBoxes
+            }            // Load available models from config and populate ComboBoxes
             LoadModelsIntoComboBox();
 
             // Set model selections - find matching item or add custom one
@@ -75,8 +72,7 @@ namespace AIAnywhere.Views
                 PasteBehaviorComboBox.SelectedIndex = 0; // Default to Auto-paste
             }
 
-            UpdatePasteBehaviorDescription();
-            // Set text selection preference
+            UpdatePasteBehaviorDescription(); // Set text selection preference
             EnableTextSelectionCheckBox.IsChecked = _config.EnableTextSelection;
 
             // Set disable thinking preference
@@ -94,9 +90,7 @@ namespace AIAnywhere.Views
             _config.Hotkey = HotkeyTextBox.Text;
             _config.ApiBaseUrl = ApiBaseUrlTextBox.Text;
             // Use the same logic as validation for consistency
-            _config.ApiKey = GetActualApiKey();
-
-            // Save LLM Model - get from selected item content, not Text property
+            _config.ApiKey = GetActualApiKey();            // Save LLM Model - get from selected item content, not Text property
             if (
                 LlmModelComboBox.SelectedItem is ComboBoxItem selectedItem
                 && selectedItem.IsEnabled
@@ -147,15 +141,11 @@ namespace AIAnywhere.Views
             )
             {
                 _config.PasteBehavior = (PasteBehavior)PasteBehaviorComboBox.SelectedIndex;
-            }
-
-            // Save text selection preference
+            } // Save text selection preference
             _config.EnableTextSelection = EnableTextSelectionCheckBox.IsChecked ?? true;
 
             // Save disable thinking preference
-            _config.DisableThinking = DisableThinkingCheckBox.IsChecked ?? false;
-
-            // Save current models lists from ComboBoxes
+            _config.DisableThinking = DisableThinkingCheckBox.IsChecked ?? false;            // Save current models lists from ComboBoxes
             var currentModels = new List<string>();
             foreach (var item in LlmModelComboBox.Items)
             {
@@ -211,18 +201,19 @@ namespace AIAnywhere.Views
                 {
                     case 0: // AutoPaste
                         PasteBehaviorDescriptionTextBlock.Text =
-                            "(Auto-paste provides smoothest workflow)";
+                            "(Auto-paste provides the smoothest workflow but requires trust in AI results.\nPress Ctrl+Z to undo if needed)";
                         break;
                     case 1: // ClipboardMode
-                        PasteBehaviorDescriptionTextBlock.Text = "(Copy to clipboard, paste manually)";
+                        PasteBehaviorDescriptionTextBlock.Text =
+                            "(Copy to clipboard mode gives you full control.\nYou manually paste (Ctrl+V) where you want the result)";
                         break;
                     case 2: // ReviewMode
                         PasteBehaviorDescriptionTextBlock.Text =
-                            "(Show preview window for confirmation)";
+                            "(Review mode shows a beautiful preview window where you can review and confirm before pasting)";
                         break;
                     default:
                         PasteBehaviorDescriptionTextBlock.Text =
-                            "(Choose how AI results are handled)";
+                            "(Choose how AI results are handled after processing)";
                         break;
                 }
             }
@@ -299,7 +290,7 @@ namespace AIAnywhere.Views
             finally
             {
                 TestButton.IsEnabled = true;
-                TestButton.Content = "📡 Connection Test";
+                TestButton.Content = "Test Connection";
             }
         }
 
@@ -422,13 +413,8 @@ namespace AIAnywhere.Views
                 ModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
                     System.Windows.Media.Colors.Blue
                 );
-                ModelStatusTextBlock.Visibility = Visibility.Visible;
-
-                var allModels = await FetchAvailableModelsAsync(
-                    ApiBaseUrlTextBox.Text,
-                    actualApiKey
-                );
-
+                ModelStatusTextBlock.Visibility = Visibility.Visible;                var allModels = await FetchAvailableModelsAsync(ApiBaseUrlTextBox.Text, actualApiKey);
+                
                 if (allModels.Any())
                 {
                     // Store current selections
@@ -437,39 +423,30 @@ namespace AIAnywhere.Views
                     var currentAudioSelection = GetSelectedAudioModel();
 
                     // Categorize models
-                    var textModels = allModels
-                        .Where(m =>
-                            !m.ToLower().Contains("dall")
-                            && !m.ToLower().Contains("flux")
-                            && !m.ToLower().Contains("image")
-                            && !m.ToLower().Contains("midjourney")
-                            && !m.ToLower().Contains("stable")
-                            && !m.ToLower().Contains("dream")
-                            && !m.ToLower().Contains("whisper")
-                            && !m.ToLower().Contains("speech")
-                            && !m.ToLower().Contains("transcrib")
-                        )
-                        .ToList();
+                    var textModels = allModels.Where(m => 
+                        !m.ToLower().Contains("dall") && 
+                        !m.ToLower().Contains("flux") && 
+                        !m.ToLower().Contains("image") &&
+                        !m.ToLower().Contains("midjourney") &&
+                        !m.ToLower().Contains("stable") &&
+                        !m.ToLower().Contains("dream") &&
+                        !m.ToLower().Contains("whisper") && 
+                        !m.ToLower().Contains("speech") &&
+                        !m.ToLower().Contains("transcrib")).ToList();
 
-                    var imageModels = allModels
-                        .Where(m =>
-                            m.ToLower().Contains("dall")
-                            || m.ToLower().Contains("flux")
-                            || m.ToLower().Contains("image")
-                            || m.ToLower().Contains("midjourney")
-                            || m.ToLower().Contains("stable")
-                            || m.ToLower().Contains("dream")
-                        )
-                        .ToList();
+                    var imageModels = allModels.Where(m => 
+                        m.ToLower().Contains("dall") || 
+                        m.ToLower().Contains("flux") || 
+                        m.ToLower().Contains("image") ||
+                        m.ToLower().Contains("midjourney") ||
+                        m.ToLower().Contains("stable") ||
+                        m.ToLower().Contains("dream")).ToList();
 
-                    var audioModels = allModels
-                        .Where(m =>
-                            m.ToLower().Contains("whisper")
-                            || m.ToLower().Contains("audio")
-                            || m.ToLower().Contains("speech")
-                            || m.ToLower().Contains("transcrib")
-                        )
-                        .ToList();
+                    var audioModels = allModels.Where(m => 
+                        m.ToLower().Contains("whisper") || 
+                        m.ToLower().Contains("audio") ||
+                        m.ToLower().Contains("speech") ||
+                        m.ToLower().Contains("transcrib")).ToList();
 
                     // Populate Text Models
                     LlmModelComboBox.Items.Clear();
@@ -521,10 +498,7 @@ namespace AIAnywhere.Views
                     else if (audioModels.Any())
                     {
                         AudioModelComboBox.SelectedIndex = 0;
-                    }
-
-                    ModelStatusTextBlock.Text =
-                        $"Retrieved {allModels.Count} models successfully (Text: {textModels.Count}, Image: {imageModels.Count}, Audio: {audioModels.Count})";
+                    }                    ModelStatusTextBlock.Text = $"Retrieved {allModels.Count} models successfully (Text: {textModels.Count}, Image: {imageModels.Count}, Audio: {audioModels.Count})";
                     ModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
                         System.Windows.Media.Colors.Green
                     );
@@ -611,6 +585,7 @@ namespace AIAnywhere.Views
             if (!_isCapturingHotkey)
                 return;
 
+            // Always mark the event as handled to prevent default textbox behavior
             e.Handled = true;
 
             // Allow Escape to cancel capture
@@ -623,68 +598,159 @@ namespace AIAnywhere.Views
                 return;
             }
 
-            // Determine actual key and modifiers
-            var key = e.Key == Key.System ? e.SystemKey : e.Key;
-            var modifiers = Keyboard.Modifiers;
+            // Capture the key combination using our improved service
+            string hotkey = HotkeyCapture.CaptureKeyCombo(e);
 
-            // Skip standalone modifier keys
-            if (key == Key.LeftCtrl || key == Key.RightCtrl
-                || key == Key.LeftAlt || key == Key.RightAlt
-                || key == Key.LWin || key == Key.RWin
-                || key == Key.LeftShift || key == Key.RightShift)
+            // Only update if we got a valid hotkey (not just a modifier key)
+            if (!string.IsNullOrEmpty(hotkey))
             {
-                return;
+                HotkeyTextBox.Text = hotkey;
+                _isCapturingHotkey = false;
+                HotkeyTextBox.Background = System.Windows.SystemColors.WindowBrush;
+                HotkeyTextBox.Foreground = System.Windows.SystemColors.ControlTextBrush;
+                HotkeyTextBox.CaretIndex = HotkeyTextBox.Text.Length; // Move cursor to end
+
+                // Move focus away to indicate we're done
+                this.Dispatcher.BeginInvoke(
+                    new Action(() =>
+                    {
+                        ApiBaseUrlTextBox.Focus();
+                    }),
+                    System.Windows.Threading.DispatcherPriority.Input
+                );
             }
-
-            // Require at least one modifier or function key
-            if (modifiers == ModifierKeys.None && (key < Key.F1 || key > Key.F24))
-                return;
-
-            try
-            {
-                var gesture = new KeyGesture(key, modifiers);
-                HotkeyTextBox.Text = gesture.GetDisplayStringForCulture(CultureInfo.CurrentCulture);
-            }
-            catch
-            {
-                // Fallback to original value on error
-                HotkeyTextBox.Text = _originalHotkeyValue;
-            }
-
-            // Complete capture and restore appearance
-            _isCapturingHotkey = false;
-            HotkeyTextBox.Background = System.Windows.SystemColors.WindowBrush;
-            HotkeyTextBox.Foreground = System.Windows.SystemColors.ControlTextBrush;
-
-            // Move focus away to finish capture
-            SaveButton.Focus();
         }
 
-        private void HotkeyTextBox_PreviewTextInput(
-            object sender,
-            System.Windows.Input.TextCompositionEventArgs e
-        )
+        private void HotkeyTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            // Prevent text input when capturing hotkeys
-            if (_isCapturingHotkey)
-            {
-                e.Handled = true;
-            }
+            // Always prevent normal text input - we only want hotkey combinations
+            e.Handled = true;
         }
 
         private string GetActualApiKey()
         {
-            // If password was modified, use the current value
+            string result = "";
+
             if (_isApiKeyModified)
             {
-                return ApiKeyPasswordBox.Password;
+                // If user modified the field, use what they entered
+                if (string.IsNullOrEmpty(ApiKeyPasswordBox.Password))
+                {
+                    // User cleared the field
+                    result = "";
+                }
+                else if (ApiKeyPasswordBox.Password.All(c => c == '•'))
+                {
+                    // User didn't change the masked key, use existing key from config
+                    result = _config.ApiKey ?? "";
+                }
+                else
+                {
+                    // User entered a new key
+                    result = ApiKeyPasswordBox.Password;
+                }
             }
-
-            // If password wasn't modified, use the original value from config
-            return _config.ApiKey ?? "";
+            else
+            {
+                // User didn't modify the field, use existing key from config
+                result = _config.ApiKey ?? "";
+            }
+            return result ?? "";
         }
 
-        private void LoadModelsIntoComboBox()
+        private string GetSelectedLlmModel()
+        {
+            if (
+                LlmModelComboBox.SelectedItem is ComboBoxItem selectedItem
+                && selectedItem.IsEnabled
+                && selectedItem.Content != null
+            )
+            {
+                return selectedItem.Content.ToString() ?? "";
+            }
+            return LlmModelComboBox.Text ?? "";
+        }
+
+        private void SetLlmModelSelection(string modelName)
+        {
+            if (string.IsNullOrEmpty(modelName))
+            {
+                LlmModelComboBox.SelectedIndex = -1; // No selection for empty ComboBox
+                return;
+            }
+
+            // Try to find an existing item that matches the model
+            for (int i = 0; i < LlmModelComboBox.Items.Count; i++)
+            {
+                if (
+                    LlmModelComboBox.Items[i] is ComboBoxItem item
+                    && item.Content.ToString() == modelName
+                )
+                {
+                    LlmModelComboBox.SelectedIndex = i;
+                    return;
+                }
+            }
+
+            // If not found, add the custom model as a new item
+            var customItem = new ComboBoxItem { Content = modelName };
+            LlmModelComboBox.Items.Add(customItem);
+            LlmModelComboBox.SelectedItem = customItem;
+        }
+
+        private void SetImageModelSelection(string modelName)
+        {
+            if (string.IsNullOrEmpty(modelName))
+            {
+                ImageModelComboBox.SelectedIndex = -1; // No selection for empty ComboBox
+                return;
+            }
+
+            // Try to find an existing item that matches the model
+            for (int i = 0; i < ImageModelComboBox.Items.Count; i++)
+            {
+                if (
+                    ImageModelComboBox.Items[i] is ComboBoxItem item
+                    && item.Content.ToString() == modelName
+                )
+                {
+                    ImageModelComboBox.SelectedIndex = i;
+                    return;
+                }
+            }
+
+            // If not found, add the custom model as a new item
+            var customItem = new ComboBoxItem { Content = modelName };
+            ImageModelComboBox.Items.Add(customItem);
+            ImageModelComboBox.SelectedItem = customItem;
+        }
+
+        private void SetAudioModelSelection(string modelName)
+        {
+            if (string.IsNullOrEmpty(modelName))
+            {
+                AudioModelComboBox.SelectedIndex = -1; // No selection for empty ComboBox
+                return;
+            }
+
+            // Try to find an existing item that matches the model
+            for (int i = 0; i < AudioModelComboBox.Items.Count; i++)
+            {
+                if (
+                    AudioModelComboBox.Items[i] is ComboBoxItem item
+                    && item.Content.ToString() == modelName
+                )
+                {
+                    AudioModelComboBox.SelectedIndex = i;
+                    return;
+                }
+            }
+
+            // If not found, add the custom model as a new item
+            var customItem = new ComboBoxItem { Content = modelName };
+            AudioModelComboBox.Items.Add(customItem);
+            AudioModelComboBox.SelectedItem = customItem;
+        }        private void LoadModelsIntoComboBox()
         {
             // Clear existing items
             LlmModelComboBox.Items.Clear();
@@ -735,26 +801,207 @@ namespace AIAnywhere.Views
             else
             {
                 // No models in config, show instruction
-                ModelStatusTextBlock.Text =
-                    "Enter API key and base URL first, then click '⤓ Get Models'";
+                ModelStatusTextBlock.Text = "Enter API key and base URL first, then click '⤓ Get Models'";
                 ModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
                     System.Windows.Media.Colors.Gray
                 );
                 ModelStatusTextBlock.Visibility = Visibility.Visible;
+            }        }        private async void RetrieveImageModelsButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Get actual API key value
+            string actualApiKey = GetActualApiKey();
+
+            // Validate API key and base URL
+            if (string.IsNullOrWhiteSpace(actualApiKey))
+            {
+                ImageModelStatusTextBlock.Text = "API key is required to retrieve image models";
+                ImageModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Colors.Red
+                );
+                ImageModelStatusTextBlock.Visibility = Visibility.Visible;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(ApiBaseUrlTextBox.Text))
+            {
+                ImageModelStatusTextBlock.Text = "API base URL is required to retrieve image models";
+                ImageModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Colors.Red
+                );
+                ImageModelStatusTextBlock.Visibility = Visibility.Visible;
+                return;
+            }
+
+            try
+            {
+                RetrieveImageModelsButton.IsEnabled = false;
+                RetrieveImageModelsButton.Content = "Retrieving...";
+
+                ImageModelStatusTextBlock.Text = "Fetching available image models...";
+                ImageModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Colors.Blue
+                );
+                ImageModelStatusTextBlock.Visibility = Visibility.Visible;
+
+                var models = await FetchAvailableModelsAsync(ApiBaseUrlTextBox.Text, actualApiKey);
+                // Filter for potential image models (this is a simple heuristic)
+                var imageModels = models.Where(m =>
+                    m.ToLower().Contains("dall") ||
+                    m.ToLower().Contains("flux") ||
+                    m.ToLower().Contains("image") ||
+                    m.ToLower().Contains("midjourney") ||
+                    m.ToLower().Contains("stable") ||
+                    m.ToLower().Contains("dream")).ToList();
+
+                if (imageModels.Any())
+                {
+                    // Store current selection
+                    var currentSelection = GetSelectedImageModel();
+
+                    // Clear and populate ComboBox
+                    ImageModelComboBox.Items.Clear();
+                    foreach (var model in imageModels.OrderBy(m => m))
+                    {
+                        ImageModelComboBox.Items.Add(new ComboBoxItem { Content = model });
+                    }
+
+                    // Update the configuration's ImageModels list
+                    _config.ImageModels = imageModels.ToList();
+
+                    // Restore selection if it exists in the new list
+                    if (imageModels.Contains(currentSelection))
+                    {
+                        SetImageModelSelection(currentSelection);
+                    }
+                    else if (imageModels.Any())
+                    {
+                        ImageModelComboBox.SelectedIndex = 0;
+                    }
+
+                    ImageModelStatusTextBlock.Text = $"Retrieved {imageModels.Count} image models successfully";
+                    ImageModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                        System.Windows.Media.Colors.Green
+                    );
+                }
+                else
+                {
+                    ImageModelStatusTextBlock.Text = "No image models found or API returned empty list";
+                    ImageModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                        System.Windows.Media.Colors.Orange
+                    );
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ImageModelStatusTextBlock.Text = $"Failed to retrieve image models: {ex.Message}";
+                ImageModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Colors.Red
+                );
+                ImageModelStatusTextBlock.Visibility = Visibility.Visible;
+            }
+            finally
+            {
+                RetrieveImageModelsButton.IsEnabled = true;
+                RetrieveImageModelsButton.Content = "⤓ Get Models";
             }
         }
 
-        private string GetSelectedLlmModel()
+        private async void RetrieveAudioModelsButton_Click(object sender, RoutedEventArgs e)
         {
-            if (
-                LlmModelComboBox.SelectedItem is ComboBoxItem selectedItem
-                && selectedItem.IsEnabled
-                && selectedItem.Content != null
-            )
+            // Get actual API key value
+            string actualApiKey = GetActualApiKey();
+
+            // Validate API key and base URL
+            if (string.IsNullOrWhiteSpace(actualApiKey))
             {
-                return selectedItem.Content.ToString() ?? "";
+                AudioModelStatusTextBlock.Text = "API key is required to retrieve audio models";
+                AudioModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Colors.Red
+                );
+                AudioModelStatusTextBlock.Visibility = Visibility.Visible;
+                return;
             }
-            return LlmModelComboBox.Text ?? "";
+
+            if (string.IsNullOrWhiteSpace(ApiBaseUrlTextBox.Text))
+            {
+                AudioModelStatusTextBlock.Text = "API base URL is required to retrieve audio models";
+                AudioModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Colors.Red
+                );
+                AudioModelStatusTextBlock.Visibility = Visibility.Visible;
+                return;
+            }
+
+            try
+            {
+                RetrieveAudioModelsButton.IsEnabled = false;
+                RetrieveAudioModelsButton.Content = "Retrieving...";
+
+                AudioModelStatusTextBlock.Text = "Fetching available audio models...";
+                AudioModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Colors.Blue
+                );
+                AudioModelStatusTextBlock.Visibility = Visibility.Visible;
+
+                var models = await FetchAvailableModelsAsync(ApiBaseUrlTextBox.Text, actualApiKey);
+                // Filter for potential audio models
+                var audioModels = models.Where(m =>
+                    m.ToLower().Contains("whisper") ||
+                    m.ToLower().Contains("audio") ||
+                    m.ToLower().Contains("speech") ||
+                    m.ToLower().Contains("transcrib")).ToList();
+
+                if (audioModels.Any())
+                {
+                    // Store current selection
+                    var currentSelection = GetSelectedAudioModel();
+
+                    // Clear and populate ComboBox
+                    AudioModelComboBox.Items.Clear();
+                    foreach (var model in audioModels.OrderBy(m => m))
+                    {
+                        AudioModelComboBox.Items.Add(new ComboBoxItem { Content = model });
+                    }
+
+                    // Update the configuration's AudioModels list
+                    _config.AudioModels = audioModels.ToList();
+
+                    // Restore selection if it exists in the new list
+                    if (audioModels.Contains(currentSelection))
+                    {
+                        SetAudioModelSelection(currentSelection);
+                    }
+                    else if (audioModels.Any())
+                    {
+                        AudioModelComboBox.SelectedIndex = 0;
+                    }
+
+                    AudioModelStatusTextBlock.Text = $"Retrieved {audioModels.Count} audio models successfully";
+                    AudioModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                        System.Windows.Media.Colors.Green
+                    );
+                }
+                else
+                {
+                    AudioModelStatusTextBlock.Text = "No audio models found or API returned empty list";
+                    AudioModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                        System.Windows.Media.Colors.Orange
+                    );
+                }
+            }
+            catch (System.Exception ex)
+            {
+                AudioModelStatusTextBlock.Text = $"Failed to retrieve audio models: {ex.Message}";
+                AudioModelStatusTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Colors.Red
+                );
+                AudioModelStatusTextBlock.Visibility = Visibility.Visible;
+            }
+            finally
+            {
+                RetrieveAudioModelsButton.IsEnabled = true;
+                RetrieveAudioModelsButton.Content = "⤓ Get Models";
+            }
         }
 
         private string GetSelectedImageModel()
@@ -781,66 +1028,6 @@ namespace AIAnywhere.Views
                 return selectedItem.Content.ToString() ?? "";
             }
             return AudioModelComboBox.Text ?? "";
-        }
-
-        private void SetLlmModelSelection(string modelName)
-        {
-            if (string.IsNullOrEmpty(modelName))
-                return;
-
-            foreach (var item in LlmModelComboBox.Items)
-            {
-                if (item is ComboBoxItem comboItem && comboItem.Content?.ToString() == modelName)
-                {
-                    LlmModelComboBox.SelectedItem = comboItem;
-                    return;
-                }
-            }
-
-            // If model not found in list, add it as a custom item
-            var customItem = new ComboBoxItem { Content = modelName };
-            LlmModelComboBox.Items.Add(customItem);
-            LlmModelComboBox.SelectedItem = customItem;
-        }
-
-        private void SetImageModelSelection(string modelName)
-        {
-            if (string.IsNullOrEmpty(modelName))
-                return;
-
-            foreach (var item in ImageModelComboBox.Items)
-            {
-                if (item is ComboBoxItem comboItem && comboItem.Content?.ToString() == modelName)
-                {
-                    ImageModelComboBox.SelectedItem = comboItem;
-                    return;
-                }
-            }
-
-            // If model not found in list, add it as a custom item
-            var customItem = new ComboBoxItem { Content = modelName };
-            ImageModelComboBox.Items.Add(customItem);
-            ImageModelComboBox.SelectedItem = customItem;
-        }
-
-        private void SetAudioModelSelection(string modelName)
-        {
-            if (string.IsNullOrEmpty(modelName))
-                return;
-
-            foreach (var item in AudioModelComboBox.Items)
-            {
-                if (item is ComboBoxItem comboItem && comboItem.Content?.ToString() == modelName)
-                {
-                    AudioModelComboBox.SelectedItem = comboItem;
-                    return;
-                }
-            }
-
-            // If model not found in list, add it as a custom item
-            var customItem = new ComboBoxItem { Content = modelName };
-            AudioModelComboBox.Items.Add(customItem);
-            AudioModelComboBox.SelectedItem = customItem;
         }
 
         private async Task TryRefreshModelsAsync(string apiKey, string apiBaseUrl)
