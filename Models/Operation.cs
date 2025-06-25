@@ -10,6 +10,7 @@ namespace AIAnywhere.Models
         TextRewrite,
         TextTranslation,
         TextSummarization,
+        TextToSpeech,
         EmailEnhancement,
         WhatsAppResponse,
         AudioTranscription,
@@ -275,6 +276,75 @@ namespace AIAnywhere.Models
                             },
                             DefaultValue = "Portuguese",
                             Required = true,
+                        },
+                    },
+                },
+                new Operation
+                {
+                    Type = OperationType.TextToSpeech,
+                    Name = "Text to Speech",
+                    Description = "Convert text to audio speech",
+                    SystemPrompt =
+                        noThinkPrefix
+                        + systemPrompts.GetValueOrDefault(
+                            nameof(OperationType.TextToSpeech),
+                            "Convert the provided text to speech audio."
+                        ),
+                    Options = new List<OperationOption>
+                    {
+                        new OperationOption
+                        {
+                            Key = "voice",
+                            Name = "Voice",
+                            Type = OptionType.Select,
+                            Values = new List<string>
+                            {
+                                "alloy",
+                                "echo",
+                                "fable",
+                                "onyx",
+                                "nova",
+                                "shimmer",
+                            },
+                            DefaultValue = "alloy",
+                            Required = true,
+                        },
+                        new OperationOption
+                        {
+                            Key = "speed",
+                            Name = "Speed",
+                            Type = OptionType.Select,
+                            Values = new List<string>
+                            {
+                                "0.25",
+                                "0.5",
+                                "0.75",
+                                "1.0",
+                                "1.25",
+                                "1.5",
+                                "1.75",
+                                "2.0",
+                                "2.5",
+                                "3.0",
+                                "4.0",
+                            },
+                            DefaultValue = "1.0",
+                            Required = false,
+                        },
+                        new OperationOption
+                        {
+                            Key = "format",
+                            Name = "Output Format",
+                            Type = OptionType.Select,
+                            Values = new List<string>
+                            {
+                                "mp3",
+                                "opus",
+                                "aac",
+                                "flac",
+                            },
+                            DefaultValue = "mp3",
+                            Required = false,
                         },
                     },
                 },

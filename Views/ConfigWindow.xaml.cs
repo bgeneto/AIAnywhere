@@ -448,6 +448,8 @@ namespace AIAnywhere.Views
                             && !m.ToLower().Contains("whisper")
                             && !m.ToLower().Contains("speech")
                             && !m.ToLower().Contains("transcrib")
+                            && !m.ToLower().Contains("shuttle")
+                            && !m.ToLower().Contains("tts")
                         )
                         .ToList();
 
@@ -459,6 +461,7 @@ namespace AIAnywhere.Views
                             || m.ToLower().Contains("midjourney")
                             || m.ToLower().Contains("stable")
                             || m.ToLower().Contains("dream")
+                            || m.ToLower().Contains("shuttle")
                         )
                         .ToList();
 

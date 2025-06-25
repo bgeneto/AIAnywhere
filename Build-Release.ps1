@@ -2,7 +2,7 @@
 # Creates both self-contained and lightweight/optimized distributions
 
 param(
-    [string]$Version = "1.0.3"
+    [string]$Version = "1.0.4"
 )
 
 Write-Host "Building AI Anywhere v$Version..." -ForegroundColor Green
@@ -13,9 +13,16 @@ if (Test-Path "AIAnywhere-Distribution") { Remove-Item "AIAnywhere-Distribution"
 if (Test-Path "AIAnywhere-Optimized") { Remove-Item "AIAnywhere-Optimized" -Recurse -Force }
 Remove-Item "AIAnywhere-v*.zip" -ErrorAction SilentlyContinue
 
-# Build optimized version (requires .NET runtime)
-Write-Host "Building optimized version..." -ForegroundColor Yellow
-dotnet publish AIAnywhere.sln -c Release -r win-x64 --self-contained false /p:PublishReadyToRun=false
+# Build speed-optimized version (requires .NET runtime)
+Write-Host "Building speed-optimized version..." -ForegroundColor Yellow
+dotnet publish AIAnywhere.sln -c Release -r win-x64 --self-contained false `
+    /p:PublishReadyToRun=true `
+    /p:OptimizationPreference=Speed `
+    /p:TieredCompilation=true `
+    /p:TieredPGO=true `
+    /p:ReadyToRunUseCrossgen2=true `
+    /p:DebuggerSupport=false `
+    /p:EnableEventPipeProfiler=false
 
 # Create optimized distribution
 New-Item -ItemType Directory -Name "AIAnywhere-Optimized" | Out-Null

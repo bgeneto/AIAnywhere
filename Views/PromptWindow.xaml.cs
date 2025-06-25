@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -331,6 +332,23 @@ namespace AIAnywhere.Views
                             await HandleImageResponse(response.Content, selectedOperation.Type);
                         }
                     }
+                    else if (selectedOperation.Type == OperationType.TextToSpeech)
+                    {
+                        // Handle Text to Speech audio response
+                        if (response.IsAudio && response.AudioData != null)
+                        {
+                            await HandleAudioResponse(response.AudioData, response.AudioFormat ?? "mp3");
+                        }
+                        else
+                        {
+                            MessageBox.Show(
+                                "No audio data received from the API.",
+                                "Error",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error
+                            );
+                        }
+                    }
                     else
                     {
                         // Handle text responses based on user's paste behavior preference
@@ -647,6 +665,60 @@ namespace AIAnywhere.Views
             {
                 MessageBox.Show(
                     $"Error showing image review window: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
+            }
+        }
+
+        private async Task HandleAudioResponse(byte[] audioData, string format)
+        {
+            try
+            {
+                // Show save file dialog with theme awareness
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Save Audio File",
+                    Filter = format.ToLower() switch
+                    {
+                        "mp3" => "MP3 Files|*.mp3|All Files|*.*",
+                        "opus" => "Opus Files|*.opus|All Files|*.*",
+                        "aac" => "AAC Files|*.aac|All Files|*.*",
+                        "flac" => "FLAC Files|*.flac|All Files|*.*",
+                        _ => "Audio Files|*.mp3|All Files|*.*"
+                    },
+                    DefaultExt = format.ToLower(),
+                    FileName = $"speech_{DateTime.Now:yyyyMMdd_HHmmss}.{format.ToLower()}",
+                    AddExtension = true,
+                    OverwritePrompt = true,
+                    ValidateNames = true
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    // Save the audio file
+                    await File.WriteAllBytesAsync(saveFileDialog.FileName, audioData);
+                    
+                    // Show success message with option to open file location
+                    var result = MessageBox.Show(
+                        $"Audio file saved successfully!\n\nLocation: {saveFileDialog.FileName}\n\nWould you like to open the file location?",
+                        "Success",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information
+                    );
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        // Open file location in Windows Explorer
+                        System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{saveFileDialog.FileName}\"");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error saving audio file: {ex.Message}",
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error
