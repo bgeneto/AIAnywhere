@@ -631,10 +631,16 @@ namespace AIAnywhere.Views
             var modifiers = Keyboard.Modifiers;
 
             // Skip standalone modifier keys
-            if (key == Key.LeftCtrl || key == Key.RightCtrl
-                || key == Key.LeftAlt || key == Key.RightAlt
-                || key == Key.LWin || key == Key.RWin
-                || key == Key.LeftShift || key == Key.RightShift)
+            if (
+                key == Key.LeftCtrl
+                || key == Key.RightCtrl
+                || key == Key.LeftAlt
+                || key == Key.RightAlt
+                || key == Key.LWin
+                || key == Key.RWin
+                || key == Key.LeftShift
+                || key == Key.RightShift
+            )
             {
                 return;
             }

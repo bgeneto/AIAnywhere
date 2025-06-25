@@ -269,7 +269,7 @@ namespace AIAnywhere.Models
                     + "9. Keep it authentic and human-like\n"
                     + "10. NO explanations or meta-commentary\n\n"
                     + "Generate a natural WhatsApp response to this message:\n",
-                [nameof(OperationType.AudioTranscription)] =
+                [nameof(OperationType.SpeechToText)] =
                     "TASK: Transcribe the provided audio file to text.\n\n"
                     + "TRANSCRIPTION RULES:\n"
                     + "1. Return only the transcribed text, no explanations\n"

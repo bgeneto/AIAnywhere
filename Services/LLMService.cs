@@ -6,13 +6,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AIAnywhere.Models;
 using OpenAI;
 using OpenAI.Audio;
 using OpenAI.Chat;
 using OpenAI.Images;
-using System.Text.RegularExpressions;
 
 namespace AIAnywhere.Services
 {
@@ -46,7 +46,7 @@ namespace AIAnywhere.Services
                 {
                     return await ProcessImageGenerationAsync(request);
                 }
-                else if (request.OperationType == OperationType.AudioTranscription)
+                else if (request.OperationType == OperationType.SpeechToText)
                 {
                     return await ProcessAudioTranscriptionAsync(request);
                 }
@@ -193,10 +193,15 @@ namespace AIAnywhere.Services
             };
         }
 
-        private async Task<string> TranscribeAudioHttpAsync(string filePath, string model, string language)
+        private async Task<string> TranscribeAudioHttpAsync(
+            string filePath,
+            string model,
+            string language
+        )
         {
             using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.ApiKey);
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.ApiKey);
             // Use user-configured ApiBaseUrl if provided, otherwise default
             var baseUrl = string.IsNullOrWhiteSpace(_config.ApiBaseUrl)
                 ? "https://api.openai.com/v1"
@@ -206,7 +211,7 @@ namespace AIAnywhere.Services
             {
                 { new StreamContent(File.OpenRead(filePath)), "file", Path.GetFileName(filePath) },
                 { new StringContent(model), "model" },
-                { new StringContent("text"), "response_format" }
+                { new StringContent("text"), "response_format" },
             };
             if (!string.IsNullOrEmpty(language) && language != "auto")
                 form.Add(new StringContent(language), "language");
@@ -233,14 +238,27 @@ namespace AIAnywhere.Services
         {
             try
             {
-                if (string.IsNullOrEmpty(request.AudioFilePath) || !File.Exists(request.AudioFilePath))
-                    return new LLMResponse { Success = false, Error = "Audio file not found or not specified" };
+                if (
+                    string.IsNullOrEmpty(request.AudioFilePath)
+                    || !File.Exists(request.AudioFilePath)
+                )
+                    return new LLMResponse
+                    {
+                        Success = false,
+                        Error = "Audio file not found or not specified",
+                    };
 
-                var audioModel = !string.IsNullOrEmpty(_config.AudioModel) ? _config.AudioModel : "whisper-1";
+                var audioModel = !string.IsNullOrEmpty(_config.AudioModel)
+                    ? _config.AudioModel
+                    : "whisper-1";
                 var language = request.Options.GetValueOrDefault("language", "auto");
 
-                // Use HTTP fallback transcription
-                var rawText = await TranscribeAudioHttpAsync(request.AudioFilePath, audioModel, language);
+                // Use HTTP transcription
+                var rawText = await TranscribeAudioHttpAsync(
+                    request.AudioFilePath,
+                    audioModel,
+                    language
+                );
 
                 // Normalize whitespace: collapse all whitespace characters to single spaces
                 rawText = Regex.Replace(rawText, @"\s+", " ").Trim();
@@ -256,7 +274,11 @@ namespace AIAnywhere.Services
             }
             catch (Exception ex)
             {
-                return new LLMResponse { Success = false, Error = $"Audio Transcription Error: {ex.Message}" };
+                return new LLMResponse
+                {
+                    Success = false,
+                    Error = $"Audio Transcription Error: {ex.Message}",
+                };
             }
         }
 
@@ -265,11 +287,15 @@ namespace AIAnywhere.Services
             try
             {
                 if (string.IsNullOrWhiteSpace(request.Prompt))
-                    return new LLMResponse { Success = false, Error = "Text prompt is required for Text to Speech" };
+                    return new LLMResponse
+                    {
+                        Success = false,
+                        Error = "Text prompt is required for Text to Speech",
+                    };
 
                 // Get TTS model from configuration (hardcoded to tts-1-hd)
                 var ttsModel = _config.TtsModel;
-                
+
                 // Get options from request
                 var voice = request.Options.GetValueOrDefault("voice", "alloy");
                 var speedStr = request.Options.GetValueOrDefault("speed", "1.0");
@@ -285,28 +311,45 @@ namespace AIAnywhere.Services
                 speed = Math.Max(0.25f, Math.Min(4.0f, speed));
 
                 // Generate speech using HTTP API
-                var audioData = await GenerateSpeechHttpAsync(request.Prompt, ttsModel, voice, speed, format);
-                
-                return new LLMResponse 
-                { 
-                    Success = true, 
+                var audioData = await GenerateSpeechHttpAsync(
+                    request.Prompt,
+                    ttsModel,
+                    voice,
+                    speed,
+                    format
+                );
+
+                return new LLMResponse
+                {
+                    Success = true,
                     Content = "Audio generated successfully",
                     IsAudio = true,
                     AudioData = audioData,
-                    AudioFormat = format
+                    AudioFormat = format,
                 };
             }
             catch (Exception ex)
             {
-                return new LLMResponse { Success = false, Error = $"Text to Speech Error: {ex.Message}" };
+                return new LLMResponse
+                {
+                    Success = false,
+                    Error = $"Text to Speech Error: {ex.Message}",
+                };
             }
         }
 
-        private async Task<byte[]> GenerateSpeechHttpAsync(string text, string model, string voice, float speed, string format)
+        private async Task<byte[]> GenerateSpeechHttpAsync(
+            string text,
+            string model,
+            string voice,
+            float speed,
+            string format
+        )
         {
             using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.ApiKey);
-            
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.ApiKey);
+
             // Use user-configured ApiBaseUrl if provided, otherwise default
             var baseUrl = string.IsNullOrWhiteSpace(_config.ApiBaseUrl)
                 ? "https://api.openai.com/v1"
@@ -319,7 +362,7 @@ namespace AIAnywhere.Services
                 input = text,
                 voice = voice,
                 response_format = format,
-                speed = speed
+                speed = speed,
             };
 
             var json = JsonSerializer.Serialize(requestBody);
@@ -327,7 +370,7 @@ namespace AIAnywhere.Services
 
             var response = await client.PostAsync(url, content);
             response.EnsureSuccessStatusCode();
-            
+
             return await response.Content.ReadAsByteArrayAsync();
         }
     }

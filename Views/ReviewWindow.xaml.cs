@@ -168,7 +168,8 @@ namespace AIAnywhere.Views
                 {
                     ShowErrorState("No image URL provided");
                     CharacterCountTextBlock.Text = "No image URL";
-                }            }
+                }
+            }
             catch (Exception ex)
             {
                 ShowErrorState($"Error loading image: {ex.Message}\n\nImage URL: {_imageUrl}");
@@ -234,7 +235,8 @@ namespace AIAnywhere.Views
         private void CopySelectedMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (!string.IsNullOrEmpty(ResultTextBox.SelectedText))
-            {                try
+            {
+                try
                 {
                     Clipboard.SetText(ResultTextBox.SelectedText);
                 }
@@ -256,7 +258,10 @@ namespace AIAnywhere.Views
             ResultTextBox.Focus();
         }
 
-        private void ResultTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        private void ResultTextBox_TextChanged(
+            object sender,
+            System.Windows.Controls.TextChangedEventArgs e
+        )
         {
             // Update character count when text changes
             if (CharacterCountTextBlock != null)
@@ -290,7 +295,8 @@ namespace AIAnywhere.Views
                     // Format text for clipboard and paste - use current TextBox content
                     var formattedText = TextProcessor.FormatForClipboard(ResultTextBox.Text);
                     Clipboard.SetText(formattedText);
-                }            }
+                }
+            }
             catch
             {
                 // Silently handle clipboard errors

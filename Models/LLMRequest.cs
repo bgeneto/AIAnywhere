@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 
 namespace AIAnywhere.Models
-{    public class LLMRequest
+{
+    public class LLMRequest
     {
         public OperationType OperationType { get; set; }
         public string Prompt { get; set; } = "";

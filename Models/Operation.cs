@@ -13,7 +13,7 @@ namespace AIAnywhere.Models
         TextToSpeech,
         EmailEnhancement,
         WhatsAppResponse,
-        AudioTranscription,
+        SpeechToText,
     }
 
     public class Operation
@@ -44,45 +44,6 @@ namespace AIAnywhere.Models
 
             return new List<Operation>
             {
-                new Operation
-                {
-                    Type = OperationType.AudioTranscription,
-                    Name = "Audio Transcription",
-                    Description = "Convert audio files to text",
-                    SystemPrompt =
-                        noThinkPrefix
-                        + systemPrompts.GetValueOrDefault(
-                            nameof(OperationType.AudioTranscription),
-                            "Transcribe the provided audio file to text with proper punctuation and formatting."
-                        ),
-                    Options = new List<OperationOption>
-                    {
-                        new OperationOption
-                        {
-                            Key = "language",
-                            Name = "Language (optional)",
-                            Type = OptionType.Select,
-                            Values = new List<string>
-                            {
-                                "auto",
-                                "en",
-                                "es",
-                                "fr",
-                                "de",
-                                "it",
-                                "pt",
-                                "ru",
-                                "ja",
-                                "ko",
-                                "zh",
-                                "ar",
-                                "hi",
-                            },
-                            DefaultValue = "auto",
-                            Required = false,
-                        },
-                    },
-                },
                 new Operation
                 {
                     Type = OperationType.GeneralChat,
@@ -170,8 +131,47 @@ namespace AIAnywhere.Models
                 },
                 new Operation
                 {
+                    Type = OperationType.SpeechToText,
+                    Name = "Speech-to-Text (STT)",
+                    Description = "Convert audio files to text",
+                    SystemPrompt =
+                        noThinkPrefix
+                        + systemPrompts.GetValueOrDefault(
+                            nameof(OperationType.SpeechToText),
+                            "Transcribe the provided audio file to text with proper punctuation and formatting."
+                        ),
+                    Options = new List<OperationOption>
+                    {
+                        new OperationOption
+                        {
+                            Key = "language",
+                            Name = "Language (optional)",
+                            Type = OptionType.Select,
+                            Values = new List<string>
+                            {
+                                "auto",
+                                "en",
+                                "es",
+                                "fr",
+                                "de",
+                                "it",
+                                "pt",
+                                "ru",
+                                "ja",
+                                "ko",
+                                "zh",
+                                "ar",
+                                "hi",
+                            },
+                            DefaultValue = "auto",
+                            Required = false,
+                        },
+                    },
+                },
+                new Operation
+                {
                     Type = OperationType.TextRewrite,
-                    Name = "Text Rewrite",
+                    Name = "Text Correction & Rewrite",
                     Description = "Rewrite and improve text",
                     SystemPrompt =
                         noThinkPrefix
@@ -241,48 +241,8 @@ namespace AIAnywhere.Models
                 },
                 new Operation
                 {
-                    Type = OperationType.TextTranslation,
-                    Name = "Text Translation",
-                    Description = "Translate text to another language",
-                    SystemPrompt =
-                        noThinkPrefix
-                        + systemPrompts.GetValueOrDefault(
-                            nameof(OperationType.TextTranslation),
-                            "You are a professional translator. Translate the provided text to {language}. Return only the translated text without any explanations."
-                        ),
-                    Options = new List<OperationOption>
-                    {
-                        new OperationOption
-                        {
-                            Key = "language",
-                            Name = "Target Language",
-                            Type = OptionType.Select,
-                            Values = new List<string>
-                            {
-                                "Arabic",
-                                "Bengali",
-                                "Chinese",
-                                "English",
-                                "French",
-                                "German",
-                                "Hindi",
-                                "Italian",
-                                "Japanese",
-                                "Korean",
-                                "Portuguese",
-                                "Punjabi",
-                                "Russian",
-                                "Spanish",
-                            },
-                            DefaultValue = "Portuguese",
-                            Required = true,
-                        },
-                    },
-                },
-                new Operation
-                {
                     Type = OperationType.TextToSpeech,
-                    Name = "Text to Speech",
+                    Name = "Text-to-Speech (TTS)",
                     Description = "Convert text to audio speech",
                     SystemPrompt =
                         noThinkPrefix
@@ -336,15 +296,49 @@ namespace AIAnywhere.Models
                             Key = "format",
                             Name = "Output Format",
                             Type = OptionType.Select,
-                            Values = new List<string>
-                            {
-                                "mp3",
-                                "opus",
-                                "aac",
-                                "flac",
-                            },
+                            Values = new List<string> { "mp3", "opus", "aac", "flac" },
                             DefaultValue = "mp3",
                             Required = false,
+                        },
+                    },
+                },
+                new Operation
+                {
+                    Type = OperationType.TextTranslation,
+                    Name = "Text Translation",
+                    Description = "Translate text to another language",
+                    SystemPrompt =
+                        noThinkPrefix
+                        + systemPrompts.GetValueOrDefault(
+                            nameof(OperationType.TextTranslation),
+                            "You are a professional translator. Translate the provided text to {language}. Return only the translated text without any explanations."
+                        ),
+                    Options = new List<OperationOption>
+                    {
+                        new OperationOption
+                        {
+                            Key = "language",
+                            Name = "Target Language",
+                            Type = OptionType.Select,
+                            Values = new List<string>
+                            {
+                                "Arabic",
+                                "Bengali",
+                                "Chinese",
+                                "English",
+                                "French",
+                                "German",
+                                "Hindi",
+                                "Italian",
+                                "Japanese",
+                                "Korean",
+                                "Portuguese",
+                                "Punjabi",
+                                "Russian",
+                                "Spanish",
+                            },
+                            DefaultValue = "Portuguese",
+                            Required = true,
                         },
                     },
                 },
@@ -385,9 +379,10 @@ namespace AIAnywhere.Models
                             Type = OptionType.Select,
                             Values = new List<string> { "SHORT", "MEDIUM", "LONG" },
                             DefaultValue = "SHORT",
-                            Required = false,                        },
+                            Required = false,
+                        },
                     },
-                }
+                },
             };
         }
     }

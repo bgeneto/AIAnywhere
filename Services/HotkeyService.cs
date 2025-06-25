@@ -67,7 +67,9 @@ namespace AIAnywhere.Services
                 return true;
             }
             return false;
-        }        private (uint modifiers, Keys key) ParseHotkey(string hotkey)
+        }
+
+        private (uint modifiers, Keys key) ParseHotkey(string hotkey)
         {
             uint modifiers = 0;
             Keys key = Keys.None;
@@ -187,9 +189,12 @@ namespace AIAnywhere.Services
                     break;
                 default:
                     // Try to parse as a function key
-                    if (keyPart.StartsWith("f", StringComparison.OrdinalIgnoreCase) &&
-                        int.TryParse(keyPart.Substring(1), out int fNum) &&
-                        fNum >= 1 && fNum <= 24)
+                    if (
+                        keyPart.StartsWith("f", StringComparison.OrdinalIgnoreCase)
+                        && int.TryParse(keyPart.Substring(1), out int fNum)
+                        && fNum >= 1
+                        && fNum <= 24
+                    )
                     {
                         key = Keys.F1 + (fNum - 1);
                     }
@@ -205,7 +210,11 @@ namespace AIAnywhere.Services
                     // Handle numeric keypad
                     else if (keyPart.StartsWith("num", StringComparison.OrdinalIgnoreCase))
                     {
-                        var numKey = keyPart.Replace("num", "numpad", StringComparison.OrdinalIgnoreCase);
+                        var numKey = keyPart.Replace(
+                            "num",
+                            "numpad",
+                            StringComparison.OrdinalIgnoreCase
+                        );
                         if (Enum.TryParse(numKey, true, out Keys numPadKey))
                         {
                             key = numPadKey;

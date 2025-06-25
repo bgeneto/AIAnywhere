@@ -275,7 +275,7 @@
                                 <ComboBox
                                     Name="AudioModelComboBox"
                                     ui:ControlHelper.PlaceholderText="Select audio model..."
-                                    ToolTip="Select your audio transcription model" />
+                                    ToolTip="Select your Speech-to-Text model" />
                             </StackPanel>
                             <!--  Status Text  -->
                             <TextBlock

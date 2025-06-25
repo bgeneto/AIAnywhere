@@ -107,15 +107,15 @@ namespace AIAnywhere.Views
         {
             // Show/hide audio upload panel based on operation type
             AudioUploadPanel.Visibility =
-                operation.Type == OperationType.AudioTranscription
+                operation.Type == OperationType.SpeechToText
                     ? Visibility.Visible
                     : Visibility.Collapsed;
 
-            // Show/hide prompt content panel - hide for audio transcription
+            // Show/hide prompt content panel - hide for Speech-to-Text (STT)
             if (_promptContentGrid != null)
             {
                 _promptContentGrid.Visibility =
-                    operation.Type == OperationType.AudioTranscription
+                    operation.Type == OperationType.SpeechToText
                         ? Visibility.Collapsed
                         : Visibility.Visible;
             }
@@ -128,9 +128,9 @@ namespace AIAnywhere.Views
 
             // For any operation change, if the prompt is empty, try to populate it
             // This ensures all operations can benefit from selected text or clipboard content
-            // Skip for audio transcription since prompt is hidden
+            // Skip for Speech-to-Text (STT) since prompt is hidden
             if (
-                operation.Type != OperationType.AudioTranscription
+                operation.Type != OperationType.SpeechToText
                 && string.IsNullOrEmpty(PromptTextBox.Text)
             )
             {
@@ -257,8 +257,8 @@ namespace AIAnywhere.Views
                     return;
                 }
 
-                // For audio transcription, check if file is selected
-                if (selectedOperation.Type == OperationType.AudioTranscription)
+                // For Speech-to-Text (STT), check if file is selected
+                if (selectedOperation.Type == OperationType.SpeechToText)
                 {
                     if (
                         string.IsNullOrEmpty(_selectedAudioFile)
@@ -314,7 +314,7 @@ namespace AIAnywhere.Views
                     SelectedText = _selectedText,
                     Options = GetSelectedOptions(),
                     AudioFilePath =
-                        selectedOperation.Type == OperationType.AudioTranscription
+                        selectedOperation.Type == OperationType.SpeechToText
                             ? _selectedAudioFile
                             : null,
                 };
@@ -341,7 +341,10 @@ namespace AIAnywhere.Views
                         // Handle Text to Speech audio response
                         if (response.IsAudio && response.AudioData != null)
                         {
-                            await HandleAudioResponse(response.AudioData, response.AudioFormat ?? "mp3");
+                            await HandleAudioResponse(
+                                response.AudioData,
+                                response.AudioFormat ?? "mp3"
+                            );
                         }
                         else
                         {
@@ -690,20 +693,20 @@ namespace AIAnywhere.Views
                         "opus" => "Opus Files|*.opus|All Files|*.*",
                         "aac" => "AAC Files|*.aac|All Files|*.*",
                         "flac" => "FLAC Files|*.flac|All Files|*.*",
-                        _ => "Audio Files|*.mp3|All Files|*.*"
+                        _ => "Audio Files|*.mp3|All Files|*.*",
                     },
                     DefaultExt = format.ToLower(),
                     FileName = $"speech_{DateTime.Now:yyyyMMdd_HHmmss}.{format.ToLower()}",
                     AddExtension = true,
                     OverwritePrompt = true,
-                    ValidateNames = true
+                    ValidateNames = true,
                 };
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     // Save the audio file
                     await File.WriteAllBytesAsync(saveFileDialog.FileName, audioData);
-                    
+
                     // Show success message with option to open file location
                     var result = MessageBox.Show(
                         $"Audio file saved successfully!\n\nLocation: {saveFileDialog.FileName}\n\nWould you like to open the file location?",
@@ -715,7 +718,10 @@ namespace AIAnywhere.Views
                     if (result == MessageBoxResult.Yes)
                     {
                         // Open file location in Windows Explorer
-                        System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{saveFileDialog.FileName}\"");
+                        System.Diagnostics.Process.Start(
+                            "explorer.exe",
+                            $"/select,\"{saveFileDialog.FileName}\""
+                        );
                     }
                 }
             }
@@ -968,14 +974,25 @@ namespace AIAnywhere.Views
                 }
 
                 // Check if file extension is supported
-                var supportedExtensions = new[] { ".mp3", ".mp4", ".wav", ".m4a", ".ogg", ".aac", ".flac", ".wma", ".webm" };
+                var supportedExtensions = new[]
+                {
+                    ".mp3",
+                    ".mp4",
+                    ".wav",
+                    ".m4a",
+                    ".ogg",
+                    ".aac",
+                    ".flac",
+                    ".wma",
+                    ".webm",
+                };
                 var fileExtension = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
-                
+
                 if (!supportedExtensions.Contains(fileExtension))
                 {
                     MessageBox.Show(
-                        $"Unsupported file format: {fileExtension}\n\n" +
-                        "Supported formats: MP3, MP4, WAV, M4A, OGG, AAC, FLAC, WMA, WebM",
+                        $"Unsupported file format: {fileExtension}\n\n"
+                            + "Supported formats: MP3, MP4, WAV, M4A, OGG, AAC, FLAC, WMA, WebM",
                         "Unsupported Format",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning
@@ -1011,27 +1028,40 @@ namespace AIAnywhere.Views
                 {
                     // Get the files being dragged
                     string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                    
+
                     if (files.Length == 1 && File.Exists(files[0])) // We only accept one file at a time
                     {
                         // Get file extension
                         string fileExt = Path.GetExtension(files[0]).ToLowerInvariant();
-                        
+
                         // Supported file extensions
-                        string[] supportedFormats = { ".mp3", ".mp4", ".wav", ".m4a", ".ogg", ".aac", ".flac", ".wma", ".webm" };
-                        
+                        string[] supportedFormats =
+                        {
+                            ".mp3",
+                            ".mp4",
+                            ".wav",
+                            ".m4a",
+                            ".ogg",
+                            ".aac",
+                            ".flac",
+                            ".wma",
+                            ".webm",
+                        };
+
                         // Check if file is supported
                         if (supportedFormats.Contains(fileExt))
                         {
                             // Set visual feedback
-                            AudioFileTextBox.Background = new SolidColorBrush(Color.FromArgb(40, 0, 120, 0));
+                            AudioFileTextBox.Background = new SolidColorBrush(
+                                Color.FromArgb(40, 0, 120, 0)
+                            );
                             e.Effects = DragDropEffects.Copy;
                             e.Handled = true;
                             return;
                         }
                     }
                 }
-                
+
                 // If we got here, it's not a valid drag operation
                 e.Effects = DragDropEffects.None;
                 e.Handled = true;
@@ -1054,15 +1084,26 @@ namespace AIAnywhere.Views
                 {
                     // Get the files being dragged
                     string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                    
+
                     if (files.Length == 1 && File.Exists(files[0])) // We only accept one file at a time
                     {
                         // Get file extension
                         string fileExt = Path.GetExtension(files[0]).ToLowerInvariant();
-                        
+
                         // Supported file extensions
-                        string[] supportedFormats = { ".mp3", ".mp4", ".wav", ".m4a", ".ogg", ".aac", ".flac", ".wma", ".webm" };
-                        
+                        string[] supportedFormats =
+                        {
+                            ".mp3",
+                            ".mp4",
+                            ".wav",
+                            ".m4a",
+                            ".ogg",
+                            ".aac",
+                            ".flac",
+                            ".wma",
+                            ".webm",
+                        };
+
                         // Check if file is supported
                         if (supportedFormats.Contains(fileExt))
                         {
@@ -1072,7 +1113,7 @@ namespace AIAnywhere.Views
                         }
                     }
                 }
-                
+
                 // If we got here, it's not a valid drag operation
                 e.Effects = DragDropEffects.None;
                 e.Handled = true;
@@ -1093,7 +1134,7 @@ namespace AIAnywhere.Views
                 // Restore original background
                 if (_originalAudioFileTextBoxBackground != null)
                     AudioFileTextBox.Background = _originalAudioFileTextBoxBackground;
-                
+
                 e.Handled = true;
             }
             catch (Exception ex)
@@ -1121,10 +1162,21 @@ namespace AIAnywhere.Views
                     {
                         // Get file extension
                         string fileExt = Path.GetExtension(files[0]).ToLowerInvariant();
-                        
+
                         // Supported file extensions
-                        string[] supportedFormats = { ".mp3", ".mp4", ".wav", ".m4a", ".ogg", ".aac", ".flac", ".wma", ".webm" };
-                        
+                        string[] supportedFormats =
+                        {
+                            ".mp3",
+                            ".mp4",
+                            ".wav",
+                            ".m4a",
+                            ".ogg",
+                            ".aac",
+                            ".flac",
+                            ".wma",
+                            ".webm",
+                        };
+
                         // Check if file is supported
                         if (supportedFormats.Contains(fileExt))
                         {
@@ -1141,25 +1193,45 @@ namespace AIAnywhere.Views
                             }
                             else
                             {
-                                MessageBox.Show("File is too large. Maximum size is 25MB.", "File Size Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                MessageBox.Show(
+                                    "File is too large. Maximum size is 25MB.",
+                                    "File Size Error",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Warning
+                                );
                             }
                         }
                         else
                         {
-                            MessageBox.Show($"Unsupported file format. Please use: MP3, MP4, WAV, M4A, OGG, AAC, FLAC, WMA, WebM", "Format Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            MessageBox.Show(
+                                $"Unsupported file format. Please use: MP3, MP4, WAV, M4A, OGG, AAC, FLAC, WMA, WebM",
+                                "Format Error",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning
+                            );
                         }
                     }
                     else if (files.Length > 1)
                     {
-                        MessageBox.Show("Please drag only one file at a time.", "Multiple Files", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show(
+                            "Please drag only one file at a time.",
+                            "Multiple Files",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning
+                        );
                     }
                 }
-                
+
                 e.Handled = true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error processing file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    $"Error processing file: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
                 e.Handled = true;
             }
         }
@@ -1175,9 +1247,13 @@ namespace AIAnywhere.Views
         {
             // Prevent key input except for Ctrl+A (Select All), Ctrl+C (Copy), etc.
             // Allow navigation keys but prevent modification keys
-            if (e.Key == Key.Delete || e.Key == Key.Back || e.Key == Key.Space || 
-                (e.Key >= Key.A && e.Key <= Key.Z && Keyboard.Modifiers == ModifierKeys.None) ||
-                (e.Key >= Key.D0 && e.Key <= Key.D9 && Keyboard.Modifiers == ModifierKeys.None))
+            if (
+                e.Key == Key.Delete
+                || e.Key == Key.Back
+                || e.Key == Key.Space
+                || (e.Key >= Key.A && e.Key <= Key.Z && Keyboard.Modifiers == ModifierKeys.None)
+                || (e.Key >= Key.D0 && e.Key <= Key.D9 && Keyboard.Modifiers == ModifierKeys.None)
+            )
             {
                 e.Handled = true;
             }
