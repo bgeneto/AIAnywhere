@@ -79,9 +79,16 @@
                     Name="AudioFileTextBox"
                     Grid.Column="0"
                     Margin="0,0,8,0"
-                    ui:ControlHelper.PlaceholderText="No file selected..."
-                    IsReadOnly="True"
-                    ToolTip="Select an audio file to transcribe" />
+                    ui:ControlHelper.PlaceholderText="Drag &amp; drop audio file here or use Browse button"
+                    IsReadOnly="False"
+                    ToolTip="Select an audio file to transcribe or drag &amp; drop here"
+                    AllowDrop="True"
+                    PreviewDragEnter="AudioFileTextBox_DragEnter"
+                    PreviewDragOver="AudioFileTextBox_DragOver"
+                    PreviewDragLeave="AudioFileTextBox_DragLeave"
+                    PreviewDrop="AudioFileTextBox_Drop"
+                    PreviewTextInput="AudioFileTextBox_PreviewTextInput"
+                    PreviewKeyDown="AudioFileTextBox_PreviewKeyDown" />
 
                 <Button
                     Name="BrowseAudioButton"
@@ -96,7 +103,7 @@
                 Grid.Row="2"
                 FontSize="11"
                 Foreground="DarkGray"
-                Text="Supported formats: MP3, MP4, WAV, M4A, OGG, AAC, FLAC (max 25MB)" />
+                Text="Supported formats: MP3, MP4, WAV, M4A, OGG, AAC, FLAC, WMA, WebM (max 25MB) • Drag &amp; drop or use Browse button" />
         </Grid>
         <!--  Prompt Input  -->
         <Grid Name="PromptContentGrid" Grid.Row="5">
