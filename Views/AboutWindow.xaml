@@ -64,7 +64,7 @@
             HorizontalAlignment="Center"
             FontSize="14"
             Style="{StaticResource SubtleTextBlock}"
-            Text="Version 1.0.3" />
+            Text="Version 1.0.6" />
 
         <!--  Description  -->
         <TextBlock

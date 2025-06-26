@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 
 namespace AIAnywhere.Models
-{    public class LLMRequest
+{
+    public class LLMRequest
     {
         public OperationType OperationType { get; set; }
         public string Prompt { get; set; } = "";
@@ -17,5 +18,8 @@ namespace AIAnywhere.Models
         public string Error { get; set; } = "";
         public bool IsImage { get; set; } = false;
         public string? ImageUrl { get; set; }
+        public bool IsAudio { get; set; } = false;
+        public byte[]? AudioData { get; set; }
+        public string? AudioFormat { get; set; }
     }
 }

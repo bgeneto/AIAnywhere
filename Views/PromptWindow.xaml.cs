@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using AIAnywhere.Models;
 using AIAnywhere.Services;
 
@@ -20,6 +22,9 @@ namespace AIAnywhere.Views
 
         // Add field to reference the prompt content grid
         private Grid? _promptContentGrid;
+
+        // Store original background brush for the AudioFileTextBox
+        private Brush? _originalAudioFileTextBoxBackground;
 
         public PromptWindow(string selectedText = "", IntPtr originalWindowHandle = default)
         {
@@ -102,15 +107,15 @@ namespace AIAnywhere.Views
         {
             // Show/hide audio upload panel based on operation type
             AudioUploadPanel.Visibility =
-                operation.Type == OperationType.AudioTranscription
+                operation.Type == OperationType.SpeechToText
                     ? Visibility.Visible
                     : Visibility.Collapsed;
 
-            // Show/hide prompt content panel - hide for audio transcription
+            // Show/hide prompt content panel - hide for Speech-to-Text (STT)
             if (_promptContentGrid != null)
             {
                 _promptContentGrid.Visibility =
-                    operation.Type == OperationType.AudioTranscription
+                    operation.Type == OperationType.SpeechToText
                         ? Visibility.Collapsed
                         : Visibility.Visible;
             }
@@ -123,9 +128,9 @@ namespace AIAnywhere.Views
 
             // For any operation change, if the prompt is empty, try to populate it
             // This ensures all operations can benefit from selected text or clipboard content
-            // Skip for audio transcription since prompt is hidden
+            // Skip for Speech-to-Text (STT) since prompt is hidden
             if (
-                operation.Type != OperationType.AudioTranscription
+                operation.Type != OperationType.SpeechToText
                 && string.IsNullOrEmpty(PromptTextBox.Text)
             )
             {
@@ -252,8 +257,8 @@ namespace AIAnywhere.Views
                     return;
                 }
 
-                // For audio transcription, check if file is selected
-                if (selectedOperation.Type == OperationType.AudioTranscription)
+                // For Speech-to-Text (STT), check if file is selected
+                if (selectedOperation.Type == OperationType.SpeechToText)
                 {
                     if (
                         string.IsNullOrEmpty(_selectedAudioFile)
@@ -309,7 +314,7 @@ namespace AIAnywhere.Views
                     SelectedText = _selectedText,
                     Options = GetSelectedOptions(),
                     AudioFilePath =
-                        selectedOperation.Type == OperationType.AudioTranscription
+                        selectedOperation.Type == OperationType.SpeechToText
                             ? _selectedAudioFile
                             : null,
                 };
@@ -329,6 +334,26 @@ namespace AIAnywhere.Views
                         {
                             // Fallback for legacy image responses or direct URL
                             await HandleImageResponse(response.Content, selectedOperation.Type);
+                        }
+                    }
+                    else if (selectedOperation.Type == OperationType.TextToSpeech)
+                    {
+                        // Handle Text to Speech audio response
+                        if (response.IsAudio && response.AudioData != null)
+                        {
+                            await HandleAudioResponse(
+                                response.AudioData,
+                                response.AudioFormat ?? "mp3"
+                            );
+                        }
+                        else
+                        {
+                            MessageBox.Show(
+                                "No audio data received from the API.",
+                                "Error",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error
+                            );
                         }
                     }
                     else
@@ -654,6 +679,63 @@ namespace AIAnywhere.Views
             }
         }
 
+        private async Task HandleAudioResponse(byte[] audioData, string format)
+        {
+            try
+            {
+                // Show save file dialog with theme awareness
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Save Audio File",
+                    Filter = format.ToLower() switch
+                    {
+                        "mp3" => "MP3 Files|*.mp3|All Files|*.*",
+                        "opus" => "Opus Files|*.opus|All Files|*.*",
+                        "aac" => "AAC Files|*.aac|All Files|*.*",
+                        "flac" => "FLAC Files|*.flac|All Files|*.*",
+                        _ => "Audio Files|*.mp3|All Files|*.*",
+                    },
+                    DefaultExt = format.ToLower(),
+                    FileName = $"speech_{DateTime.Now:yyyyMMdd_HHmmss}.{format.ToLower()}",
+                    AddExtension = true,
+                    OverwritePrompt = true,
+                    ValidateNames = true,
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    // Save the audio file
+                    await File.WriteAllBytesAsync(saveFileDialog.FileName, audioData);
+
+                    // Show success message with option to open file location
+                    var result = MessageBox.Show(
+                        $"Audio file saved successfully!\n\nLocation: {saveFileDialog.FileName}\n\nWould you like to open the file location?",
+                        "Success",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information
+                    );
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        // Open file location in Windows Explorer
+                        System.Diagnostics.Process.Start(
+                            "explorer.exe",
+                            $"/select,\"{saveFileDialog.FileName}\""
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error saving audio file: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
+            }
+        }
+
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)
         {
             if (sender is ContextMenu contextMenu)
@@ -857,27 +939,7 @@ namespace AIAnywhere.Views
 
                 if (openFileDialog.ShowDialog() == true)
                 {
-                    var selectedFile = openFileDialog.FileName;
-
-                    // Check file size (25MB limit for OpenAI Whisper)
-                    var fileInfo = new System.IO.FileInfo(selectedFile);
-                    const long maxSizeInBytes = 25 * 1024 * 1024; // 25MB
-
-                    if (fileInfo.Length > maxSizeInBytes)
-                    {
-                        MessageBox.Show(
-                            $"The selected file is too large ({fileInfo.Length / (1024 * 1024):F1} MB). "
-                                + "Maximum file size is 25 MB.",
-                            "File Too Large",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Warning
-                        );
-                        return;
-                    }
-
-                    _selectedAudioFile = selectedFile;
-                    AudioFileTextBox.Text = System.IO.Path.GetFileName(selectedFile);
-                    AudioFileTextBox.ToolTip = selectedFile;
+                    SetSelectedAudioFile(openFileDialog.FileName);
                 }
             }
             catch (Exception ex)
@@ -888,6 +950,312 @@ namespace AIAnywhere.Views
                     MessageBoxButton.OK,
                     MessageBoxImage.Error
                 );
+            }
+        }
+
+        private void SetSelectedAudioFile(string filePath)
+        {
+            try
+            {
+                // Check file size (25MB limit for OpenAI Whisper)
+                var fileInfo = new System.IO.FileInfo(filePath);
+                const long maxSizeInBytes = 25 * 1024 * 1024; // 25MB
+
+                if (fileInfo.Length > maxSizeInBytes)
+                {
+                    MessageBox.Show(
+                        $"The selected file is too large ({fileInfo.Length / (1024 * 1024):F1} MB). "
+                            + "Maximum file size is 25 MB.",
+                        "File Too Large",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning
+                    );
+                    return;
+                }
+
+                // Check if file extension is supported
+                var supportedExtensions = new[]
+                {
+                    ".mp3",
+                    ".mp4",
+                    ".wav",
+                    ".m4a",
+                    ".ogg",
+                    ".aac",
+                    ".flac",
+                    ".wma",
+                    ".webm",
+                };
+                var fileExtension = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
+
+                if (!supportedExtensions.Contains(fileExtension))
+                {
+                    MessageBox.Show(
+                        $"Unsupported file format: {fileExtension}\n\n"
+                            + "Supported formats: MP3, MP4, WAV, M4A, OGG, AAC, FLAC, WMA, WebM",
+                        "Unsupported Format",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning
+                    );
+                    return;
+                }
+
+                _selectedAudioFile = filePath;
+                AudioFileTextBox.Text = System.IO.Path.GetFileName(filePath);
+                AudioFileTextBox.ToolTip = filePath;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error processing audio file: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
+            }
+        }
+
+        private void AudioFileTextBox_DragEnter(object sender, DragEventArgs e)
+        {
+            try
+            {
+                // Save the original background color if needed
+                if (_originalAudioFileTextBoxBackground == null)
+                    _originalAudioFileTextBoxBackground = AudioFileTextBox.Background;
+
+                // Check if the data is a file
+                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    // Get the files being dragged
+                    string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+                    if (files.Length == 1 && File.Exists(files[0])) // We only accept one file at a time
+                    {
+                        // Get file extension
+                        string fileExt = Path.GetExtension(files[0]).ToLowerInvariant();
+
+                        // Supported file extensions
+                        string[] supportedFormats =
+                        {
+                            ".mp3",
+                            ".mp4",
+                            ".wav",
+                            ".m4a",
+                            ".ogg",
+                            ".aac",
+                            ".flac",
+                            ".wma",
+                            ".webm",
+                        };
+
+                        // Check if file is supported
+                        if (supportedFormats.Contains(fileExt))
+                        {
+                            // Set visual feedback
+                            AudioFileTextBox.Background = new SolidColorBrush(
+                                Color.FromArgb(40, 0, 120, 0)
+                            );
+                            e.Effects = DragDropEffects.Copy;
+                            e.Handled = true;
+                            return;
+                        }
+                    }
+                }
+
+                // If we got here, it's not a valid drag operation
+                e.Effects = DragDropEffects.None;
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                // Log error if needed
+                System.Diagnostics.Debug.WriteLine($"Error in drag enter: {ex.Message}");
+                e.Effects = DragDropEffects.None;
+                e.Handled = true;
+            }
+        }
+
+        private void AudioFileTextBox_DragOver(object sender, DragEventArgs e)
+        {
+            try
+            {
+                // Check if the data is a file
+                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    // Get the files being dragged
+                    string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+                    if (files.Length == 1 && File.Exists(files[0])) // We only accept one file at a time
+                    {
+                        // Get file extension
+                        string fileExt = Path.GetExtension(files[0]).ToLowerInvariant();
+
+                        // Supported file extensions
+                        string[] supportedFormats =
+                        {
+                            ".mp3",
+                            ".mp4",
+                            ".wav",
+                            ".m4a",
+                            ".ogg",
+                            ".aac",
+                            ".flac",
+                            ".wma",
+                            ".webm",
+                        };
+
+                        // Check if file is supported
+                        if (supportedFormats.Contains(fileExt))
+                        {
+                            e.Effects = DragDropEffects.Copy;
+                            e.Handled = true;
+                            return;
+                        }
+                    }
+                }
+
+                // If we got here, it's not a valid drag operation
+                e.Effects = DragDropEffects.None;
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                // Log error if needed
+                System.Diagnostics.Debug.WriteLine($"Error in drag over: {ex.Message}");
+                e.Effects = DragDropEffects.None;
+                e.Handled = true;
+            }
+        }
+
+        private void AudioFileTextBox_DragLeave(object sender, DragEventArgs e)
+        {
+            try
+            {
+                // Restore original background
+                if (_originalAudioFileTextBoxBackground != null)
+                    AudioFileTextBox.Background = _originalAudioFileTextBoxBackground;
+
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                // Log error if needed
+                System.Diagnostics.Debug.WriteLine($"Error in drag leave: {ex.Message}");
+            }
+        }
+
+        private void AudioFileTextBox_Drop(object sender, DragEventArgs e)
+        {
+            try
+            {
+                // Restore original background
+                if (_originalAudioFileTextBoxBackground != null)
+                    AudioFileTextBox.Background = _originalAudioFileTextBoxBackground;
+
+                // Check if the dropped data contains file(s)
+                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    // Get the dropped files
+                    string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+                    if (files.Length == 1 && File.Exists(files[0]))
+                    {
+                        // Get file extension
+                        string fileExt = Path.GetExtension(files[0]).ToLowerInvariant();
+
+                        // Supported file extensions
+                        string[] supportedFormats =
+                        {
+                            ".mp3",
+                            ".mp4",
+                            ".wav",
+                            ".m4a",
+                            ".ogg",
+                            ".aac",
+                            ".flac",
+                            ".wma",
+                            ".webm",
+                        };
+
+                        // Check if file is supported
+                        if (supportedFormats.Contains(fileExt))
+                        {
+                            // Check file size (25MB limit)
+                            FileInfo fileInfo = new FileInfo(files[0]);
+                            if (fileInfo.Length <= 25 * 1024 * 1024) // 25MB in bytes
+                            {
+                                // Set the selected audio file and update UI
+                                _selectedAudioFile = files[0];
+                                AudioFileTextBox.Text = Path.GetFileName(files[0]);
+                                AudioFileTextBox.ToolTip = files[0];
+                                e.Handled = true;
+                                return;
+                            }
+                            else
+                            {
+                                MessageBox.Show(
+                                    "File is too large. Maximum size is 25MB.",
+                                    "File Size Error",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Warning
+                                );
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show(
+                                $"Unsupported file format. Please use: MP3, MP4, WAV, M4A, OGG, AAC, FLAC, WMA, WebM",
+                                "Format Error",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning
+                            );
+                        }
+                    }
+                    else if (files.Length > 1)
+                    {
+                        MessageBox.Show(
+                            "Please drag only one file at a time.",
+                            "Multiple Files",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning
+                        );
+                    }
+                }
+
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error processing file: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
+                e.Handled = true;
+            }
+        }
+
+        private void AudioFileTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            // Prevent all text input to keep the TextBox "read-only" for typing
+            // but still allow drag and drop operations
+            e.Handled = true;
+        }
+
+        private void AudioFileTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            // Prevent key input except for Ctrl+A (Select All), Ctrl+C (Copy), etc.
+            // Allow navigation keys but prevent modification keys
+            if (
+                e.Key == Key.Delete
+                || e.Key == Key.Back
+                || e.Key == Key.Space
+                || (e.Key >= Key.A && e.Key <= Key.Z && Keyboard.Modifiers == ModifierKeys.None)
+                || (e.Key >= Key.D0 && e.Key <= Key.D9 && Keyboard.Modifiers == ModifierKeys.None)
+            )
+            {
+                e.Handled = true;
             }
         }
     }

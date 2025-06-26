@@ -16,6 +16,7 @@ namespace AIAnywhere.Views
         private readonly string _operationType;
         private readonly IntPtr _originalWindowHandle;
         private readonly bool _isImage;
+        private readonly bool _isImageGeneration;
         private readonly string? _imageUrl;
         private BitmapImage? _downloadedImage;
 
@@ -40,6 +41,7 @@ namespace AIAnywhere.Views
             _operationType = operationType;
             _originalWindowHandle = originalWindowHandle;
             _isImage = false;
+            _isImageGeneration = false;
             _imageUrl = null;
 
             InitializeWindow();
@@ -61,6 +63,9 @@ namespace AIAnywhere.Views
             _operationType = operationType;
             _originalWindowHandle = originalWindowHandle;
             _isImage = true;
+            _isImageGeneration =
+                operationType.Equals("ImageGeneration", StringComparison.OrdinalIgnoreCase)
+                || operationType.Equals("Image Generation", StringComparison.OrdinalIgnoreCase);
             _imageUrl = imageUrl;
 
             InitializeWindow();
@@ -112,6 +117,12 @@ namespace AIAnywhere.Views
             // Start fade-in animation
             var fadeInStoryboard = (Storyboard)FindResource("FadeInAnimation");
             fadeInStoryboard.Begin(this);
+
+            // Show Save Image button only for Image Generation operations
+            if (_isImageGeneration)
+            {
+                SaveImageButton.Visibility = Visibility.Visible;
+            }
 
             // Focus on the paste button
             PasteButton.Focus();
@@ -168,7 +179,8 @@ namespace AIAnywhere.Views
                 {
                     ShowErrorState("No image URL provided");
                     CharacterCountTextBlock.Text = "No image URL";
-                }            }
+                }
+            }
             catch (Exception ex)
             {
                 ShowErrorState($"Error loading image: {ex.Message}\n\nImage URL: {_imageUrl}");
@@ -230,11 +242,17 @@ namespace AIAnywhere.Views
             CopyToClipboard();
         }
 
+        private async void SaveImageButton_Click(object sender, RoutedEventArgs e)
+        {
+            await SaveImageToFile();
+        }
+
         // Context menu handlers for enhanced text selection
         private void CopySelectedMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (!string.IsNullOrEmpty(ResultTextBox.SelectedText))
-            {                try
+            {
+                try
                 {
                     Clipboard.SetText(ResultTextBox.SelectedText);
                 }
@@ -256,7 +274,10 @@ namespace AIAnywhere.Views
             ResultTextBox.Focus();
         }
 
-        private void ResultTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        private void ResultTextBox_TextChanged(
+            object sender,
+            System.Windows.Controls.TextChangedEventArgs e
+        )
         {
             // Update character count when text changes
             if (CharacterCountTextBlock != null)
@@ -290,7 +311,8 @@ namespace AIAnywhere.Views
                     // Format text for clipboard and paste - use current TextBox content
                     var formattedText = TextProcessor.FormatForClipboard(ResultTextBox.Text);
                     Clipboard.SetText(formattedText);
-                }            }
+                }
+            }
             catch
             {
                 // Silently handle clipboard errors
@@ -362,6 +384,213 @@ namespace AIAnywhere.Views
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning
                 );
+            }
+        }
+
+        private async Task SaveImageToFile()
+        {
+            try
+            {
+                if (!_isImage || (_downloadedImage == null && string.IsNullOrEmpty(_imageUrl)))
+                {
+                    MessageBox.Show(
+                        "No image available to save.",
+                        "Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning
+                    );
+                    return;
+                }
+
+                // Determine file extension from URL or default to PNG
+                string extension = "png";
+                if (!string.IsNullOrEmpty(_imageUrl))
+                {
+                    var uri = new Uri(_imageUrl);
+                    var path = uri.AbsolutePath.ToLowerInvariant();
+                    if (path.Contains(".jpg") || path.Contains(".jpeg"))
+                        extension = "jpg";
+                    else if (path.Contains(".png"))
+                        extension = "png";
+                    else if (path.Contains(".gif"))
+                        extension = "gif";
+                    else if (path.Contains(".bmp"))
+                        extension = "bmp";
+                    else if (path.Contains(".webp"))
+                        extension = "webp";
+                }
+
+                // Generate random filename
+                string randomFileName =
+                    $"ai_image_{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid().ToString("N")[..8]}.{extension}";
+
+                // Show save file dialog
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Save Generated Image",
+                    Filter = extension.ToLower() switch
+                    {
+                        "jpg" or "jpeg" =>
+                            "JPEG Images|*.jpg;*.jpeg|PNG Images|*.png|All Files|*.*",
+                        "png" => "PNG Images|*.png|JPEG Images|*.jpg;*.jpeg|All Files|*.*",
+                        "gif" => "GIF Images|*.gif|PNG Images|*.png|All Files|*.*",
+                        "bmp" => "Bitmap Images|*.bmp|PNG Images|*.png|All Files|*.*",
+                        "webp" => "WebP Images|*.webp|PNG Images|*.png|All Files|*.*",
+                        _ => "PNG Images|*.png|JPEG Images|*.jpg;*.jpeg|All Files|*.*",
+                    },
+                    DefaultExt = extension,
+                    FileName = randomFileName,
+                    AddExtension = true,
+                    OverwritePrompt = true,
+                    ValidateNames = true,
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    // Save the image
+                    bool saved = false;
+
+                    if (_downloadedImage != null)
+                    {
+                        // Save from BitmapImage
+                        saved = await SaveBitmapImageToFile(
+                            _downloadedImage,
+                            saveFileDialog.FileName
+                        );
+                    }
+                    else if (!string.IsNullOrEmpty(_imageUrl))
+                    {
+                        // Download and save directly from URL
+                        saved = await SaveImageFromUrlToFile(_imageUrl, saveFileDialog.FileName);
+                    }
+
+                    if (saved)
+                    {
+                        // Show success message with option to open file location
+                        var result = MessageBox.Show(
+                            $"Image saved successfully!\n\nLocation: {saveFileDialog.FileName}\n\nWould you like to open the file location?",
+                            "Image Saved",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Information
+                        );
+
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            // Open file location in Windows Explorer
+                            System.Diagnostics.Process.Start(
+                                "explorer.exe",
+                                $"/select,\"{saveFileDialog.FileName}\""
+                            );
+                        }
+
+                        // Briefly change button text to show feedback
+                        var originalContent = SaveImageButton.Content;
+                        SaveImageButton.Content = "✓ Saved!";
+                        SaveImageButton.IsEnabled = false;
+
+                        // Reset after 2 seconds
+                        var timer = new System.Windows.Threading.DispatcherTimer
+                        {
+                            Interval = TimeSpan.FromSeconds(2),
+                        };
+                        timer.Tick += (s, e) =>
+                        {
+                            SaveImageButton.Content = originalContent;
+                            SaveImageButton.IsEnabled = true;
+                            timer.Stop();
+                        };
+                        timer.Start();
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "Failed to save image. Please try again.",
+                            "Save Error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error saving image: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
+            }
+        }
+
+        private Task<bool> SaveBitmapImageToFile(BitmapImage bitmapImage, string filePath)
+        {
+            return Task.Run(() =>
+            {
+                try
+                {
+                    // Create encoder based on file extension
+                    BitmapEncoder encoder = System
+                        .IO.Path.GetExtension(filePath)
+                        .ToLowerInvariant() switch
+                    {
+                        ".jpg" or ".jpeg" => new JpegBitmapEncoder(),
+                        ".png" => new PngBitmapEncoder(),
+                        ".gif" => new GifBitmapEncoder(),
+                        ".bmp" => new BmpBitmapEncoder(),
+                        _ => new PngBitmapEncoder(), // Default to PNG
+                    };
+
+                    encoder.Frames.Add(BitmapFrame.Create(bitmapImage));
+
+                    // Ensure directory exists
+                    var directory = System.IO.Path.GetDirectoryName(filePath);
+                    if (!string.IsNullOrEmpty(directory) && !System.IO.Directory.Exists(directory))
+                    {
+                        System.IO.Directory.CreateDirectory(directory);
+                    }
+
+                    using var fileStream = new System.IO.FileStream(
+                        filePath,
+                        System.IO.FileMode.Create,
+                        System.IO.FileAccess.Write
+                    );
+                    encoder.Save(fileStream);
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error saving bitmap image: {ex.Message}");
+                    return false;
+                }
+            });
+        }
+
+        private async Task<bool> SaveImageFromUrlToFile(string imageUrl, string filePath)
+        {
+            try
+            {
+                using var httpClient = new System.Net.Http.HttpClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(30);
+
+                var imageBytes = await httpClient.GetByteArrayAsync(imageUrl);
+                
+                // Ensure directory exists
+                var directory = System.IO.Path.GetDirectoryName(filePath);
+                if (!string.IsNullOrEmpty(directory) && !System.IO.Directory.Exists(directory))
+                {
+                    System.IO.Directory.CreateDirectory(directory);
+                }
+
+                await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving image from URL: {ex.Message}");
+                return false;
             }
         }
 

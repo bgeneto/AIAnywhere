@@ -12,12 +12,12 @@ namespace AIAnywhere.Services
 
             // Handle the most common escaped sequences from LLM responses
             // Based on your example: "Olá [Nome],\\n\\nEspero..."
-            text = text.Replace("\\n", "\n");      // \n becomes actual newline
-            text = text.Replace("\\r\\n", "\n");   // \r\n becomes newline
-            text = text.Replace("\\r", "\n");      // \r becomes newline
-            text = text.Replace("\\t", "\t");      // \t becomes actual tab
-            text = text.Replace("\\\"", "\"");     // \" becomes actual quote
-            text = text.Replace("\\'", "'");       // \' becomes actual apostrophe
+            text = text.Replace("\\n", "\n"); // \n becomes actual newline
+            text = text.Replace("\\r\\n", "\n"); // \r\n becomes newline
+            text = text.Replace("\\r", "\n"); // \r becomes newline
+            text = text.Replace("\\t", "\t"); // \t becomes actual tab
+            text = text.Replace("\\\"", "\""); // \" becomes actual quote
+            text = text.Replace("\\'", "'"); // \' becomes actual apostrophe
 
             // Clean up excessive whitespace
             text = Regex.Replace(text, @"\n\s*\n\s*\n", "\n\n");

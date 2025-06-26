@@ -22,7 +22,9 @@ namespace AIAnywhere.Services
         private const byte VK_C = 0x43;
         private const byte VK_V = 0x56;
         private const byte VK_A = 0x41;
-        private const uint KEYEVENTF_KEYUP = 0x0002;        public static string GetSelectedText()
+        private const uint KEYEVENTF_KEYUP = 0x0002;
+
+        public static string GetSelectedText()
         {
             try
             {
@@ -46,7 +48,9 @@ namespace AIAnywhere.Services
             {
                 return "";
             }
-        }        private static string GetSelectedTextViaKeyboardSimulation()
+        }
+
+        private static string GetSelectedTextViaKeyboardSimulation()
         {
             try
             {
@@ -76,7 +80,8 @@ namespace AIAnywhere.Services
                 // Clear clipboard to detect if Ctrl+C works
                 try
                 {
-                    Clipboard.Clear();                }
+                    Clipboard.Clear();
+                }
                 catch
                 {
                     // Error clearing clipboard
@@ -110,7 +115,8 @@ namespace AIAnywhere.Services
                             selectedText = ""; // No actual selection was made
                         }
                     }
-                    else                    {
+                    else
+                    {
                         // No text in clipboard after Ctrl+C
                     }
                 }
@@ -260,7 +266,9 @@ namespace AIAnywhere.Services
                     MessageBoxImage.Error
                 );
             }
-        }        public static string GetClipboardText()
+        }
+
+        public static string GetClipboardText()
         {
             try
             {

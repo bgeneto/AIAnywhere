@@ -13,9 +13,9 @@
     <PublishTrimmed>false</PublishTrimmed>
     <InvariantGlobalization>false</InvariantGlobalization>
     <!-- Version Information -->
-    <AssemblyVersion>1.0.3</AssemblyVersion>
-    <FileVersion>1.0.3</FileVersion>
-    <Version>1.0.3</Version>
+    <AssemblyVersion>1.0.6</AssemblyVersion>
+    <FileVersion>1.0.6</FileVersion>
+    <Version>1.0.6</Version>
     <AssemblyTitle>AI Anywhere</AssemblyTitle>
     <AssemblyDescription>A powerful AI assistant that works anywhere on your desktop</AssemblyDescription>
     <AssemblyConfiguration>Release</AssemblyConfiguration>

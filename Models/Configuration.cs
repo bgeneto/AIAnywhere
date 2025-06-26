@@ -20,6 +20,7 @@ namespace AIAnywhere.Models
         private string _llmModel = "";
         private string _imageModel = "";
         private string _audioModel = "";
+        private string _ttsModel = "tts-1-hd";
         private PasteBehavior _pasteBehavior = PasteBehavior.ReviewMode;
         private bool _disableTextSelection = false;
         private bool _disableThinking = false;
@@ -97,6 +98,16 @@ namespace AIAnywhere.Models
             {
                 _audioModel = value;
                 OnPropertyChanged(nameof(AudioModel));
+            }
+        }
+
+        public string TtsModel
+        {
+            get => _ttsModel;
+            set
+            {
+                _ttsModel = value;
+                OnPropertyChanged(nameof(TtsModel));
             }
         }
 
@@ -221,6 +232,15 @@ namespace AIAnywhere.Models
                     + "6. Focus on facts and actionable items\n"
                     + "7. NO explanations or meta-commentary\n\n"
                     + "Create the {length} {format} summary:\n",
+                [nameof(OperationType.TextToSpeech)] =
+                    "TASK: Convert text to speech audio file.\n\n"
+                    + "TEXT-TO-SPEECH RULES:\n"
+                    + "1. Use the provided text exactly as given\n"
+                    + "2. Apply the selected voice and speed settings\n"
+                    + "3. Generate high-quality audio output\n"
+                    + "4. Maintain natural speech patterns and pronunciation\n"
+                    + "5. Process the complete text without truncation\n\n"
+                    + "Convert this text to speech:\n",
                 [nameof(OperationType.EmailEnhancement)] =
                     "LANGUAGE RULE: Write your reply in the EXACT same language as the original email.\n\n"
                     + "TASK: Generate an email reply with {tone} tone and {length} length.\n\n"
@@ -249,7 +269,7 @@ namespace AIAnywhere.Models
                     + "9. Keep it authentic and human-like\n"
                     + "10. NO explanations or meta-commentary\n\n"
                     + "Generate a natural WhatsApp response to this message:\n",
-                [nameof(OperationType.AudioTranscription)] =
+                [nameof(OperationType.SpeechToText)] =
                     "TASK: Transcribe the provided audio file to text.\n\n"
                     + "TRANSCRIPTION RULES:\n"
                     + "1. Return only the transcribed text, no explanations\n"
