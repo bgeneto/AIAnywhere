@@ -164,7 +164,7 @@ This ensures maximum compatibility across different applications and scenarios.
 ### Performance Settings
 
 #### Text Selection and Clipboard Detection
-**Setting**: Enable automatic text selection and clipboard detection
+**Setting**: Disable automatic text selection and clipboard detection
 
 AIAnywhere offers flexible performance optimization to match your workflow preferences:
 
@@ -192,7 +192,7 @@ Power users can customize AI behavior by editing the `config.json` file directly
   "ApiKey": "encrypted_key_here",
   "LlmModel": "gpt-4o",
   "PasteBehavior": "ReviewMode",
-  "EnableTextSelection": true,
+  "DisableTextSelection": false,
   "SystemPrompts": {
     "GeneralChat": "Your custom system prompt for general tasks...",
     "EmailEnhancement": "Custom email reply instructions...",

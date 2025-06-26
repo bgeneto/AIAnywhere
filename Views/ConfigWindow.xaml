@@ -172,15 +172,15 @@
                                 Grid.Column="0"
                                 Margin="0,0,0,6">
                                 <CheckBox
-                                    Name="EnableTextSelectionCheckBox"
-                                    Content="📋 Enable automatic text selection and clipboard detection"
+                                    Name="DisableTextSelectionCheckBox"
+                                    Content="📋 Disable automatic text selection and clipboard detection"
                                     FontWeight="SemiBold"
-                                    ToolTip="When enabled, detects selected text to prefill prompts" />
+                                    ToolTip="When enabled, disables selected text detection to improve responsiveness" />
                                 <TextBlock
                                     Margin="24,2,0,0"
                                     FontSize="10"
                                     Foreground="DarkGray"
-                                    Text="Disabling this feature makes the app more responsive but less productive" />
+                                    Text="Enabling this feature makes the app more responsive but less productive" />
                             </StackPanel>
 
                             <!--  Thinking Mode Option  -->

@@ -77,7 +77,7 @@ namespace AIAnywhere.Views
 
             UpdatePasteBehaviorDescription();
             // Set text selection preference
-            EnableTextSelectionCheckBox.IsChecked = _config.EnableTextSelection;
+            DisableTextSelectionCheckBox.IsChecked = _config.DisableTextSelection;
 
             // Set disable thinking preference
             DisableThinkingCheckBox.IsChecked = _config.DisableThinking;
@@ -150,7 +150,7 @@ namespace AIAnywhere.Views
             }
 
             // Save text selection preference
-            _config.EnableTextSelection = EnableTextSelectionCheckBox.IsChecked ?? true;
+            _config.DisableTextSelection = DisableTextSelectionCheckBox.IsChecked ?? false;
 
             // Save disable thinking preference
             _config.DisableThinking = DisableThinkingCheckBox.IsChecked ?? false;

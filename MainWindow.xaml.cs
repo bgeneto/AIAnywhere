@@ -122,7 +122,7 @@ namespace AIAnywhere
 
             // Check if text selection is enabled in configuration
             var config = ConfigurationService.GetConfiguration();
-            if (config.EnableTextSelection)
+            if (!config.DisableTextSelection)
             {
                 // Small delay to ensure the hotkey processing doesn't interfere with text selection
                 System.Threading.Thread.Sleep(50);

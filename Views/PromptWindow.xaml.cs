@@ -66,8 +66,8 @@ namespace AIAnywhere.Views
             // NOTE: This method is called with Dispatcher.BeginInvoke to fix timing issues
             // where the PromptTextBox might not be properly initialized during constructor
 
-            // Check if text selection is enabled in configuration
-            if (!_config.EnableTextSelection)
+            // Check if text selection is disabled in configuration
+            if (_config.DisableTextSelection)
             {
                 return;
             }
@@ -115,8 +115,8 @@ namespace AIAnywhere.Views
                         : Visibility.Visible;
             }
 
-            // Check if text selection is enabled in configuration
-            if (!_config.EnableTextSelection)
+            // Check if text selection is disabled in configuration
+            if (_config.DisableTextSelection)
             {
                 return; // Skip text prefilling if disabled
             }

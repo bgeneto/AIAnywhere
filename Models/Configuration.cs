@@ -21,7 +21,7 @@ namespace AIAnywhere.Models
         private string _imageModel = "";
         private string _audioModel = "";
         private PasteBehavior _pasteBehavior = PasteBehavior.ReviewMode;
-        private bool _enableTextSelection = true;
+        private bool _disableTextSelection = false;
         private bool _disableThinking = false;
 
         public string Hotkey
@@ -111,16 +111,16 @@ namespace AIAnywhere.Models
         }
 
         /// <summary>
-        /// Enable automatic text selection and clipboard detection for prompt prefilling.
-        /// When disabled, the prompt window opens faster but without automatic text prefilling.
+        /// Disable automatic text selection and clipboard detection for prompt prefilling.
+        /// When enabled, the prompt window opens faster but without automatic text prefilling.
         /// </summary>
-        public bool EnableTextSelection
+        public bool DisableTextSelection
         {
-            get => _enableTextSelection;
+            get => _disableTextSelection;
             set
             {
-                _enableTextSelection = value;
-                OnPropertyChanged(nameof(EnableTextSelection));
+                _disableTextSelection = value;
+                OnPropertyChanged(nameof(DisableTextSelection));
             }
         }
 
