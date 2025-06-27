@@ -129,8 +129,142 @@ namespace AIAnywhere.Services
         {
             try
             {
+                // Try HTTP-based generation first (supports exact sizes and custom parameters)
+                var httpResult = await ProcessImageGenerationHttpAsync(request);
+                if (httpResult.Success)
+                {
+                    return httpResult;
+                }
+
+                // Fallback to library-based generation
+                return await ProcessImageGenerationLibraryAsync(request);
+            }
+            catch (Exception ex)
+            {
+                return new LLMResponse
+                {
+                    Success = false,
+                    Error = $"Image Generation Error: {ex.Message}",
+                };
+            }
+        }
+
+        /// <summary>
+        /// HTTP-based image generation that supports exact sizes and custom parameters
+        /// </summary>
+        private async Task<LLMResponse> ProcessImageGenerationHttpAsync(LLMRequest request)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.ApiKey);
+
+                // Use user-configured ApiBaseUrl if provided, otherwise default
+                var baseUrl = string.IsNullOrWhiteSpace(_config.ApiBaseUrl)
+                    ? "https://api.openai.com/v1"
+                    : _config.ApiBaseUrl.TrimEnd('/');
+                var url = $"{baseUrl}/images/generations";
+
+                // Get parameters from request options
+                var sizeString = request.Options.GetValueOrDefault("size", "512x512");
+                var quality = request.Options.GetValueOrDefault("quality", "standard");
+                var imageModel = !string.IsNullOrEmpty(_config.ImageModel)
+                    ? _config.ImageModel
+                    : "FLUX.1-schnell";
+
+                // Create request body with exact size support
+                var requestBody = new Dictionary<string, object>
+                {
+                    ["model"] = imageModel,
+                    ["prompt"] = request.Prompt,
+                    ["size"] = sizeString, // Use exact size string
+                    ["quality"] = quality,
+                    ["response_format"] = "url",
+                    ["n"] = 1,
+                };
+
+                // Add custom parameters if supported (like steps for some models)
+                if (request.Options.ContainsKey("steps"))
+                {
+                    if (int.TryParse(request.Options["steps"], out int steps))
+                    {
+                        requestBody["steps"] = steps;
+                    }
+                }
+
+                // Add style parameter if provided
+                if (request.Options.ContainsKey("style"))
+                {
+                    requestBody["style"] = request.Options["style"];
+                }
+
+                var json = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await client.PostAsync(url, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return new LLMResponse
+                    {
+                        Success = false,
+                        Error =
+                            $"HTTP Image Generation Failed: {response.StatusCode} - {errorContent}",
+                    };
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(responseContent);
+
+                if (
+                    doc.RootElement.TryGetProperty("data", out var dataArray)
+                    && dataArray.GetArrayLength() > 0
+                )
+                {
+                    var firstItem = dataArray[0];
+                    if (firstItem.TryGetProperty("url", out var urlProp))
+                    {
+                        var imageUrl = urlProp.GetString();
+                        if (!string.IsNullOrEmpty(imageUrl))
+                        {
+                            return new LLMResponse
+                            {
+                                Success = true,
+                                Content = imageUrl,
+                                IsImage = true,
+                                ImageUrl = imageUrl,
+                            };
+                        }
+                    }
+                }
+
+                return new LLMResponse
+                {
+                    Success = false,
+                    Error = "No image URL found in HTTP response",
+                };
+            }
+            catch (Exception ex)
+            {
+                return new LLMResponse
+                {
+                    Success = false,
+                    Error = $"HTTP Image Generation Error: {ex.Message}",
+                };
+            }
+        }
+
+        /// <summary>
+        /// Library-based image generation (fallback method)
+        /// </summary>
+        private async Task<LLMResponse> ProcessImageGenerationLibraryAsync(LLMRequest request)
+        {
+            try
+            {
                 // Parse image size from user options
-                var sizeString = request.Options.GetValueOrDefault("size", "1024x1024");
+                var sizeString = request.Options.GetValueOrDefault("size", "512x512");
                 var imageSize = ParseImageSize(sizeString);
                 var quality = request.Options.GetValueOrDefault("quality", "standard");
                 var imageQuality =
@@ -145,15 +279,18 @@ namespace AIAnywhere.Services
                     Quality = imageQuality,
                     ResponseFormat = GeneratedImageFormat.Uri,
                 };
+
                 // Get image client with configured image model or fallback
                 var imageModel = !string.IsNullOrEmpty(_config.ImageModel)
                     ? _config.ImageModel
                     : "FLUX.1-schnell";
                 var imageClient = _openAIClient.GetImageClient(imageModel);
+
                 var imageResult = await imageClient.GenerateImageAsync(
                     request.Prompt,
                     imageOptions
                 );
+
                 if (imageResult.Value?.ImageUri != null)
                 {
                     var imageUrl = imageResult.Value.ImageUri.ToString();
@@ -166,14 +303,18 @@ namespace AIAnywhere.Services
                     };
                 }
 
-                return new LLMResponse { Success = false, Error = "No image generated" };
+                return new LLMResponse
+                {
+                    Success = false,
+                    Error = "No image generated by library method",
+                };
             }
             catch (Exception ex)
             {
                 return new LLMResponse
                 {
                     Success = false,
-                    Error = $"Image Generation Error: {ex.Message}",
+                    Error = $"Library Image Generation Error: {ex.Message}",
                 };
             }
         }
@@ -182,14 +323,39 @@ namespace AIAnywhere.Services
         {
             return sizeString switch
             {
-                "512x512" => GeneratedImageSize.W512xH512,
-                "768x768" => GeneratedImageSize.W1024xH1024, // Map to closest available
-                "1024x768" => GeneratedImageSize.W1024xH1024, // Map to closest available
-                "768x1024" => GeneratedImageSize.W1024xH1024, // Map to closest available
-                "1024x1024" => GeneratedImageSize.W1024xH1024,
+                // 1:1 Square sizes
+                "512x512" => CustomImageSizes.W512xH512,
+                "768x768" => CustomImageSizes.W768xH768,
+                "1024x1024" => CustomImageSizes.W1024xH1024,
+
+                // 2:3 Portrait sizes
+                "512x768" => CustomImageSizes.W512xH768,
+                "768x1152" => CustomImageSizes.W768xH1152,
+                "832x1248" => CustomImageSizes.W832xH1248,
+                "896x1344" => CustomImageSizes.W896xH1344,
+                "1024x1536" => CustomImageSizes.W1024xH1536,
+
+                // 3:2 Landscape sizes
+                "768x512" => CustomImageSizes.W768xH512,
+                "1152x768" => CustomImageSizes.W1152xH768,
+                "1248x832" => CustomImageSizes.W1248xH832,
+                "1344x896" => CustomImageSizes.W1344xH896,
+                "1536x1024" => CustomImageSizes.W1536xH1024,
+
+                // 3:4 Portrait sizes
+                "768x1024" => CustomImageSizes.W768xH1024,
+                "936x1248" => CustomImageSizes.W936xH1248,
+
+                // 4:3 Landscape sizes
+                "1024x768" => CustomImageSizes.W1024xH768,
+                "1248x936" => CustomImageSizes.W1248xH936,
+
+                // OpenAI standard sizes (for compatibility)
                 "1792x1024" => GeneratedImageSize.W1792xH1024,
                 "1024x1792" => GeneratedImageSize.W1024xH1792,
-                _ => GeneratedImageSize.W1024xH1024,
+
+                // Default fallback
+                _ => CustomImageSizes.W1024xH1024,
             };
         }
 

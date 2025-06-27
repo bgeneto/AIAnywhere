@@ -18,6 +18,7 @@ namespace AIAnywhere.Views
         private readonly bool _isImage;
         private readonly bool _isImageGeneration;
         private readonly string? _imageUrl;
+        private readonly DateTime? _generationStartTime;
         private BitmapImage? _downloadedImage;
 
         // Windows API for focus management
@@ -43,6 +44,7 @@ namespace AIAnywhere.Views
             _isImage = false;
             _isImageGeneration = false;
             _imageUrl = null;
+            _generationStartTime = null;
 
             InitializeWindow();
 
@@ -54,7 +56,8 @@ namespace AIAnywhere.Views
             string resultText,
             string operationType,
             string imageUrl,
-            IntPtr originalWindowHandle = default
+            IntPtr originalWindowHandle = default,
+            DateTime? generationStartTime = null
         )
         {
             InitializeComponent();
@@ -67,6 +70,7 @@ namespace AIAnywhere.Views
                 operationType.Equals("ImageGeneration", StringComparison.OrdinalIgnoreCase)
                 || operationType.Equals("Image Generation", StringComparison.OrdinalIgnoreCase);
             _imageUrl = imageUrl;
+            _generationStartTime = generationStartTime;
 
             InitializeWindow();
 
@@ -167,7 +171,19 @@ namespace AIAnywhere.Views
                     {
                         ResultImage.Source = _downloadedImage;
                         ShowImageState();
-                        CharacterCountTextBlock.Text = "Image loaded successfully";
+
+                        // Calculate elapsed time if start time is available
+                        if (_generationStartTime.HasValue)
+                        {
+                            var elapsed = DateTime.Now - _generationStartTime.Value;
+                            var seconds = elapsed.TotalSeconds;
+                            CharacterCountTextBlock.Text =
+                                $"Image loaded successfully in {seconds:F1} seconds";
+                        }
+                        else
+                        {
+                            CharacterCountTextBlock.Text = "Image loaded successfully";
+                        }
                     }
                     else
                     {
@@ -575,7 +591,7 @@ namespace AIAnywhere.Views
                 httpClient.Timeout = TimeSpan.FromSeconds(30);
 
                 var imageBytes = await httpClient.GetByteArrayAsync(imageUrl);
-                
+
                 // Ensure directory exists
                 var directory = System.IO.Path.GetDirectoryName(filePath);
                 if (!string.IsNullOrEmpty(directory) && !System.IO.Directory.Exists(directory))

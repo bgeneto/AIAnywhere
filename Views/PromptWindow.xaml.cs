@@ -230,7 +230,16 @@ namespace AIAnywhere.Views
                 if (child is ComboBox comboBox && comboBox.Name.StartsWith("Option_"))
                 {
                     var key = comboBox.Name.Substring(7); // Remove "Option_" prefix
-                    options[key] = comboBox.SelectedItem?.ToString() ?? "";
+                    var value = comboBox.SelectedItem?.ToString() ?? "";
+
+                    // For size parameter, extract just the dimensions (before parentheses)
+                    // UI shows: "512x768 (2:3 Portrait)" → API gets: "512x768"
+                    if (key == "size" && value.Contains(" ("))
+                    {
+                        value = value.Substring(0, value.IndexOf(" ("));
+                    }
+
+                    options[key] = value;
                 }
                 else if (child is TextBox textBox && textBox.Name.StartsWith("Option_"))
                 {
@@ -306,6 +315,9 @@ namespace AIAnywhere.Views
                 ProcessButton.Content = "Processing...";
                 Cursor = System.Windows.Input.Cursors.Wait;
 
+                // Capture start time for image generation timing
+                var requestStartTime = DateTime.Now;
+
                 var llmService = new LLMService(_config);
                 var request = new LLMRequest
                 {
@@ -321,6 +333,12 @@ namespace AIAnywhere.Views
 
                 var response = await llmService.ProcessRequestAsync(request);
 
+                // Add start time to response for timing calculation
+                if (selectedOperation.Type == OperationType.ImageGeneration)
+                {
+                    response.GenerationStartTime = requestStartTime;
+                }
+
                 if (response.Success)
                 { // Handle different response types
                     if (selectedOperation.Type == OperationType.ImageGeneration)
@@ -328,12 +346,20 @@ namespace AIAnywhere.Views
                         // Handle image responses based on user's paste behavior preference
                         if (response.IsImage && !string.IsNullOrEmpty(response.ImageUrl))
                         {
-                            await HandleImageResponse(response.ImageUrl, selectedOperation.Type);
+                            await HandleImageResponse(
+                                response.ImageUrl,
+                                selectedOperation.Type,
+                                response.GenerationStartTime
+                            );
                         }
                         else
                         {
                             // Fallback for legacy image responses or direct URL
-                            await HandleImageResponse(response.Content, selectedOperation.Type);
+                            await HandleImageResponse(
+                                response.Content,
+                                selectedOperation.Type,
+                                response.GenerationStartTime
+                            );
                         }
                     }
                     else if (selectedOperation.Type == OperationType.TextToSpeech)
@@ -541,7 +567,11 @@ namespace AIAnywhere.Views
             }
         }
 
-        private async Task HandleImageResponse(string imageUrl, OperationType operationType)
+        private async Task HandleImageResponse(
+            string imageUrl,
+            OperationType operationType,
+            DateTime? generationStartTime = null
+        )
         {
             switch (_config.PasteBehavior)
             {
@@ -554,12 +584,12 @@ namespace AIAnywhere.Views
                     break;
 
                 case PasteBehavior.ReviewMode:
-                    HandleImageReviewMode(imageUrl, operationType.ToString());
+                    HandleImageReviewMode(imageUrl, operationType.ToString(), generationStartTime);
                     break;
 
                 default:
                     // Default to review mode for safety
-                    HandleImageReviewMode(imageUrl, operationType.ToString());
+                    HandleImageReviewMode(imageUrl, operationType.ToString(), generationStartTime);
                     break;
             }
         }
@@ -652,7 +682,11 @@ namespace AIAnywhere.Views
             }
         }
 
-        private void HandleImageReviewMode(string imageUrl, string operationType)
+        private void HandleImageReviewMode(
+            string imageUrl,
+            string operationType,
+            DateTime? generationStartTime = null
+        )
         {
             try
             {
@@ -662,7 +696,8 @@ namespace AIAnywhere.Views
                     imageUrl,
                     operationType,
                     imageUrl,
-                    _originalWindowHandle
+                    _originalWindowHandle,
+                    generationStartTime
                 );
                 reviewWindow.ShowDialog();
 

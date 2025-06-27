@@ -56,7 +56,7 @@
                    HorizontalAlignment="Center"
                    FontSize="14"
                    Style="{StaticResource SubtleTextBlock}"
-                   Text="Version 1.0.7" />
+                   Text="Version 1.1.0" />
         <!-- Description -->
         <TextBlock Grid.Row="3"
                    MaxWidth="400"

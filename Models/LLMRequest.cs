@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace AIAnywhere.Models
@@ -21,5 +22,6 @@ namespace AIAnywhere.Models
         public bool IsAudio { get; set; } = false;
         public byte[]? AudioData { get; set; }
         public string? AudioFormat { get; set; }
+        public DateTime? GenerationStartTime { get; set; }
     }
 }
