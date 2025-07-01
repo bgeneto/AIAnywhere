@@ -25,10 +25,9 @@ A powerful Windows desktop application that provides universal AI assistance thr
 - **Flexible API Support**: Works with OpenAI, Anthropic Claude, local LLMs, or any OpenAI-compatible endpoint (can be used with e.g. LiteLLM or Openrouter)
 - **Robust Text Handling**: Intelligent text selection using both UI Automation and clipboard methods
 
-![screen-shot](https://github.com/user-attachments/assets/a224ac00-e8e6-4106-8115-3006368e51e1)
+![screen-shot](https://github.com/user-attachments/assets/c9247a50-48ad-4c60-a85d-d62761911fc0)
 
-![screen-shot2](https://github.com/user-attachments/assets/a5e30f11-668f-4a57-98fa-eec3683ad649)
-
+![screen-shot2](https://github.com/user-attachments/assets/2389bd40-0765-40f2-a26b-e69c9b081300)
 
 ## 🚀 Quick Start
 
