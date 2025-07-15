@@ -1,10 +1,5 @@
-# Aparam(
-    [string]$Version = "1.1.3"
-)nywhere - Build Script
-# Creates both self-contained and lightweight/optimized distributions
-
 param(
-    [string]$Version = "1.1.2"
+    [string]$Version = "1.1.3"
 )
 
 Write-Host "Building AI Anywhere v$Version..." -ForegroundColor Green
