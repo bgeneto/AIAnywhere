@@ -82,6 +82,9 @@ namespace AIAnywhere.Views
             // Set disable thinking preference
             DisableThinkingCheckBox.IsChecked = _config.DisableThinking;
 
+            // Set debug logging preference
+            EnableDebugLoggingCheckBox.IsChecked = _config.EnableDebugLogging;
+
             // Handle selection change event
             PasteBehaviorComboBox.SelectionChanged += PasteBehaviorComboBox_SelectionChanged;
 
@@ -154,6 +157,9 @@ namespace AIAnywhere.Views
 
             // Save disable thinking preference
             _config.DisableThinking = DisableThinkingCheckBox.IsChecked ?? false;
+
+            // Save debug logging preference
+            _config.EnableDebugLogging = EnableDebugLoggingCheckBox.IsChecked ?? false;
 
             // Save current models lists from ComboBoxes
             var currentModels = new List<string>();
@@ -436,43 +442,10 @@ namespace AIAnywhere.Views
                     var currentImageSelection = GetSelectedImageModel();
                     var currentAudioSelection = GetSelectedAudioModel();
 
-                    // Categorize models
-                    var textModels = allModels
-                        .Where(m =>
-                            !m.ToLower().Contains("dall")
-                            && !m.ToLower().Contains("flux")
-                            && !m.ToLower().Contains("image")
-                            && !m.ToLower().Contains("midjourney")
-                            && !m.ToLower().Contains("stable")
-                            && !m.ToLower().Contains("dream")
-                            && !m.ToLower().Contains("whisper")
-                            && !m.ToLower().Contains("speech")
-                            && !m.ToLower().Contains("transcrib")
-                            && !m.ToLower().Contains("shuttle")
-                            && !m.ToLower().Contains("tts")
-                        )
-                        .ToList();
-
-                    var imageModels = allModels
-                        .Where(m =>
-                            m.ToLower().Contains("dall")
-                            || m.ToLower().Contains("flux")
-                            || m.ToLower().Contains("image")
-                            || m.ToLower().Contains("midjourney")
-                            || m.ToLower().Contains("stable")
-                            || m.ToLower().Contains("dream")
-                            || m.ToLower().Contains("shuttle")
-                        )
-                        .ToList();
-
-                    var audioModels = allModels
-                        .Where(m =>
-                            m.ToLower().Contains("whisper")
-                            || m.ToLower().Contains("audio")
-                            || m.ToLower().Contains("speech")
-                            || m.ToLower().Contains("transcrib")
-                        )
-                        .ToList();
+                    // Categorize models using the new filter methods
+                    var textModels = FilterTextModels(allModels);
+                    var imageModels = FilterImageModels(allModels);
+                    var audioModels = FilterAudioModels(allModels);
 
                     // Populate Text Models
                     LlmModelComboBox.Items.Clear();
@@ -702,34 +675,46 @@ namespace AIAnywhere.Views
 
             int totalModelsLoaded = 0;
 
-            // Add text models from config if any exist
+            // Add text models from config if any exist - apply filtering to ensure clean categorization
             if (_config.Models != null && _config.Models.Any())
             {
-                foreach (var model in _config.Models.OrderBy(m => m))
+                var filteredTextModels = FilterTextModels(_config.Models);
+                foreach (var model in filteredTextModels.OrderBy(m => m))
                 {
                     LlmModelComboBox.Items.Add(new ComboBoxItem { Content = model });
                 }
-                totalModelsLoaded += _config.Models.Count;
+                totalModelsLoaded += filteredTextModels.Count;
+
+                // Update config with filtered models
+                _config.Models = filteredTextModels.ToList();
             }
 
             // Add image models from config if any exist
             if (_config.ImageModels != null && _config.ImageModels.Any())
             {
-                foreach (var model in _config.ImageModels.OrderBy(m => m))
+                var filteredImageModels = FilterImageModels(_config.ImageModels);
+                foreach (var model in filteredImageModels.OrderBy(m => m))
                 {
                     ImageModelComboBox.Items.Add(new ComboBoxItem { Content = model });
                 }
-                totalModelsLoaded += _config.ImageModels.Count;
+                totalModelsLoaded += filteredImageModels.Count;
+
+                // Update config with filtered models
+                _config.ImageModels = filteredImageModels.ToList();
             }
 
             // Add audio models from config if any exist
             if (_config.AudioModels != null && _config.AudioModels.Any())
             {
-                foreach (var model in _config.AudioModels.OrderBy(m => m))
+                var filteredAudioModels = FilterAudioModels(_config.AudioModels);
+                foreach (var model in filteredAudioModels.OrderBy(m => m))
                 {
                     AudioModelComboBox.Items.Add(new ComboBoxItem { Content = model });
                 }
-                totalModelsLoaded += _config.AudioModels.Count;
+                totalModelsLoaded += filteredAudioModels.Count;
+
+                // Update config with filtered models
+                _config.AudioModels = filteredAudioModels.ToList();
             }
 
             // Update unified status message
@@ -892,6 +877,61 @@ namespace AIAnywhere.Views
                 // Silently fail for model refresh during save - not critical
                 // The user can always manually refresh models if needed
             }
+        }
+
+        /// <summary>
+        /// Filter models to include only text/chat models, excluding image, audio, and special models
+        /// </summary>
+        private List<string> FilterTextModels(IEnumerable<string> models)
+        {
+            return models.Where(m =>
+            {
+                var modelLower = m.ToLower();
+                var isImageModel = modelLower.Contains("dall") || modelLower.Contains("flux") ||
+                                   modelLower.Contains("image") || modelLower.Contains("midjourney") ||
+                                   modelLower.Contains("stable") || modelLower.Contains("dream") ||
+                                   modelLower.Contains("shuttle") || modelLower.Contains("kandinsky") ||
+                                   modelLower.Contains("playground");
+
+                var isAudioModel = modelLower.Contains("whisper") || modelLower.Contains("speech") ||
+                                   modelLower.Contains("transcrib") || modelLower.Contains("tts") ||
+                                   modelLower.Contains("audio") || modelLower.Contains("voice");
+
+                var isSpecialModel = modelLower.Contains("embed") || modelLower.Contains("clip") ||
+                                     modelLower.Contains("moderation");
+
+                return !(isImageModel || isAudioModel || isSpecialModel);
+            }).ToList();
+        }
+
+        /// <summary>
+        /// Filter models to include only image generation models
+        /// </summary>
+        private List<string> FilterImageModels(IEnumerable<string> models)
+        {
+            return models.Where(m =>
+            {
+                var modelLower = m.ToLower();
+                return modelLower.Contains("dall") || modelLower.Contains("flux") ||
+                       modelLower.Contains("image") || modelLower.Contains("midjourney") ||
+                       modelLower.Contains("stable") || modelLower.Contains("dream") ||
+                       modelLower.Contains("shuttle") || modelLower.Contains("kandinsky") ||
+                       modelLower.Contains("playground");
+            }).ToList();
+        }
+
+        /// <summary>
+        /// Filter models to include only audio models
+        /// </summary>
+        private List<string> FilterAudioModels(IEnumerable<string> models)
+        {
+            return models.Where(m =>
+            {
+                var modelLower = m.ToLower();
+                return modelLower.Contains("whisper") || modelLower.Contains("audio") ||
+                       modelLower.Contains("speech") || modelLower.Contains("transcrib") ||
+                       modelLower.Contains("tts") || modelLower.Contains("voice");
+            }).ToList();
         }
     }
 }

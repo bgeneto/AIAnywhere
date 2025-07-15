@@ -24,6 +24,7 @@ namespace AIAnywhere.Models
         private PasteBehavior _pasteBehavior = PasteBehavior.ReviewMode;
         private bool _disableTextSelection = false;
         private bool _disableThinking = false;
+        private bool _enableDebugLogging = false;
 
         public string Hotkey
         {
@@ -150,6 +151,20 @@ namespace AIAnywhere.Models
         }
 
         /// <summary>
+        /// Enable debug logging for API requests and responses.
+        /// When enabled, creates detailed logs in the api_debug folder for troubleshooting.
+        /// </summary>
+        public bool EnableDebugLogging
+        {
+            get => _enableDebugLogging;
+            set
+            {
+                _enableDebugLogging = value;
+                OnPropertyChanged(nameof(EnableDebugLogging));
+            }
+        }
+
+        /// <summary>
         /// Custom system prompts for each operation type. Advanced users can modify these in the config.json file.
         /// </summary>
         public Dictionary<string, string> SystemPrompts { get; set; } = GetDefaultSystemPrompts();
@@ -241,7 +256,7 @@ namespace AIAnywhere.Models
                     + "4. Maintain natural speech patterns and pronunciation\n"
                     + "5. Process the complete text without truncation\n\n"
                     + "Convert this text to speech:\n",
-                [nameof(OperationType.EmailEnhancement)] =
+                [nameof(OperationType.EmailReply)] =
                     "LANGUAGE RULE: Write your reply in the EXACT same language as the original email.\n\n"
                     + "TASK: Generate an email reply with {tone} tone and {length} length.\n\n"
                     + "EMAIL REPLY RULES:\n"

@@ -11,7 +11,7 @@ namespace AIAnywhere.Models
         TextTranslation,
         TextSummarization,
         TextToSpeech,
-        EmailEnhancement,
+        EmailReply,
         WhatsAppResponse,
         SpeechToText,
     }
@@ -59,13 +59,13 @@ namespace AIAnywhere.Models
                 },
                 new Operation
                 {
-                    Type = OperationType.EmailEnhancement,
+                    Type = OperationType.EmailReply,
                     Name = "Email Reply",
                     Description = "Generate professional email replies",
                     SystemPrompt =
                         noThinkPrefix
                         + systemPrompts.GetValueOrDefault(
-                            nameof(OperationType.EmailEnhancement),
+                            nameof(OperationType.EmailReply),
                             "You are a professional email communication expert. Generate a well-structured reply to the provided email with a {tone} tone and {length} length."
                         ),
                     Options = new List<OperationOption>

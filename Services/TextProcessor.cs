@@ -51,8 +51,35 @@ namespace AIAnywhere.Services
             if (string.IsNullOrEmpty(rawResponse))
                 return rawResponse;
 
-            // Apply text processing - simplified to just normalize
-            return NormalizeText(rawResponse);
+            // Remove thinking tokens first
+            var cleanedResponse = RemoveThinkingTokens(rawResponse);
+
+            // Apply text processing - normalize the cleaned response
+            return NormalizeText(cleanedResponse);
+        }
+
+        /// <summary>
+        /// Removes thinking tokens like &lt;think&gt;...&lt;/think&gt; from LLM responses
+        /// </summary>
+        public static string RemoveThinkingTokens(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            // Remove thinking blocks using regex
+            // This handles multi-line thinking blocks with any content inside
+            text = Regex.Replace(
+                text,
+                @"<think>.*?</think>",
+                "",
+                RegexOptions.Singleline | RegexOptions.IgnoreCase
+            );
+
+            // Clean up any extra whitespace that might be left after removing thinking blocks
+            text = Regex.Replace(text, @"^\s*\n", "", RegexOptions.Multiline); // Remove empty lines at start
+            text = Regex.Replace(text, @"\n\s*\n\s*\n", "\n\n"); // Collapse multiple newlines
+
+            return text.Trim();
         }
 
         // Debug method to see what's actually in the text

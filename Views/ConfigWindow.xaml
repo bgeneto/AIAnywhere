@@ -162,6 +162,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -195,6 +196,20 @@
                                     FontSize="10"
                                     Foreground="DarkGray"
                                     Text="Only applies to models that allow disabling the thinking mode, such as Qwen3" />
+                            </StackPanel>
+
+                            <!--  Debug Logging Option  -->
+                            <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,8,0,0">
+                                <CheckBox
+                                    Name="EnableDebugLoggingCheckBox"
+                                    Content="🔍 Enable debug logging for API requests"
+                                    FontWeight="SemiBold"
+                                    ToolTip="Creates detailed logs in api_debug folder for troubleshooting API issues" />
+                                <TextBlock
+                                    Margin="24,2,0,0"
+                                    FontSize="10"
+                                    Foreground="DarkGray"
+                                    Text="Logs API requests/responses to help diagnose custom endpoint compatibility issues" />
                             </StackPanel>
                         </Grid>
                     </StackPanel>

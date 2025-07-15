@@ -195,7 +195,7 @@ Power users can customize AI behavior by editing the `config.json` file directly
   "DisableTextSelection": false,
   "SystemPrompts": {
     "GeneralChat": "Your custom system prompt for general tasks...",
-    "EmailEnhancement": "Custom email reply instructions...",
+    "EmailReply": "Custom email reply instructions...",
     "TextSummarization": "Custom summarization guidelines...",
     "TextTranslation": "Custom translation instructions...",
     "TextRewrite": "Custom rewriting guidelines...",

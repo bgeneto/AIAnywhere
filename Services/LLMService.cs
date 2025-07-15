@@ -21,9 +21,99 @@ namespace AIAnywhere.Services
         private readonly OpenAIClient _openAIClient;
         private readonly Configuration _config;
 
+        // Debug logging - conditional based on configuration
+        private static void LogApiDebug(string endpoint, string? request, string? response, Exception? ex = null)
+        {
+            // Only log if debug logging is enabled in configuration
+            if (_staticConfig?.EnableDebugLogging != true)
+                return;
+
+            try
+            {
+                var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss-fff");
+                var debugDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "api_debug");
+                Directory.CreateDirectory(debugDir);
+
+                var filename = $"api_debug_{timestamp}.log";
+                var filePath = Path.Combine(debugDir, filename);
+
+                var logContent = new StringBuilder();
+                logContent.AppendLine($"=== API DEBUG LOG - {timestamp} ===");
+                logContent.AppendLine($"Endpoint: {endpoint}");
+                logContent.AppendLine($"Config ApiBaseUrl: {_staticConfig?.ApiBaseUrl ?? "null"}");
+                logContent.AppendLine($"Config LlmModel: {_staticConfig?.LlmModel ?? "null"}");
+                logContent.AppendLine($"Config ImageModel: {_staticConfig?.ImageModel ?? "null"}");
+                logContent.AppendLine();
+
+                logContent.AppendLine("=== REQUEST ===");
+                logContent.AppendLine(request ?? "null");
+                logContent.AppendLine();
+
+                logContent.AppendLine("=== RESPONSE ===");
+                logContent.AppendLine(response ?? "null");
+                logContent.AppendLine();
+
+                if (ex != null)
+                {
+                    logContent.AppendLine("=== EXCEPTION ===");
+                    logContent.AppendLine($"Type: {ex.GetType().Name}");
+                    logContent.AppendLine($"Message: {ex.Message}");
+                    logContent.AppendLine($"StackTrace: {ex.StackTrace}");
+                    if (ex.InnerException != null)
+                    {
+                        logContent.AppendLine($"InnerException: {ex.InnerException.Message}");
+                    }
+                    logContent.AppendLine();
+                }
+
+                logContent.AppendLine("=== RESPONSE ANALYSIS ===");
+                if (!string.IsNullOrEmpty(response))
+                {
+                    logContent.AppendLine($"Response Length: {response.Length}");
+                    logContent.AppendLine($"Starts with: {(response.Length > 100 ? response.Substring(0, 100) + "..." : response)}");
+
+                    // Try to parse as JSON
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(response);
+                        logContent.AppendLine("✅ Valid JSON");
+
+                        // Log JSON structure
+                        logContent.AppendLine("JSON Properties:");
+                        foreach (var prop in doc.RootElement.EnumerateObject())
+                        {
+                            logContent.AppendLine($"  - {prop.Name}: {prop.Value.ValueKind}");
+                            if (prop.Value.ValueKind == JsonValueKind.Object)
+                            {
+                                foreach (var subProp in prop.Value.EnumerateObject())
+                                {
+                                    logContent.AppendLine($"    - {subProp.Name}: {subProp.Value.ValueKind} = {subProp.Value}");
+                                }
+                            }
+                        }
+                    }
+                    catch (JsonException jsonEx)
+                    {
+                        logContent.AppendLine($"❌ Invalid JSON: {jsonEx.Message}");
+                    }
+                }
+
+                File.WriteAllText(filePath, logContent.ToString());
+                Console.WriteLine($"🔍 API Debug logged to: {filePath}");
+            }
+            catch (Exception logEx)
+            {
+                Console.WriteLine($"⚠️ Failed to log API debug: {logEx.Message}");
+            }
+        }
+
+        // Static config reference for logging
+        private static Configuration? _staticConfig;
+
         public LLMService(Configuration config)
         {
             _config = config;
+            _staticConfig = config; // Set static reference for debugging
 
             // Create OpenAI client with custom endpoint support
             var clientOptions = new OpenAIClientOptions();
@@ -76,6 +166,9 @@ namespace AIAnywhere.Services
                 return new LLMResponse { Success = false, Error = "Unknown operation type" };
             }
 
+            // DEBUG: Prepare request info outside try block for exception logging
+            string requestInfo = "";
+
             try
             {
                 // Build the system prompt with options
@@ -92,28 +185,39 @@ namespace AIAnywhere.Services
                     userPrompt = $"{request.Prompt}\n\nText to process:\n{request.SelectedText}";
                 }
 
-                // Create chat messages
+                // DEBUG: Log request details
+                requestInfo = $"Operation: {request.OperationType}\nModel: {_config.LlmModel}\nSystem: {systemPrompt}\nUser: {userPrompt}";
+
+                // Use HTTP method for custom endpoints to avoid token parsing issues
+                if (!string.IsNullOrEmpty(_config.ApiBaseUrl) && _config.ApiBaseUrl != "https://api.openai.com/v1")
+                {
+                    return await ProcessTextRequestHttpAsync(systemPrompt, userPrompt, requestInfo);
+                }
+
+                // Use OpenAI library for standard OpenAI endpoints
                 var messages = new List<ChatMessage>
                 {
                     ChatMessage.CreateSystemMessage(systemPrompt),
                     ChatMessage.CreateUserMessage(userPrompt),
-                }; // Create chat completion options
+                };
+
                 var chatOptions = new ChatCompletionOptions
                 {
                     MaxOutputTokenCount = 2000,
                     Temperature = 0.6f,
                 };
 
-                // Get chat client and make request
                 var chatClient = _openAIClient.GetChatClient(_config.LlmModel);
                 var completion = await chatClient.CompleteChatAsync(messages, chatOptions);
-                if (completion.Value?.Content?.Count > 0)
+
+                // DEBUG: Log the completion response
+                var debugResponse = completion?.Value?.ToString() ?? "null completion";
+                LogApiDebug($"chat/completions ({request.OperationType})", requestInfo, debugResponse);
+
+                if (completion?.Value?.Content?.Count > 0)
                 {
                     var rawContent = string.Join("", completion.Value.Content.Select(c => c.Text));
-
-                    // Process the raw response to normalize formatting and line breaks
                     var processedContent = TextProcessor.ProcessLLMResponse(rawContent);
-
                     return new LLMResponse { Success = true, Content = processedContent };
                 }
 
@@ -121,7 +225,98 @@ namespace AIAnywhere.Services
             }
             catch (Exception ex)
             {
+                // DEBUG: Log the exception
+                LogApiDebug($"chat/completions ({request.OperationType}) ERROR", requestInfo, null, ex);
                 return new LLMResponse { Success = false, Error = $"API Error: {ex.Message}" };
+            }
+        }
+
+        /// <summary>
+        /// HTTP-based text completion that bypasses OpenAI library token usage parsing.
+        /// This method avoids JSON parsing errors when custom API endpoints return null
+        /// values for token usage fields that the OpenAI library expects to be numeric.
+        /// </summary>
+        private async Task<LLMResponse> ProcessTextRequestHttpAsync(string systemPrompt, string userPrompt, string requestInfo)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.ApiKey);
+
+                var baseUrl = _config.ApiBaseUrl.TrimEnd('/');
+                var url = $"{baseUrl}/chat/completions";
+
+                // Create OpenAI-compatible request
+                var requestBody = new
+                {
+                    model = _config.LlmModel,
+                    messages = new[]
+                    {
+                        new { role = "system", content = systemPrompt },
+                        new { role = "user", content = userPrompt }
+                    },
+                    max_tokens = 4096,
+                    temperature = 0.6
+                };
+
+                var json = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                // DEBUG: Log HTTP request
+                LogApiDebug("chat/completions (HTTP)", json, null);
+
+                var response = await client.PostAsync(url, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    LogApiDebug("chat/completions (HTTP) ERROR", json, errorContent);
+
+                    return new LLMResponse
+                    {
+                        Success = false,
+                        Error = $"HTTP Chat Completion Failed: {response.StatusCode} - {errorContent}"
+                    };
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                // DEBUG: Log successful response
+                LogApiDebug("chat/completions (HTTP) SUCCESS", json, responseContent);
+
+                // Parse response manually, ignoring usage data
+                using var doc = JsonDocument.Parse(responseContent);
+
+                if (doc.RootElement.TryGetProperty("choices", out var choicesArray) && choicesArray.GetArrayLength() > 0)
+                {
+                    var firstChoice = choicesArray[0];
+                    if (firstChoice.TryGetProperty("message", out var messageObj) &&
+                        messageObj.TryGetProperty("content", out var contentProp))
+                    {
+                        var rawContent = contentProp.GetString();
+                        if (!string.IsNullOrEmpty(rawContent))
+                        {
+                            var processedContent = TextProcessor.ProcessLLMResponse(rawContent);
+                            return new LLMResponse { Success = true, Content = processedContent };
+                        }
+                    }
+                }
+
+                return new LLMResponse
+                {
+                    Success = false,
+                    Error = "No valid content found in HTTP response"
+                };
+            }
+            catch (Exception ex)
+            {
+                LogApiDebug("chat/completions (HTTP) EXCEPTION", requestInfo, null, ex);
+                return new LLMResponse
+                {
+                    Success = false,
+                    Error = $"HTTP Chat Completion Error: {ex.Message}"
+                };
             }
         }
 
@@ -202,11 +397,18 @@ namespace AIAnywhere.Services
                 var json = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+                // DEBUG: Log request
+                LogApiDebug("images/generations (HTTP)", json, null);
+
                 var response = await client.PostAsync(url, content);
 
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
+
+                    // DEBUG: Log error response
+                    LogApiDebug("images/generations (HTTP) ERROR", json, errorContent);
+
                     return new LLMResponse
                     {
                         Success = false,
@@ -216,6 +418,10 @@ namespace AIAnywhere.Services
                 }
 
                 var responseContent = await response.Content.ReadAsStringAsync();
+
+                // DEBUG: Log successful response
+                LogApiDebug("images/generations (HTTP) SUCCESS", json, responseContent);
+
                 using var doc = JsonDocument.Parse(responseContent);
 
                 if (
@@ -248,6 +454,9 @@ namespace AIAnywhere.Services
             }
             catch (Exception ex)
             {
+                // DEBUG: Log HTTP image generation exception
+                LogApiDebug("images/generations (HTTP) EXCEPTION", "HTTP Image Generation", null, ex);
+
                 return new LLMResponse
                 {
                     Success = false,
@@ -373,6 +582,11 @@ namespace AIAnywhere.Services
                 ? "https://api.openai.com/v1"
                 : _config.ApiBaseUrl.TrimEnd('/');
             var url = $"{baseUrl}/audio/transcriptions";
+
+            // DEBUG: Log transcription request
+            var requestInfo = $"File: {Path.GetFileName(filePath)}\nModel: {model}\nLanguage: {language}";
+            LogApiDebug("audio/transcriptions", requestInfo, null);
+
             using var form = new MultipartFormDataContent
             {
                 { new StreamContent(File.OpenRead(filePath)), "file", Path.GetFileName(filePath) },
@@ -385,6 +599,10 @@ namespace AIAnywhere.Services
             var response = await client.PostAsync(url, form);
             response.EnsureSuccessStatusCode();
             var raw = await response.Content.ReadAsStringAsync();
+
+            // DEBUG: Log transcription response
+            LogApiDebug("audio/transcriptions RESPONSE", requestInfo, raw);
+
             try
             {
                 using var doc = JsonDocument.Parse(raw);
@@ -393,8 +611,10 @@ namespace AIAnywhere.Services
                     return textProp.GetString() ?? raw;
                 }
             }
-            catch
+            catch (JsonException jsonEx)
             {
+                // DEBUG: Log JSON parsing error
+                LogApiDebug("audio/transcriptions JSON ERROR", requestInfo, raw, jsonEx);
                 // If parsing fails, return raw response
             }
             return raw;
@@ -496,6 +716,9 @@ namespace AIAnywhere.Services
             }
             catch (Exception ex)
             {
+                // DEBUG: Log TTS exception
+                LogApiDebug("Text-to-Speech ERROR", $"Text: {request.Prompt}", null, ex);
+
                 return new LLMResponse
                 {
                     Success = false,
@@ -534,8 +757,15 @@ namespace AIAnywhere.Services
             var json = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+            // DEBUG: Log TTS request
+            LogApiDebug("audio/speech", json, null);
+
             var response = await client.PostAsync(url, content);
             response.EnsureSuccessStatusCode();
+
+            // DEBUG: Log TTS response (note: this is binary data)
+            var responseSize = response.Content.Headers.ContentLength ?? 0;
+            LogApiDebug("audio/speech RESPONSE", json, $"Binary audio data, size: {responseSize} bytes");
 
             return await response.Content.ReadAsByteArrayAsync();
         }
