@@ -29,7 +29,7 @@ namespace AIAnywhere.Views
 
                 // Update copyright year
                 var currentYear = DateTime.Now.Year;
-                CopyrightTextBlock.Text = $"© {currentYear} Bernhard Enders. All rights reserved.";            }
+                CopyrightTextBlock.Text = $"© {currentYear} LABiA-FUP/UnB. All rights reserved.";            }
             catch
             {
                 // If version info can't be loaded, keep default values

@@ -19,9 +19,9 @@
     <AssemblyTitle>AI Anywhere</AssemblyTitle>
     <AssemblyDescription>A powerful AI assistant that works anywhere on your desktop</AssemblyDescription>
     <AssemblyConfiguration>Release</AssemblyConfiguration>
-    <AssemblyCompany>Bernhard Enders</AssemblyCompany>
+    <AssemblyCompany>LABiA-FUP/UnB</AssemblyCompany>
     <AssemblyProduct>AI Anywhere</AssemblyProduct>
-    <AssemblyCopyright>© 2025 Bernhard Enders. All rights reserved.</AssemblyCopyright>
+    <AssemblyCopyright>© 2025 LABiA-FUP/UnB. All rights reserved.</AssemblyCopyright>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ModernWpfUI" Version="0.9.6" />

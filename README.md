@@ -313,7 +313,7 @@ We welcome contributions from the community! This project is actively maintained
 ```
 MIT License
 
-Copyright (c) 2025 Bernhard Enders
+Copyright (c) 2025 LABiA-FUP/UnB
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

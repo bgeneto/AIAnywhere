@@ -56,7 +56,7 @@ AI Anywhere - Installation Instructions
 
 Package Size: ~6MB (Lightweight/Optimized - requires .NET 9.0)
 
-© 2025 Bernhard Enders - AI Anywhere v$Version
+© 2025 LABiA-FUP/UnB - AI Anywhere v$Version
 "@ | Out-File "AIAnywhere-Optimized\INSTALL.txt" -Encoding UTF8
 
 @"
