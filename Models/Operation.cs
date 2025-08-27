@@ -326,7 +326,32 @@ namespace AIAnywhere.Models
                             Type = OptionType.Select,
                             Values = new List<string> { "mp3", "opus", "aac", "flac" },
                             DefaultValue = "mp3",
-                            Required = true,
+                            Required = false,
+                        },
+                        new OperationOption
+                        {
+                            Key = "language",
+                            Name = "Language",
+                            Type = OptionType.Select,
+                            Values = new List<string>
+                            {
+                                "en",
+                                "es",
+                                "fr",
+                                "de",
+                                "it",
+                                "pt",
+                                "pl",
+                                "tr",
+                                "ru",
+                                "cs",
+                                "ar",
+                                "zh-cn",
+                                "nl",
+                                "hi",
+                            },
+                            DefaultValue = "pt",
+                            Required = false,
                         },
                         new OperationOption
                         {
