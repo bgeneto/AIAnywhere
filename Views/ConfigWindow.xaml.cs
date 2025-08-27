@@ -898,7 +898,7 @@ namespace AIAnywhere.Views
                                    modelLower.Contains("audio") || modelLower.Contains("voice");
 
                 var isSpecialModel = modelLower.Contains("embed") || modelLower.Contains("clip") ||
-                                     modelLower.Contains("moderation");
+                                     modelLower.Contains("moderation") || modelLower.Contains("fallback");
 
                 return !(isImageModel || isAudioModel || isSpecialModel);
             }).ToList();
@@ -930,7 +930,7 @@ namespace AIAnywhere.Views
                 var modelLower = m.ToLower();
                 return modelLower.Contains("whisper") || modelLower.Contains("audio") ||
                        modelLower.Contains("speech") || modelLower.Contains("transcrib") ||
-                       modelLower.Contains("tts") || modelLower.Contains("voice");
+                       modelLower.Contains("stt") || modelLower.Contains("voice");
             }).ToList();
         }
     }
