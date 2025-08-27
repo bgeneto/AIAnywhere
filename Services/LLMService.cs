@@ -680,8 +680,8 @@ namespace AIAnywhere.Services
                         Error = "Text prompt is required for Text to Speech",
                     };
 
-                // Get TTS model from configuration (hardcoded to tts-1-hd)
-                var ttsModel = _config.TtsModel;
+                // Get TTS model from request options or configuration
+                var ttsModel = request.Options.GetValueOrDefault("model", _config.TtsModel);
 
                 // Get options from request
                 var voice = request.Options.GetValueOrDefault("voice", "alloy");
