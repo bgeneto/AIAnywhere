@@ -734,7 +734,7 @@ namespace AIAnywhere.Services
                 }
 
                 // Clamp speed to valid range (0.25 to 2.0)
-                speed = 1.0; // Math.Max(0.25f, Math.Min(2.0f, speed));
+                speed = 1.0f; // Math.Max(0.25f, Math.Min(2.0f, speed));
 
                 // Generate speech using HTTP API
                 var audioData = await GenerateSpeechHttpAsync(
