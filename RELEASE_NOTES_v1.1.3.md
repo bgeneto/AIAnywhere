@@ -1,4 +1,4 @@
-# AI Anywhere v1.1.3 - Debug Logging & Custom API Compatibility
+# AI Anywhere v1.1.4 - Debug Logging & Custom API Compatibility
 
 ## 🎯 **Issues Resolved**
 
@@ -59,13 +59,13 @@
    - Updated load/save methods to handle new setting
 
 5. **`Build-Release.ps1`**
-   - Updated version to 1.1.3
+   - Updated version to 1.1.4
 
 6. **`Views/AboutWindow.xaml`**
-   - Updated version display to 1.1.3
+   - Updated version display to 1.1.4
 
 7. **`AIAnywhere.csproj`**
-   - Updated assembly version to 1.1.3
+   - Updated assembly version to 1.1.4
 
 ## 🚀 **Usage Instructions**
 
@@ -125,7 +125,7 @@ private static void LogApiDebug(...)
 - **Ignores token usage fields** that cause parsing errors
 - **Graceful fallback** for various response formats
 
-## 📦 **Version 1.1.3 Ready**
+## 📦 **Version 1.1.4 Ready**
 
 The application is now ready for release with:
 - ✅ **Fixed custom API compatibility**
