@@ -575,6 +575,7 @@ namespace AIAnywhere.Services
         )
         {
             using var client = new HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(300); // Set timeout to 5 minutes for large files
             client.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.ApiKey);
             // Use user-configured ApiBaseUrl if provided, otherwise default
@@ -736,6 +737,7 @@ namespace AIAnywhere.Services
         )
         {
             using var client = new HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(300); // Set timeout to 5 minutes for large files
             client.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.ApiKey);
 
