@@ -728,20 +728,21 @@ namespace AIAnywhere.Services
                 var language = request.Options.GetValueOrDefault("language", "pt");
 
                 // Parse speed to float
+                /*
                 if (!float.TryParse(speedStr, out float speed))
                 {
                     speed = 1.0f;
                 }
 
                 // Clamp speed to valid range (0.25 to 2.0)
-                speed = 1.0f; // Math.Max(0.25f, Math.Min(2.0f, speed));
-
+                speed = Math.Max(0.25f, Math.Min(2.0f, speed));
+                */
                 // Generate speech using HTTP API
                 var audioData = await GenerateSpeechHttpAsync(
                     request.Prompt,
                     ttsModel,
                     voice,
-                    speed,
+                    1,
                     format,
                     language
                 );
