@@ -22,7 +22,12 @@ namespace AIAnywhere.Services
         private readonly Configuration _config;
 
         // Debug logging - conditional based on configuration
-        private static void LogApiDebug(string endpoint, string? request, string? response, Exception? ex = null)
+        private static void LogApiDebug(
+            string endpoint,
+            string? request,
+            string? response,
+            Exception? ex = null
+        )
         {
             // Only log if debug logging is enabled in configuration
             if (_staticConfig?.EnableDebugLogging != true)
@@ -70,7 +75,9 @@ namespace AIAnywhere.Services
                 if (!string.IsNullOrEmpty(response))
                 {
                     logContent.AppendLine($"Response Length: {response.Length}");
-                    logContent.AppendLine($"Starts with: {(response.Length > 100 ? response.Substring(0, 100) + "..." : response)}");
+                    logContent.AppendLine(
+                        $"Starts with: {(response.Length > 100 ? response.Substring(0, 100) + "..." : response)}"
+                    );
 
                     // Try to parse as JSON
                     try
@@ -87,7 +94,9 @@ namespace AIAnywhere.Services
                             {
                                 foreach (var subProp in prop.Value.EnumerateObject())
                                 {
-                                    logContent.AppendLine($"    - {subProp.Name}: {subProp.Value.ValueKind} = {subProp.Value}");
+                                    logContent.AppendLine(
+                                        $"    - {subProp.Name}: {subProp.Value.ValueKind} = {subProp.Value}"
+                                    );
                                 }
                             }
                         }
@@ -186,10 +195,14 @@ namespace AIAnywhere.Services
                 }
 
                 // DEBUG: Log request details
-                requestInfo = $"Operation: {request.OperationType}\nModel: {_config.LlmModel}\nSystem: {systemPrompt}\nUser: {userPrompt}";
+                requestInfo =
+                    $"Operation: {request.OperationType}\nModel: {_config.LlmModel}\nSystem: {systemPrompt}\nUser: {userPrompt}";
 
                 // Use HTTP method for custom endpoints to avoid token parsing issues
-                if (!string.IsNullOrEmpty(_config.ApiBaseUrl) && _config.ApiBaseUrl != "https://api.openai.com/v1")
+                if (
+                    !string.IsNullOrEmpty(_config.ApiBaseUrl)
+                    && _config.ApiBaseUrl != "https://api.openai.com/v1"
+                )
                 {
                     return await ProcessTextRequestHttpAsync(systemPrompt, userPrompt, requestInfo);
                 }
@@ -212,7 +225,11 @@ namespace AIAnywhere.Services
 
                 // DEBUG: Log the completion response
                 var debugResponse = completion?.Value?.ToString() ?? "null completion";
-                LogApiDebug($"chat/completions ({request.OperationType})", requestInfo, debugResponse);
+                LogApiDebug(
+                    $"chat/completions ({request.OperationType})",
+                    requestInfo,
+                    debugResponse
+                );
 
                 if (completion?.Value?.Content?.Count > 0)
                 {
@@ -226,7 +243,12 @@ namespace AIAnywhere.Services
             catch (Exception ex)
             {
                 // DEBUG: Log the exception
-                LogApiDebug($"chat/completions ({request.OperationType}) ERROR", requestInfo, null, ex);
+                LogApiDebug(
+                    $"chat/completions ({request.OperationType}) ERROR",
+                    requestInfo,
+                    null,
+                    ex
+                );
                 return new LLMResponse { Success = false, Error = $"API Error: {ex.Message}" };
             }
         }
@@ -236,7 +258,11 @@ namespace AIAnywhere.Services
         /// This method avoids JSON parsing errors when custom API endpoints return null
         /// values for token usage fields that the OpenAI library expects to be numeric.
         /// </summary>
-        private async Task<LLMResponse> ProcessTextRequestHttpAsync(string systemPrompt, string userPrompt, string requestInfo)
+        private async Task<LLMResponse> ProcessTextRequestHttpAsync(
+            string systemPrompt,
+            string userPrompt,
+            string requestInfo
+        )
         {
             try
             {
@@ -254,10 +280,10 @@ namespace AIAnywhere.Services
                     messages = new[]
                     {
                         new { role = "system", content = systemPrompt },
-                        new { role = "user", content = userPrompt }
+                        new { role = "user", content = userPrompt },
                     },
                     max_tokens = 4096,
-                    temperature = 0.6
+                    temperature = 0.6,
                 };
 
                 var json = JsonSerializer.Serialize(requestBody);
@@ -276,7 +302,8 @@ namespace AIAnywhere.Services
                     return new LLMResponse
                     {
                         Success = false,
-                        Error = $"HTTP Chat Completion Failed: {response.StatusCode} - {errorContent}"
+                        Error =
+                            $"HTTP Chat Completion Failed: {response.StatusCode} - {errorContent}",
                     };
                 }
 
@@ -288,11 +315,16 @@ namespace AIAnywhere.Services
                 // Parse response manually, ignoring usage data
                 using var doc = JsonDocument.Parse(responseContent);
 
-                if (doc.RootElement.TryGetProperty("choices", out var choicesArray) && choicesArray.GetArrayLength() > 0)
+                if (
+                    doc.RootElement.TryGetProperty("choices", out var choicesArray)
+                    && choicesArray.GetArrayLength() > 0
+                )
                 {
                     var firstChoice = choicesArray[0];
-                    if (firstChoice.TryGetProperty("message", out var messageObj) &&
-                        messageObj.TryGetProperty("content", out var contentProp))
+                    if (
+                        firstChoice.TryGetProperty("message", out var messageObj)
+                        && messageObj.TryGetProperty("content", out var contentProp)
+                    )
                     {
                         var rawContent = contentProp.GetString();
                         if (!string.IsNullOrEmpty(rawContent))
@@ -306,7 +338,7 @@ namespace AIAnywhere.Services
                 return new LLMResponse
                 {
                     Success = false,
-                    Error = "No valid content found in HTTP response"
+                    Error = "No valid content found in HTTP response",
                 };
             }
             catch (Exception ex)
@@ -315,7 +347,7 @@ namespace AIAnywhere.Services
                 return new LLMResponse
                 {
                     Success = false,
-                    Error = $"HTTP Chat Completion Error: {ex.Message}"
+                    Error = $"HTTP Chat Completion Error: {ex.Message}",
                 };
             }
         }
@@ -455,7 +487,12 @@ namespace AIAnywhere.Services
             catch (Exception ex)
             {
                 // DEBUG: Log HTTP image generation exception
-                LogApiDebug("images/generations (HTTP) EXCEPTION", "HTTP Image Generation", null, ex);
+                LogApiDebug(
+                    "images/generations (HTTP) EXCEPTION",
+                    "HTTP Image Generation",
+                    null,
+                    ex
+                );
 
                 return new LLMResponse
                 {
@@ -575,6 +612,7 @@ namespace AIAnywhere.Services
         )
         {
             using var client = new HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(300); // Set timeout to 5 minutes for large files
             client.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.ApiKey);
             // Use user-configured ApiBaseUrl if provided, otherwise default
@@ -584,7 +622,8 @@ namespace AIAnywhere.Services
             var url = $"{baseUrl}/audio/transcriptions";
 
             // DEBUG: Log transcription request
-            var requestInfo = $"File: {Path.GetFileName(filePath)}\nModel: {model}\nLanguage: {language}";
+            var requestInfo =
+                $"File: {Path.GetFileName(filePath)}\nModel: {model}\nLanguage: {language}";
             LogApiDebug("audio/transcriptions", requestInfo, null);
 
             using var form = new MultipartFormDataContent
@@ -679,13 +718,14 @@ namespace AIAnywhere.Services
                         Error = "Text prompt is required for Text to Speech",
                     };
 
-                // Get TTS model from configuration (hardcoded to tts-1-hd)
-                var ttsModel = _config.TtsModel;
+                // Get TTS model from request options or configuration
+                var ttsModel = request.Options.GetValueOrDefault("model", _config.TtsModel);
 
                 // Get options from request
                 var voice = request.Options.GetValueOrDefault("voice", "alloy");
                 var speedStr = request.Options.GetValueOrDefault("speed", "1.0");
                 var format = request.Options.GetValueOrDefault("format", "mp3");
+                var language = request.Options.GetValueOrDefault("language", "pt");
 
                 // Parse speed to float
                 if (!float.TryParse(speedStr, out float speed))
@@ -693,8 +733,8 @@ namespace AIAnywhere.Services
                     speed = 1.0f;
                 }
 
-                // Clamp speed to valid range (0.25 to 4.0)
-                speed = Math.Max(0.25f, Math.Min(4.0f, speed));
+                // Clamp speed to valid range (0.25 to 2.0)
+                speed = Math.Max(0.25f, Math.Min(2.0f, speed));
 
                 // Generate speech using HTTP API
                 var audioData = await GenerateSpeechHttpAsync(
@@ -702,7 +742,8 @@ namespace AIAnywhere.Services
                     ttsModel,
                     voice,
                     speed,
-                    format
+                    format,
+                    language
                 );
 
                 return new LLMResponse
@@ -732,10 +773,12 @@ namespace AIAnywhere.Services
             string model,
             string voice,
             float speed,
-            string format
+            string format,
+            string language
         )
         {
             using var client = new HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(300); // Set timeout to 5 minutes for large files
             client.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.ApiKey);
 
@@ -752,6 +795,7 @@ namespace AIAnywhere.Services
                 voice = voice,
                 response_format = format,
                 speed = speed,
+                language = language,
             };
 
             var json = JsonSerializer.Serialize(requestBody);
@@ -765,7 +809,11 @@ namespace AIAnywhere.Services
 
             // DEBUG: Log TTS response (note: this is binary data)
             var responseSize = response.Content.Headers.ContentLength ?? 0;
-            LogApiDebug("audio/speech RESPONSE", json, $"Binary audio data, size: {responseSize} bytes");
+            LogApiDebug(
+                "audio/speech RESPONSE",
+                json,
+                $"Binary audio data, size: {responseSize} bytes"
+            );
 
             return await response.Content.ReadAsByteArrayAsync();
         }
