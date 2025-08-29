@@ -14,12 +14,12 @@ Remove-Item "AIAnywhere-v*.zip" -ErrorAction SilentlyContinue
 Write-Host "Building speed-optimized version..." -ForegroundColor Yellow
 dotnet publish AIAnywhere.sln -c Release -r win-x64 --self-contained false `
     /p:PublishReadyToRun=true `
-    /p:OptimizationPreference=Speed `
-    /p:TieredCompilation=true `
-    /p:TieredPGO=true `
-    /p:ReadyToRunUseCrossgen2=true `
-    /p:DebuggerSupport=false `
-    /p:EnableEventPipeProfiler=false
+#    /p:OptimizationPreference=Speed `
+#    /p:TieredCompilation=true `
+#    /p:TieredPGO=true `
+#    /p:ReadyToRunUseCrossgen2=true `
+#    /p:DebuggerSupport=false `
+#    /p:EnableEventPipeProfiler=false
 
 # Create optimized distribution
 New-Item -ItemType Directory -Name "AIAnywhere-Optimized" | Out-Null
