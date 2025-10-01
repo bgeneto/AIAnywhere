@@ -138,7 +138,7 @@ namespace AIAnywhere.Models
 
         /// <summary>
         /// Disable thinking mode for LLM models that support it.
-        /// When enabled, adds "/no_think\n" prefix to system prompts (except image generation).
+        /// When enabled, sets reasoning_effort to 'low' for compatible models to reduce thinking time.
         /// </summary>
         public bool DisableThinking
         {

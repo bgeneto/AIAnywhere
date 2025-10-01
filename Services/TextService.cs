@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
@@ -32,6 +33,7 @@ namespace AIAnywhere.Services
                 var uiAutomationText = UIAutomationTextService.GetSelectedTextViaUIAutomation();
                 if (!string.IsNullOrEmpty(uiAutomationText))
                 {
+                    LogDebugTextCapture("UI Automation", uiAutomationText.Length);
                     return uiAutomationText;
                 }
 
@@ -39,14 +41,41 @@ namespace AIAnywhere.Services
                 var keyboardText = GetSelectedTextViaKeyboardSimulation();
                 if (!string.IsNullOrEmpty(keyboardText))
                 {
+                    LogDebugTextCapture("Keyboard Simulation", keyboardText.Length);
                     return keyboardText;
                 }
 
+                LogDebugTextCapture("No text captured", 0);
                 return "";
+            }
+            catch (Exception ex)
+            {
+                LogDebugTextCapture($"Error: {ex.Message}", 0);
+                return "";
+            }
+        }
+
+        private static void LogDebugTextCapture(string method, int length)
+        {
+            try
+            {
+                var config = ConfigurationService.GetConfiguration();
+                if (config.EnableDebugLogging)
+                {
+                    var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss-fff");
+                    var debugDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "api_debug");
+                    Directory.CreateDirectory(debugDir);
+
+                    var filename = $"text_capture_{timestamp}.log";
+                    var filePath = Path.Combine(debugDir, filename);
+
+                    var logContent = $"[{timestamp}] Text Capture - Method: {method}, Length: {length} chars{Environment.NewLine}";
+                    File.AppendAllText(filePath, logContent);
+                }
             }
             catch
             {
-                return "";
+                // Ignore logging errors
             }
         }
 

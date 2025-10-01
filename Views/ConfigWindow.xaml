@@ -190,12 +190,12 @@
                                     Name="DisableThinkingCheckBox"
                                     Content="🧠 Disable thinking mode (for compatible models)"
                                     FontWeight="SemiBold"
-                                    ToolTip="Adds '/no_think' prefix to prompts for models that support it" />
+                                    ToolTip="Sets reasoning_effort to 'low' for models that support it" />
                                 <TextBlock
                                     Margin="24,2,0,0"
                                     FontSize="10"
                                     Foreground="DarkGray"
-                                    Text="Only applies to models that allow disabling the thinking mode, such as Qwen3" />
+                                    Text="Reduces thinking time for reasoning models like OpenAI o1" />
                             </StackPanel>
 
                             <!--  Debug Logging Option  -->

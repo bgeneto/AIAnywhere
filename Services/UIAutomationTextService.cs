@@ -1,5 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Automation;
 
 namespace AIAnywhere.Services
@@ -16,6 +19,14 @@ namespace AIAnywhere.Services
         {
             try
             {
+                // Check if the foreground application is VS Code, which can cause hanging
+                var foregroundWindow = GetForegroundWindow();
+                if (IsVSCode(foregroundWindow))
+                {
+                    // Skip UI Automation for VS Code to prevent hanging
+                    return "";
+                }
+
                 // Get the currently focused element
                 var focusedElement = AutomationElement.FocusedElement;
                 if (focusedElement == null)
@@ -36,6 +47,21 @@ namespace AIAnywhere.Services
             catch
             {
                 return "";
+            }
+        }
+
+        private static bool IsVSCode(IntPtr windowHandle)
+        {
+            try
+            {
+                GetWindowThreadProcessId(windowHandle, out uint processId);
+                var process = Process.GetProcessById((int)processId);
+                var processName = process.ProcessName;
+                return processName == "Code" || processName == "Code - Insiders";
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -105,53 +131,78 @@ namespace AIAnywhere.Services
                     return selectedText;
                 }
 
-                // Find all descendant elements that support TextPattern
-                var condition = new PropertyCondition(
-                    AutomationElement.IsTextPatternAvailableProperty,
-                    true
-                );
-                var textElements = element.FindAll(TreeScope.Descendants, condition);
+                // Use a timeout to prevent hanging on complex applications
+                var cts = new CancellationTokenSource();
+                cts.CancelAfter(2000); // 2 second timeout
 
-                foreach (AutomationElement textElement in textElements)
+                try
                 {
-                    try
-                    {
-                        selectedText = GetSelectedTextFromTextPattern(textElement);
-                        if (!string.IsNullOrEmpty(selectedText))
+                    var task = Task.Run(
+                        () =>
                         {
-                            return selectedText;
-                        }
-                    }
-                    catch
-                    {
-                        continue;
-                    }
+                            // Find all descendant elements that support TextPattern
+                            var condition = new PropertyCondition(
+                                AutomationElement.IsTextPatternAvailableProperty,
+                                true
+                            );
+                            var textElements = element.FindAll(TreeScope.Descendants, condition);
+
+                            foreach (AutomationElement textElement in textElements)
+                            {
+                                cts.Token.ThrowIfCancellationRequested();
+                                try
+                                {
+                                    selectedText = GetSelectedTextFromTextPattern(textElement);
+                                    if (!string.IsNullOrEmpty(selectedText))
+                                    {
+                                        return selectedText;
+                                    }
+                                }
+                                catch
+                                {
+                                    continue;
+                                }
+                            }
+
+                            // Also try looking for focused elements within the window
+                            var focusCondition = new PropertyCondition(
+                                AutomationElement.HasKeyboardFocusProperty,
+                                true
+                            );
+                            var focusedElements = element.FindAll(
+                                TreeScope.Descendants,
+                                focusCondition
+                            );
+
+                            foreach (AutomationElement focusedElement in focusedElements)
+                            {
+                                cts.Token.ThrowIfCancellationRequested();
+                                try
+                                {
+                                    selectedText = GetSelectedTextFromTextPattern(focusedElement);
+                                    if (!string.IsNullOrEmpty(selectedText))
+                                    {
+                                        return selectedText;
+                                    }
+                                }
+                                catch
+                                {
+                                    continue;
+                                }
+                            }
+
+                            return "";
+                        },
+                        cts.Token
+                    );
+
+                    return task.Result;
                 }
-
-                // Also try looking for focused elements within the window
-                var focusCondition = new PropertyCondition(
-                    AutomationElement.HasKeyboardFocusProperty,
-                    true
-                );
-                var focusedElements = element.FindAll(TreeScope.Descendants, focusCondition);
-
-                foreach (AutomationElement focusedElement in focusedElements)
+                catch (OperationCanceledException)
                 {
-                    try
-                    {
-                        selectedText = GetSelectedTextFromTextPattern(focusedElement);
-                        if (!string.IsNullOrEmpty(selectedText))
-                        {
-                            return selectedText;
-                        }
-                    }
-                    catch
-                    {
-                        continue;
-                    }
+                    // Timeout occurred, return empty string
+                    return "";
                 }
-
-                return "";
             }
             catch
             {

@@ -220,6 +220,25 @@ namespace AIAnywhere.Services
                     Temperature = 0.6f,
                 };
 
+                // Add reasoning_effort when thinking is disabled
+                // Models that don't support it will simply ignore this parameter
+                if (_config.DisableThinking)
+                {
+                    try
+                    {
+                        // Set ReasoningEffort property - models that don't support it will ignore this
+                        var property = chatOptions.GetType().GetProperty("ReasoningEffort");
+                        if (property != null)
+                        {
+                            property.SetValue(chatOptions, "low");
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore if setting ReasoningEffort fails
+                    }
+                }
+
                 var chatClient = _openAIClient.GetChatClient(_config.LlmModel);
                 var completion = await chatClient.CompleteChatAsync(messages, chatOptions);
 
@@ -274,17 +293,24 @@ namespace AIAnywhere.Services
                 var url = $"{baseUrl}/chat/completions";
 
                 // Create OpenAI-compatible request
-                var requestBody = new
+                var requestBody = new Dictionary<string, object>
                 {
-                    model = _config.LlmModel,
-                    messages = new[]
+                    ["model"] = _config.LlmModel,
+                    ["messages"] = new[]
                     {
                         new { role = "system", content = systemPrompt },
                         new { role = "user", content = userPrompt },
                     },
-                    max_tokens = 4096,
-                    temperature = 0.6,
+                    ["max_tokens"] = 4096,
+                    ["temperature"] = 0.6,
                 };
+
+                // Add reasoning_effort when thinking is disabled
+                // Models that don't support it will simply ignore this parameter
+                if (_config.DisableThinking)
+                {
+                    requestBody["reasoning_effort"] = "low";
+                }
 
                 var json = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
