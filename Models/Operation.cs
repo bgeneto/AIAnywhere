@@ -14,6 +14,7 @@ namespace AIAnywhere.Models
         EmailReply,
         WhatsAppResponse,
         SpeechToText,
+        UnicodeSymbols,
     }
 
     public class Operation
@@ -385,6 +386,17 @@ namespace AIAnywhere.Models
                             Required = true,
                         },
                     },
+                },
+                new Operation
+                {
+                    Type = OperationType.UnicodeSymbols,
+                    Name = "🔣 Unicode Symbols",
+                    Description = "Generate unicode symbols/emojis representing text",
+                    SystemPrompt = systemPrompts.GetValueOrDefault(
+                        nameof(OperationType.UnicodeSymbols),
+                        "You are a helpful assistant that suggests relevant Unicode symbols and emojis for any given concept. Provide several accurate, diverse options (with brief explanations if useful) and favor characters that display consistently across platforms. Answer in plain text only, no markdown."
+                    ),
+                    Options = new List<OperationOption>(),
                 },
                 new Operation
                 {

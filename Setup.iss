@@ -8,7 +8,7 @@
 
 [Setup]
 #define MyAppSetupName 'AI Anywhere'
-#define MyAppVersion '1.1.6'
+#define MyAppVersion '1.1.7'
 #define MyAppPublisher 'LABiA-FUP/UnB'
 #define MyAppCopyright 'Copyright © LABiA-FUP/UnB'
 #define MyAppURL 'https://github.com/bgeneto/AIAnywhere'

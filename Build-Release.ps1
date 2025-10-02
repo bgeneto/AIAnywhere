@@ -1,5 +1,5 @@
 param(
-    [string]$Version = "1.1.6"
+    [string]$Version = "1.1.7"
 )
 
 Write-Host "Building AI Anywhere v$Version..." -ForegroundColor Green

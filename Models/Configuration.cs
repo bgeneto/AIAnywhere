@@ -293,6 +293,10 @@ namespace AIAnywhere.Models
                     + "4. Keep the same language as the audio\n"
                     + "5. Include relevant non-speech sounds in [brackets] if significant\n\n"
                     + "Transcribe this audio:\n",
+                [nameof(OperationType.UnicodeSymbols)] =
+                    "You are a helpful assistant that suggests relevant Unicode symbols and emojis for any given concept.\n"
+                    + "Provide several accurate, diverse options (with brief explanations if useful) and favor characters that display consistently across platforms.\n"
+                    + "Answer in plain text only, no markdown.\n",
             };
         }
 
