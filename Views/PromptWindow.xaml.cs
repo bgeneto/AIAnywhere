@@ -388,7 +388,8 @@ namespace AIAnywhere.Views
                         await HandleTextResponse(response.Content, selectedOperation.Type);
                     }
 
-                    Close();
+                    // Note: Window closing is now handled by individual response handlers
+                    // to support the back button functionality in review mode
                 }
                 else
                 {
@@ -413,7 +414,7 @@ namespace AIAnywhere.Views
             {
                 // Re-enable UI
                 ProcessButton.IsEnabled = true;
-                ProcessButton.Content = "Process";
+                ProcessButton.Content = "✓ Send";
                 Cursor = System.Windows.Input.Cursors.Arrow;
             }
         }
@@ -554,7 +555,25 @@ namespace AIAnywhere.Views
                 );
                 reviewWindow.ShowDialog();
 
-                Close();
+                if (reviewWindow.ShouldGoBack)
+                {
+                    // User clicked back, restore the prompt window
+                    Show();
+                    Activate();
+                    Focus();
+                    Topmost = true;
+                    Topmost = false; // Reset to allow normal window behavior
+
+                    // Re-enable the process button
+                    ProcessButton.IsEnabled = true;
+                    ProcessButton.Content = "✓ Send";
+                    Cursor = System.Windows.Input.Cursors.Arrow;
+                }
+                else
+                {
+                    // User completed the action (paste or cancel), close prompt window
+                    Close();
+                }
             }
             catch (Exception ex)
             {
@@ -564,6 +583,12 @@ namespace AIAnywhere.Views
                     MessageBoxButton.OK,
                     MessageBoxImage.Error
                 );
+
+                // Re-enable UI on error
+                Show();
+                ProcessButton.IsEnabled = true;
+                ProcessButton.Content = "✓ Send";
+                Cursor = System.Windows.Input.Cursors.Arrow;
             }
         }
 
@@ -701,7 +726,25 @@ namespace AIAnywhere.Views
                 );
                 reviewWindow.ShowDialog();
 
-                Close();
+                if (reviewWindow.ShouldGoBack)
+                {
+                    // User clicked back, restore the prompt window
+                    Show();
+                    Activate();
+                    Focus();
+                    Topmost = true;
+                    Topmost = false; // Reset to allow normal window behavior
+
+                    // Re-enable the process button
+                    ProcessButton.IsEnabled = true;
+                    ProcessButton.Content = "✓ Send";
+                    Cursor = System.Windows.Input.Cursors.Arrow;
+                }
+                else
+                {
+                    // User completed the action (paste or cancel), close prompt window
+                    Close();
+                }
             }
             catch (Exception ex)
             {
@@ -711,6 +754,12 @@ namespace AIAnywhere.Views
                     MessageBoxButton.OK,
                     MessageBoxImage.Error
                 );
+
+                // Re-enable UI on error
+                Show();
+                ProcessButton.IsEnabled = true;
+                ProcessButton.Content = "✓ Send";
+                Cursor = System.Windows.Input.Cursors.Arrow;
             }
         }
 
@@ -759,6 +808,8 @@ namespace AIAnywhere.Views
                         );
                     }
                 }
+
+                Close();
             }
             catch (Exception ex)
             {
@@ -768,6 +819,7 @@ namespace AIAnywhere.Views
                     MessageBoxButton.OK,
                     MessageBoxImage.Error
                 );
+                Close();
             }
         }
 

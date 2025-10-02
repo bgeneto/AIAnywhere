@@ -29,6 +29,7 @@ namespace AIAnywhere.Views
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
         public bool ShouldPaste { get; private set; } = false;
+        public bool ShouldGoBack { get; private set; } = false;
 
         public ReviewWindow(
             string resultText,
@@ -216,6 +217,10 @@ namespace AIAnywhere.Views
                     CancelAndClose();
                     e.Handled = true;
                     break;
+                case Key.B when Keyboard.Modifiers == ModifierKeys.None:
+                    BackButton_Click(sender, e);
+                    e.Handled = true;
+                    break;
                 case Key.C when Keyboard.Modifiers == ModifierKeys.Control:
                     // If text is selected in the TextBox, copy only selected text
                     if (
@@ -261,6 +266,12 @@ namespace AIAnywhere.Views
         private async void SaveImageButton_Click(object sender, RoutedEventArgs e)
         {
             await SaveImageToFile();
+        }
+
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            ShouldGoBack = true;
+            Close();
         }
 
         // Context menu handlers for enhanced text selection

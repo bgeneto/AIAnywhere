@@ -45,12 +45,10 @@ namespace AIAnywhere.Services
                     return keyboardText;
                 }
 
-                LogDebugTextCapture("No text captured", 0);
                 return "";
             }
-            catch (Exception ex)
+            catch
             {
-                LogDebugTextCapture($"Error: {ex.Message}", 0);
                 return "";
             }
         }

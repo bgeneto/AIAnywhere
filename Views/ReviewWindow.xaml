@@ -189,15 +189,25 @@
         <!--  Action Buttons  -->
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
+
+            <!--  Back button  -->
+            <Button
+                Name="BackButton"
+                Grid.Column="0"
+                Margin="0,0,12,0"
+                HorizontalAlignment="Left"
+                Click="BackButton_Click"
+                Content="↩️ Back"
+                Style="{StaticResource SecondaryButton}" />
 
             <!--  Copy to Clipboard button  -->
             <Button
                 Name="CopyButton"
-                Grid.Column="0"
+                Grid.Column="1"
                 Margin="0,0,12,0"
                 HorizontalAlignment="Left"
                 Click="CopyButton_Click"
