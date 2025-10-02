@@ -296,7 +296,8 @@ namespace AIAnywhere.Models
                 [nameof(OperationType.UnicodeSymbols)] =
                     "You are a helpful assistant that suggests relevant Unicode symbols and emojis for any given concept.\n"
                     + "Provide several accurate, diverse options (with brief explanations if useful) and favor characters that display consistently across platforms.\n"
-                    + "Answer in plain text only, no markdown.\n",
+                    + "Answer in plain text only, no markdown.\n"
+                    + "Now provide unicode symbols and/or emojis for representing the following: ",
             };
         }
 
