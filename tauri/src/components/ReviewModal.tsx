@@ -217,8 +217,10 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
         <div className="flex items-center justify-between p-4 border-t border-slate-200 dark:border-slate-700">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300
-                       hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-900 dark:text-white
+                       border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800
+                       hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500
+                       rounded-lg transition-colors duration-200"
           >
             <span>←</span>
             Back

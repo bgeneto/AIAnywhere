@@ -35,6 +35,9 @@ export interface SaveConfigRequest {
   disableTextSelection: boolean;
   disableThinking: boolean;
   enableDebugLogging: boolean;
+  models: string[];
+  imageModels: string[];
+  audioModels: string[];
 }
 
 // ============================================================================

@@ -11,7 +11,8 @@ function AppContent() {
   const { 
     activeModal, 
     loadConfig, 
-    configLoading 
+    configLoading,
+    config
   } = useApp();
   
   const [activePage, setActivePage] = useState<PageId>('home');
@@ -47,7 +48,8 @@ function AppContent() {
     };
   }, []);
 
-  if (configLoading) {
+  // Only show loading on initial load (when config is null)
+  if (configLoading && !config) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950">
         <div className="text-center">
@@ -64,8 +66,6 @@ function AppContent() {
       case 'home':
         return <HomePage onShowToast={showToast} />;
       case 'api-settings':
-      case 'language-settings':
-      case 'audio-settings':
         return <SettingsPage onShowToast={showToast} />;
       case 'about':
         return <AboutPage />;

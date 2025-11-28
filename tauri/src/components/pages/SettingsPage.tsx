@@ -60,8 +60,8 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
 
   const tabs: { id: SettingsTab; label: string; icon: string }[] = [
     { id: 'api', label: t.nav.apiSettings, icon: '🔑' },
-    { id: 'audio', label: 'Models Settings', icon: '🤖' },
-    { id: 'general', label: 'General', icon: '⚙️' },
+    { id: 'audio', label: t.settings.models.title, icon: '🤖' },
+    { id: 'general', label: t.settings.general.title, icon: '⚙️' },
   ];
 
   const handleHotkeyKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -88,27 +88,46 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
     try {
       const allModels = await fetchModelsWithEndpoint(apiBaseUrl, apiKey || undefined);
 
-      const textModels = allModels.filter((m: string) =>
-        !m.includes('dall-e') &&
-        !m.includes('whisper') &&
-        !m.includes('tts') &&
-        !m.includes('embedding')
-      );
-      const imgModels = allModels.filter((m: string) =>
-        m.includes('dall-e') ||
-        m.includes('flux') ||
-        m.includes('image') ||
-        m.includes('FLUX')
-      );
-      const audModels = allModels.filter((m: string) =>
-        m.includes('whisper') ||
-        m.includes('tts') ||
-        m.includes('audio')
-      );
+      // Filter models more accurately - exclude image/audio/embedding models from text models
+      const textModels = allModels.filter((m: string) => {
+        const lower = m.toLowerCase();
+        return !lower.includes('dall-e') &&
+          !lower.includes('whisper') &&
+          !lower.includes('tts') &&
+          !lower.includes('embedding') &&
+          !lower.includes('flux') &&
+          !lower.includes('image') &&
+          !lower.includes('stable-diffusion') &&
+          !lower.includes('audio');
+      });
+      const imgModels = allModels.filter((m: string) => {
+        const lower = m.toLowerCase();
+        return lower.includes('dall-e') ||
+          lower.includes('flux') ||
+          lower.includes('image') ||
+          lower.includes('stable-diffusion');
+      });
+      const audModels = allModels.filter((m: string) => {
+        const lower = m.toLowerCase();
+        return lower.includes('whisper') ||
+          lower.includes('tts') ||
+          lower.includes('audio');
+      });
 
       setModels(textModels);
       setImageModels(imgModels);
       setAudioModels(audModels);
+
+      // Auto-select first model if current selection is empty or not in the new list
+      if (textModels.length > 0 && (!llmModel || !textModels.includes(llmModel))) {
+        setLlmModel(textModels[0]);
+      }
+      if (imgModels.length > 0 && (!imageModel || !imgModels.includes(imageModel))) {
+        setImageModel(imgModels[0]);
+      }
+      if (audModels.length > 0 && (!audioModel || !audModels.includes(audioModel))) {
+        setAudioModel(audModels[0]);
+      }
 
       onShowToast('success', 'Models Loaded', `Found ${allModels.length} models`);
     } catch (error) {
@@ -123,6 +142,8 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
     try {
       await testConnectionWithEndpoint(apiBaseUrl, apiKey || undefined);
       onShowToast('success', t.settings.api.testSuccess);
+      // Auto-refresh models after successful connection test
+      await handleFetchModels();
     } catch (error) {
       onShowToast('error', t.settings.api.testFailed, String(error));
     } finally {
@@ -131,11 +152,6 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   };
 
   const handleSave = async () => {
-    if (!llmModel) {
-      onShowToast('error', t.toast.error, 'LLM Model is required');
-      return;
-    }
-
     setIsSaving(true);
     try {
       const request: SaveConfigRequest = {
@@ -150,6 +166,9 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
         disableTextSelection,
         disableThinking,
         enableDebugLogging,
+        models,
+        imageModels,
+        audioModels,
       };
       await saveConfig(request);
       await loadConfig();
@@ -266,7 +285,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  Models
+                  {t.settings.models.title}
                 </h3>
                 <button
                   onClick={handleFetchModels}
@@ -293,13 +312,10 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                              bg-white dark:bg-slate-800 text-slate-900 dark:text-white
                              focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  {models.length > 0 ? (
-                    models.map((model) => (
-                      <option key={model} value={model}>{model}</option>
-                    ))
-                  ) : (
-                    <option value={llmModel}>{llmModel || 'Select a model'}</option>
-                  )}
+                  <option value="">Select a model</option>
+                  {models.map((model) => (
+                    <option key={model} value={model}>{model}</option>
+                  ))}
                 </select>
               </div>
 
@@ -315,13 +331,10 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                              bg-white dark:bg-slate-800 text-slate-900 dark:text-white
                              focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  {imageModels.length > 0 ? (
-                    imageModels.map((model) => (
-                      <option key={model} value={model}>{model}</option>
-                    ))
-                  ) : (
-                    <option value={imageModel}>{imageModel || 'Select a model'}</option>
-                  )}
+                  <option value="">Select a model</option>
+                  {imageModels.map((model) => (
+                    <option key={model} value={model}>{model}</option>
+                  ))}
                 </select>
               </div>
 
@@ -337,13 +350,10 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                              bg-white dark:bg-slate-800 text-slate-900 dark:text-white
                              focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  {audioModels.length > 0 ? (
-                    audioModels.map((model) => (
-                      <option key={model} value={model}>{model}</option>
-                    ))
-                  ) : (
-                    <option value={audioModel}>{audioModel || 'Select a model'}</option>
-                  )}
+                  <option value="">Select a model</option>
+                  {audioModels.filter((m) => !m.toLowerCase().includes('tts')).map((model) => (
+                    <option key={model} value={model}>{model}</option>
+                  ))}
                 </select>
               </div>
 

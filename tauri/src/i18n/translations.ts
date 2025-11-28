@@ -92,6 +92,11 @@ export interface Translations {
       translationTargetDesc: string;
     };
 
+    // Models Settings
+    models: {
+      title: string;
+    };
+
     // Audio Settings
     audio: {
       title: string;
@@ -267,6 +272,10 @@ export const translations: Record<Language, Translations> = {
         translationTargetDesc: 'Default target language for translations',
       },
 
+      models: {
+        title: 'Models',
+      },
+
       audio: {
         title: 'Audio Settings',
         voice: 'Voice',
@@ -440,6 +449,10 @@ export const translations: Record<Language, Translations> = {
         appLanguageDesc: 'Escolha o idioma da interface do usuário',
         translationTarget: 'Idioma de Tradução Padrão',
         translationTargetDesc: 'Idioma padrão de destino para traduções',
+      },
+
+      models: {
+        title: 'Modelos',
       },
 
       audio: {

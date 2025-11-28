@@ -1,5 +1,4 @@
 import { useEffect, useRef, KeyboardEvent } from 'react';
-import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useApp } from '../../context/AppContext';
 import { useI18n } from '../../i18n/index';
 import { OperationOptionsPanel } from '../OperationOptionsPanel';
@@ -42,10 +41,6 @@ export function HomePage({ onShowToast }: HomePageProps) {
       e.preventDefault();
       handleSend();
     }
-    // Escape to cancel/close
-    if (e.key === 'Escape') {
-      handleCancel();
-    }
   };
 
   const handleSend = async () => {
@@ -65,38 +60,12 @@ export function HomePage({ onShowToast }: HomePageProps) {
     }
   };
 
-  const handleCancel = async () => {
-    try {
-      const window = getCurrentWindow();
-      await window.hide();
-    } catch {
-      setPromptText('');
-    }
-  };
-
   const handleClear = () => {
     setPromptText('');
     textareaRef.current?.focus();
   };
 
   const isSpeechToText = selectedOperation?.type === 'speechToText';
-
-  // Get icon for operation type
-  const getOperationIcon = (type: string): string => {
-    const icons: Record<string, string> = {
-      generalChat: '🛠️',
-      imageGeneration: '🖼️',
-      textRewrite: '✏️',
-      textTranslation: '🌐',
-      textSummarization: '📝',
-      textToSpeech: '🔊',
-      emailReply: '📧',
-      whatsAppResponse: '📱',
-      speechToText: '🎤',
-      unicodeSymbols: '🔣',
-    };
-    return icons[type] || '⚙️';
-  };
 
   return (
     <div className="flex flex-col h-full">
@@ -119,14 +88,11 @@ export function HomePage({ onShowToast }: HomePageProps) {
               {t.home.taskSelection}
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl">
-                {selectedOperation ? getOperationIcon(selectedOperation.type) : '⚙️'}
-              </span>
               <select
                 id="operation"
                 value={selectedOperation?.type || ''}
                 onChange={handleOperationChange}
-                className="w-full pl-12 pr-4 py-3 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                className="w-full px-4 py-3 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
                            bg-white dark:bg-slate-800 text-slate-900 dark:text-white
                            focus:ring-2 focus:ring-blue-500 focus:border-transparent
                            transition-colors duration-200 appearance-none cursor-pointer"
@@ -216,17 +182,6 @@ export function HomePage({ onShowToast }: HomePageProps) {
                 {t.home.send}
               </>
             )}
-          </button>
-          <button
-            onClick={handleCancel}
-            className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white
-                       bg-red-600 hover:bg-red-700
-                       rounded-lg transition-colors duration-200 shadow-sm
-                       focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
-                       dark:focus:ring-offset-slate-900"
-          >
-            <span>✕</span>
-            {t.home.cancel}
           </button>
         </div>
       </div>

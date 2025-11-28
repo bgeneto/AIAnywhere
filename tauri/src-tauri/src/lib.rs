@@ -11,7 +11,7 @@ mod text;
 use config::{Configuration, ConfigurationDto, PasteBehavior};
 use llm::{LlmRequest, LlmResponse, LlmService};
 use operations::Operation;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::{
     menu::{Menu, MenuItem},
@@ -43,9 +43,9 @@ async fn get_configuration(state: State<'_, AppState>) -> Result<ConfigurationDt
     Ok(ConfigurationDto::from(&*config))
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SaveConfigRequest {
+struct SaveConfigRequest {
     hotkey: String,
     api_base_url: String,
     api_key: Option<String>,
@@ -57,6 +57,9 @@ pub struct SaveConfigRequest {
     disable_text_selection: bool,
     disable_thinking: bool,
     enable_debug_logging: bool,
+    models: Vec<String>,
+    image_models: Vec<String>,
+    audio_models: Vec<String>,
 }
 
 #[tauri::command]
@@ -76,6 +79,9 @@ async fn save_configuration(
     config.disable_text_selection = request.disable_text_selection;
     config.disable_thinking = request.disable_thinking;
     config.enable_debug_logging = request.enable_debug_logging;
+    config.models = request.models;
+    config.image_models = request.image_models;
+    config.audio_models = request.audio_models;
 
     // Only update API key if provided
     if let Some(key) = request.api_key {
@@ -155,15 +161,29 @@ async fn test_connection(state: State<'_, AppState>) -> Result<(), String> {
 
 #[tauri::command]
 async fn get_models_with_endpoint(
+    state: State<'_, AppState>,
     api_base_url: String,
     api_key: Option<String>,
 ) -> Result<Vec<String>, String> {
-    // Create a temporary config with the provided endpoint and key
+    // Get the stored config for API key if not provided
+    let stored_config = {
+        let config = state.config.lock().map_err(|e| e.to_string())?;
+        config.clone()
+    };
+    
+    // Create a temporary config with the provided endpoint
     let mut config = Configuration::default();
     config.api_base_url = api_base_url;
     
+    // Use provided API key if given (as plaintext), otherwise use the stored encrypted one
     if let Some(key) = api_key {
-        config.api_key = key;
+        if !key.is_empty() {
+            config.plaintext_api_key = Some(key);
+        } else {
+            config.api_key = stored_config.api_key;
+        }
+    } else {
+        config.api_key = stored_config.api_key;
     }
     
     let service = LlmService::new(config);
@@ -174,15 +194,29 @@ async fn get_models_with_endpoint(
 
 #[tauri::command]
 async fn test_connection_with_endpoint(
+    state: State<'_, AppState>,
     api_base_url: String,
     api_key: Option<String>,
 ) -> Result<(), String> {
-    // Create a temporary config with the provided endpoint and key
+    // Get the stored config for API key if not provided
+    let stored_config = {
+        let config = state.config.lock().map_err(|e| e.to_string())?;
+        config.clone()
+    };
+    
+    // Create a temporary config with the provided endpoint
     let mut config = Configuration::default();
     config.api_base_url = api_base_url;
     
+    // Use provided API key if given (as plaintext), otherwise use the stored encrypted one
     if let Some(key) = api_key {
-        config.api_key = key;
+        if !key.is_empty() {
+            config.plaintext_api_key = Some(key);
+        } else {
+            config.api_key = stored_config.api_key;
+        }
+    } else {
+        config.api_key = stored_config.api_key;
     }
     
     let service = LlmService::new(config);

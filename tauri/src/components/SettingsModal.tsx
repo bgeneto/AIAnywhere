@@ -148,6 +148,9 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
         disableTextSelection,
         disableThinking,
         enableDebugLogging,
+        models,
+        imageModels,
+        audioModels,
       };
       
       await saveConfig(request);

@@ -35,6 +35,10 @@ pub struct Configuration {
     #[serde(default)]
     pub api_key: String,
     
+    /// Plaintext API key (not persisted, used for testing with unsaved keys)
+    #[serde(skip)]
+    pub plaintext_api_key: Option<String>,
+    
     /// Text/chat model name
     #[serde(default)]
     pub llm_model: String,
@@ -60,7 +64,7 @@ pub struct Configuration {
     pub disable_text_selection: bool,
     
     /// Disable thinking mode for LLM models
-    #[serde(default)]
+    #[serde(default = "default_disable_thinking")]
     pub disable_thinking: bool,
     
     /// Enable debug logging for API requests
@@ -96,19 +100,24 @@ fn default_tts_model() -> String {
     "tts-1-hd".to_string()
 }
 
+fn default_disable_thinking() -> bool {
+    true
+}
+
 impl Default for Configuration {
     fn default() -> Self {
         Self {
             hotkey: default_hotkey(),
             api_base_url: default_api_base_url(),
             api_key: String::new(),
+            plaintext_api_key: None,
             llm_model: String::new(),
             image_model: String::new(),
             audio_model: String::new(),
             tts_model: default_tts_model(),
             paste_behavior: PasteBehavior::default(),
             disable_text_selection: false,
-            disable_thinking: false,
+            disable_thinking: true,
             enable_debug_logging: false,
             system_prompts: get_default_system_prompts(),
             models: Vec::new(),
@@ -169,6 +178,11 @@ impl Configuration {
     
     /// Get decrypted API key
     pub fn get_api_key(&self) -> String {
+        // If plaintext API key is set (from form input), use it directly
+        if let Some(ref plaintext) = self.plaintext_api_key {
+            return plaintext.clone();
+        }
+        // Otherwise decrypt the stored encrypted key
         if self.api_key.is_empty() {
             return String::new();
         }

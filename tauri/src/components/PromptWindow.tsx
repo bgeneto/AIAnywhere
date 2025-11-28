@@ -83,23 +83,6 @@ export function PromptWindow({ onShowToast }: PromptWindowProps) {
 
   const isSpeechToText = selectedOperation?.type === 'speechToText';
 
-  // Get icon for operation type
-  const getOperationIcon = (type: string): string => {
-    const icons: Record<string, string> = {
-      generalChat: '💬',
-      imageGeneration: '🖼️',
-      textRewrite: '✏️',
-      textTranslation: '🌐',
-      textSummarization: '📝',
-      textToSpeech: '🔊',
-      emailReply: '📧',
-      whatsAppResponse: '📱',
-      speechToText: '🎤',
-      unicodeSymbols: '🔣',
-    };
-    return icons[type] || '⚙️';
-  };
-
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">
       {/* Header */}
@@ -131,14 +114,11 @@ export function PromptWindow({ onShowToast }: PromptWindowProps) {
             Task Selection:
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg">
-              {selectedOperation ? getOperationIcon(selectedOperation.type) : '⚙️'}
-            </span>
             <select
               id="operation"
               value={selectedOperation?.type || ''}
               onChange={handleOperationChange}
-              className="w-full pl-10 pr-3 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+              className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
                          bg-white dark:bg-slate-800 text-slate-900 dark:text-white
                          focus:ring-2 focus:ring-blue-500 focus:border-transparent
                          transition-colors duration-200 appearance-none cursor-pointer"
