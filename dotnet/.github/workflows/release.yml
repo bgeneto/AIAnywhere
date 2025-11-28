@@ -1,0 +1,52 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x' # Use .NET 10 as in the PowerShell script
+
+      - name: Get version from tag
+        id: vars
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Clean previous builds
+        run: |
+          Remove-Item -Recurse -Force AIAnywhere-Distribution,AIAnywhere-Optimized -ErrorAction SilentlyContinue
+          Remove-Item AIAnywhere-v*.zip -ErrorAction SilentlyContinue
+        shell: pwsh
+
+      - name: Build speed-optimized version
+        run: |
+          dotnet publish AIAnywhere.sln -c Release -r win-x64 --self-contained false `
+            /p:PublishReadyToRun=true `
+            /p:OptimizationPreference=Speed `
+            /p:TieredCompilation=true `
+            /p:TieredPGO=true `
+            /p:ReadyToRunUseCrossgen2=true `
+            /p:DebuggerSupport=false `
+            /p:EnableEventPipeProfiler=false
+        shell: pwsh
+
+      - name: Create optimized distribution folder
+        run: |
+          New-Item -ItemType Directory -Name "AIAnywhere-Optimized" | Out-Null
+          Copy-Item "bin\Release\net10.0-windows\win-x64\publish\*.exe" "AIAnywhere-Optimized\"
+          Copy-Item "bin\Release\net10.0-windows\win-x64\publish\*.dll" "AIAnywhere-Optimized\"
+          Copy-Item "bin\Release\net10.0-windows\win-x64\publish\*.json" "AIAnywhere-Optimized\"
+          Copy-Item "bin\Release\net10.0-windows\win-x64\publish\*.ico" "AIAnywhere-Optimized\"
+          Copy-Item "bin\Release\net10.0-windows\win-x64\publish\*.png" "AIAnywhere-Optimized\"
+          if (Test-Path "README.md") { Copy-Item "README.md" "AIAnywhere-Optimized\" }
+        shell: pwsh

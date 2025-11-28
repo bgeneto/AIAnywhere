@@ -1,0 +1,11 @@
+Simply run:
+
+Build-Release.ps1
+
+with powershell or:
+
+Portable:
+dotnet publish -c Release --self-contained true -r win-x64 /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true /p:DebugType=None
+
+Non-portable:
+dotnet publish -c Release --self-contained false -r win-x64 /p:PublishSingleFile=false /p:EnableCompressionInSingleFile=true /p:DebugType=None
