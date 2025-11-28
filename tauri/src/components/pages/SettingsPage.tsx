@@ -1,0 +1,507 @@
+import { useState, useEffect, KeyboardEvent } from 'react';
+import { useApp } from '../../context/AppContext';
+import { useI18n } from '../../i18n/index';
+import { ToastType, SaveConfigRequest, PasteBehavior } from '../../types';
+
+type SettingsTab = 'api' | 'audio' | 'general';
+
+interface SettingsPageProps {
+  onShowToast: (type: ToastType, title: string, message?: string) => void;
+}
+
+export function SettingsPage({ onShowToast }: SettingsPageProps) {
+  const { config, saveConfig, fetchModelsWithEndpoint, testConnectionWithEndpoint, loadConfig } = useApp();
+  const { t } = useI18n();
+  const [activeTab, setActiveTab] = useState<SettingsTab>('api');
+
+  // Form state
+  const [hotkey, setHotkey] = useState('');
+  const [apiBaseUrl, setApiBaseUrl] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [llmModel, setLlmModel] = useState('');
+  const [imageModel, setImageModel] = useState('');
+  const [audioModel, setAudioModel] = useState('');
+  const [ttsModel, setTtsModel] = useState('');
+  const [pasteBehavior, setPasteBehavior] = useState<PasteBehavior>('reviewMode');
+  const [disableTextSelection, setDisableTextSelection] = useState(false);
+  const [disableThinking, setDisableThinking] = useState(false);
+  const [enableDebugLogging, setEnableDebugLogging] = useState(false);
+
+  // Model lists
+  const [models, setModels] = useState<string[]>([]);
+  const [imageModels, setImageModels] = useState<string[]>([]);
+  const [audioModels, setAudioModels] = useState<string[]>([]);
+
+  // UI state
+  const [isCapturingHotkey, setIsCapturingHotkey] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
+
+  // Initialize form from config
+  useEffect(() => {
+    if (config) {
+      setHotkey(config.hotkey);
+      setApiBaseUrl(config.apiBaseUrl);
+      setLlmModel(config.llmModel);
+      setImageModel(config.imageModel);
+      setAudioModel(config.audioModel);
+      setTtsModel(config.ttsModel);
+      setPasteBehavior(config.pasteBehavior);
+      setDisableTextSelection(config.disableTextSelection);
+      setDisableThinking(config.disableThinking);
+      setEnableDebugLogging(config.enableDebugLogging);
+      setModels(config.models);
+      setImageModels(config.imageModels);
+      setAudioModels(config.audioModels);
+    }
+  }, [config]);
+
+  const tabs: { id: SettingsTab; label: string; icon: string }[] = [
+    { id: 'api', label: t.nav.apiSettings, icon: '🔑' },
+    { id: 'audio', label: 'Models Settings', icon: '🤖' },
+    { id: 'general', label: 'General', icon: '⚙️' },
+  ];
+
+  const handleHotkeyKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (!isCapturingHotkey) return;
+
+    e.preventDefault();
+
+    const parts: string[] = [];
+    if (e.ctrlKey) parts.push('Ctrl');
+    if (e.altKey) parts.push('Alt');
+    if (e.shiftKey) parts.push('Shift');
+    if (e.metaKey) parts.push('Meta');
+
+    const key = e.key;
+    if (!['Control', 'Alt', 'Shift', 'Meta'].includes(key)) {
+      parts.push(key.length === 1 ? key.toUpperCase() : key);
+      setHotkey(parts.join('+'));
+      setIsCapturingHotkey(false);
+    }
+  };
+
+  const handleFetchModels = async () => {
+    setIsFetchingModels(true);
+    try {
+      const allModels = await fetchModelsWithEndpoint(apiBaseUrl, apiKey || undefined);
+
+      const textModels = allModels.filter((m: string) =>
+        !m.includes('dall-e') &&
+        !m.includes('whisper') &&
+        !m.includes('tts') &&
+        !m.includes('embedding')
+      );
+      const imgModels = allModels.filter((m: string) =>
+        m.includes('dall-e') ||
+        m.includes('flux') ||
+        m.includes('image') ||
+        m.includes('FLUX')
+      );
+      const audModels = allModels.filter((m: string) =>
+        m.includes('whisper') ||
+        m.includes('tts') ||
+        m.includes('audio')
+      );
+
+      setModels(textModels);
+      setImageModels(imgModels);
+      setAudioModels(audModels);
+
+      onShowToast('success', 'Models Loaded', `Found ${allModels.length} models`);
+    } catch (error) {
+      onShowToast('error', t.toast.error, String(error));
+    } finally {
+      setIsFetchingModels(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    setIsTesting(true);
+    try {
+      await testConnectionWithEndpoint(apiBaseUrl, apiKey || undefined);
+      onShowToast('success', t.settings.api.testSuccess);
+    } catch (error) {
+      onShowToast('error', t.settings.api.testFailed, String(error));
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!llmModel) {
+      onShowToast('error', t.toast.error, 'LLM Model is required');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const request: SaveConfigRequest = {
+        hotkey,
+        apiBaseUrl,
+        apiKey: apiKey || undefined,
+        llmModel,
+        imageModel,
+        audioModel,
+        ttsModel,
+        pasteBehavior,
+        disableTextSelection,
+        disableThinking,
+        enableDebugLogging,
+      };
+      await saveConfig(request);
+      await loadConfig();
+      onShowToast('success', t.toast.configSaved);
+    } catch (error) {
+      onShowToast('error', t.toast.configSaveFailed, String(error));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Page Header */}
+      <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+          {t.settings.title}
+        </h2>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors
+                        ${activeTab === tab.id
+                ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-white dark:bg-slate-800'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+          >
+            <span>{tab.icon}</span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-2xl space-y-6">
+          {/* API Settings Tab */}
+          {activeTab === 'api' && (
+            <>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  {t.settings.api.configuration}
+                </h3>
+
+                {/* Endpoint */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {t.settings.api.endpoint}
+                  </label>
+                  <input
+                    type="url"
+                    value={apiBaseUrl}
+                    onChange={(e) => setApiBaseUrl(e.target.value)}
+                    placeholder={t.settings.api.endpointPlaceholder}
+                    className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                               bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                               focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* API Key */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {t.settings.api.apiKey}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder={config?.apiKeySet ? '••••••••••••••••' : t.settings.api.apiKeyPlaceholder}
+                      className="w-full px-4 py-2.5 pr-20 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                                 bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                                 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs font-medium
+                                 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white
+                                 bg-slate-100 dark:bg-slate-700 rounded transition-colors"
+                    >
+                      {showApiKey ? t.settings.api.hide : t.settings.api.show}
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {t.settings.api.apiKeyHelp}
+                  </p>
+                </div>
+
+                {/* Test Connection */}
+                <button
+                  onClick={handleTestConnection}
+                  disabled={isTesting || !apiBaseUrl}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium
+                             text-blue-600 dark:text-blue-400 
+                             bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40
+                             disabled:opacity-50 disabled:cursor-not-allowed
+                             rounded-lg transition-colors"
+                >
+                  {isTesting ? '⏳' : '🔌'} {t.settings.api.testConnection}
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* Models Settings Tab */}
+          {activeTab === 'audio' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  Models
+                </h3>
+                <button
+                  onClick={handleFetchModels}
+                  disabled={isFetchingModels}
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium
+                             text-slate-600 dark:text-slate-400 
+                             bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700
+                             disabled:opacity-50 disabled:cursor-not-allowed
+                             rounded-lg transition-colors"
+                >
+                  {isFetchingModels ? '⏳' : '🔄'} {t.settings.api.refreshModels}
+                </button>
+              </div>
+
+              {/* Text Model */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t.settings.api.textModel}
+                </label>
+                <select
+                  value={llmModel}
+                  onChange={(e) => setLlmModel(e.target.value)}
+                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {models.length > 0 ? (
+                    models.map((model) => (
+                      <option key={model} value={model}>{model}</option>
+                    ))
+                  ) : (
+                    <option value={llmModel}>{llmModel || 'Select a model'}</option>
+                  )}
+                </select>
+              </div>
+
+              {/* Image Model */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t.settings.api.imageModel}
+                </label>
+                <select
+                  value={imageModel}
+                  onChange={(e) => setImageModel(e.target.value)}
+                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {imageModels.length > 0 ? (
+                    imageModels.map((model) => (
+                      <option key={model} value={model}>{model}</option>
+                    ))
+                  ) : (
+                    <option value={imageModel}>{imageModel || 'Select a model'}</option>
+                  )}
+                </select>
+              </div>
+
+              {/* Audio Model (STT) */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t.settings.api.audioModel}
+                </label>
+                <select
+                  value={audioModel}
+                  onChange={(e) => setAudioModel(e.target.value)}
+                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {audioModels.length > 0 ? (
+                    audioModels.map((model) => (
+                      <option key={model} value={model}>{model}</option>
+                    ))
+                  ) : (
+                    <option value={audioModel}>{audioModel || 'Select a model'}</option>
+                  )}
+                </select>
+              </div>
+
+              {/* TTS Model */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t.settings.api.ttsModel}
+                </label>
+                <input
+                  type="text"
+                  value={ttsModel}
+                  onChange={(e) => setTtsModel(e.target.value)}
+                  placeholder="e.g., tts-1"
+                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* General Settings Tab */}
+          {activeTab === 'general' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                {t.settings.general.title}
+              </h3>
+
+              {/* Global Hotkey */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t.settings.general.hotkey}
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={hotkey}
+                    readOnly
+                    onKeyDown={handleHotkeyKeyDown}
+                    onFocus={() => setIsCapturingHotkey(true)}
+                    onBlur={() => setIsCapturingHotkey(false)}
+                    placeholder={t.settings.general.hotkeyPlaceholder}
+                    className={`w-full px-4 py-2.5 text-sm rounded-lg border 
+                               ${isCapturingHotkey
+                        ? 'border-blue-500 ring-2 ring-blue-500'
+                        : 'border-slate-300 dark:border-slate-600'} 
+                               bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                               cursor-pointer`}
+                  />
+                  {isCapturingHotkey && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-blue-500">
+                      Press keys...
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t.settings.general.hotkeyDesc}
+                </p>
+              </div>
+
+              {/* Paste Behavior */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t.settings.general.pasteBehavior}
+                </label>
+                <select
+                  value={pasteBehavior}
+                  onChange={(e) => setPasteBehavior(e.target.value as PasteBehavior)}
+                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="autoPaste">{t.settings.general.autoPaste}</option>
+                  <option value="clipboardOnly">{t.settings.general.clipboardMode}</option>
+                  <option value="reviewMode">{t.settings.general.reviewMode}</option>
+                </select>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t.settings.general.pasteBehaviorDesc}
+                </p>
+              </div>
+
+              {/* Toggle Options */}
+              <div className="space-y-3 pt-4">
+                <label className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg cursor-pointer">
+                  <div>
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {t.settings.general.disableTextSelection}
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      {t.settings.general.disableTextSelectionDesc}
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={disableTextSelection}
+                    onChange={(e) => setDisableTextSelection(e.target.checked)}
+                    className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 
+                               text-blue-600 focus:ring-blue-500"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg cursor-pointer">
+                  <div>
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {t.settings.general.disableThinking}
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      {t.settings.general.disableThinkingDesc}
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={disableThinking}
+                    onChange={(e) => setDisableThinking(e.target.checked)}
+                    className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 
+                               text-blue-600 focus:ring-blue-500"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg cursor-pointer">
+                  <div>
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {t.settings.general.enableDebugLogging}
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      {t.settings.general.enableDebugLoggingDesc}
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={enableDebugLogging}
+                    onChange={(e) => setEnableDebugLogging(e.target.checked)}
+                    className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 
+                               text-blue-600 focus:ring-blue-500"
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div className="max-w-2xl flex items-center justify-end gap-3">
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white
+                       bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400
+                       rounded-lg transition-colors duration-200 shadow-sm
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                       dark:focus:ring-offset-slate-900"
+          >
+            {isSaving ? '⏳' : '💾'} {t.settings.save}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

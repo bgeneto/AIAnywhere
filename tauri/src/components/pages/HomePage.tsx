@@ -1,0 +1,235 @@
+import { useEffect, useRef, KeyboardEvent } from 'react';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { useApp } from '../../context/AppContext';
+import { useI18n } from '../../i18n/index';
+import { OperationOptionsPanel } from '../OperationOptionsPanel';
+import { AudioUpload } from '../AudioUpload';
+import { ToastType } from '../../types';
+
+interface HomePageProps {
+  onShowToast: (type: ToastType, title: string, message?: string) => void;
+}
+
+export function HomePage({ onShowToast }: HomePageProps) {
+  const {
+    operations,
+    selectedOperation,
+    setSelectedOperation,
+    promptText,
+    setPromptText,
+    isProcessing,
+    processRequest,
+  } = useApp();
+
+  const { t } = useI18n();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Focus textarea on mount
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  const handleOperationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const operation = operations.find(op => op.type === e.target.value);
+    if (operation) {
+      setSelectedOperation(operation);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Ctrl/Cmd + Enter to send
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      handleSend();
+    }
+    // Escape to cancel/close
+    if (e.key === 'Escape') {
+      handleCancel();
+    }
+  };
+
+  const handleSend = async () => {
+    if (!selectedOperation) {
+      onShowToast('error', t.toast.error, 'Please select an operation');
+      return;
+    }
+
+    if (!promptText.trim() && selectedOperation.type !== 'speechToText') {
+      onShowToast('error', t.toast.error, 'Please enter a prompt');
+      return;
+    }
+
+    const response = await processRequest();
+    if (response && !response.success) {
+      onShowToast('error', t.toast.error, response.error || 'Request failed');
+    }
+  };
+
+  const handleCancel = async () => {
+    try {
+      const window = getCurrentWindow();
+      await window.hide();
+    } catch {
+      setPromptText('');
+    }
+  };
+
+  const handleClear = () => {
+    setPromptText('');
+    textareaRef.current?.focus();
+  };
+
+  const isSpeechToText = selectedOperation?.type === 'speechToText';
+
+  // Get icon for operation type
+  const getOperationIcon = (type: string): string => {
+    const icons: Record<string, string> = {
+      generalChat: '🛠️',
+      imageGeneration: '🖼️',
+      textRewrite: '✏️',
+      textTranslation: '🌐',
+      textSummarization: '📝',
+      textToSpeech: '🔊',
+      emailReply: '📧',
+      whatsAppResponse: '📱',
+      speechToText: '🎤',
+      unicodeSymbols: '🔣',
+    };
+    return icons[type] || '⚙️';
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Page Header */}
+      <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+          {t.home.title}
+        </h2>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-3xl space-y-6">
+          {/* Task Selection */}
+          <div className="space-y-2">
+            <label
+              htmlFor="operation"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+            >
+              {t.home.taskSelection}
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl">
+                {selectedOperation ? getOperationIcon(selectedOperation.type) : '⚙️'}
+              </span>
+              <select
+                id="operation"
+                value={selectedOperation?.type || ''}
+                onChange={handleOperationChange}
+                className="w-full pl-12 pr-4 py-3 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                           bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                           focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                           transition-colors duration-200 appearance-none cursor-pointer"
+              >
+                {operations.map((op) => (
+                  <option key={op.type} value={op.type}>
+                    {op.name}
+                  </option>
+                ))}
+              </select>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                ▼
+              </span>
+            </div>
+            {selectedOperation && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic">
+                {selectedOperation.description}
+              </p>
+            )}
+          </div>
+
+          {/* Operation Options */}
+          <OperationOptionsPanel />
+
+          {/* Audio Upload (for STT) */}
+          {isSpeechToText && (
+            <AudioUpload onError={(msg) => onShowToast('error', t.audio.title, msg)} />
+          )}
+
+          {/* Prompt Content */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="prompt"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                {t.home.promptContent}
+              </label>
+              <button
+                onClick={handleClear}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium
+                           text-slate-600 dark:text-slate-400 
+                           hover:text-slate-900 dark:hover:text-white
+                           bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700
+                           rounded-lg transition-colors"
+              >
+                🗑️ {t.home.clear}
+              </button>
+            </div>
+            <textarea
+              ref={textareaRef}
+              id="prompt"
+              value={promptText}
+              onChange={(e) => setPromptText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t.home.enterPrompt}
+              className="w-full h-48 px-4 py-3 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                         bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                         placeholder-slate-400 dark:placeholder-slate-500
+                         focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                         resize-none transition-colors duration-200"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div className="max-w-3xl flex items-center justify-end gap-3">
+          <button
+            onClick={handleSend}
+            disabled={isProcessing}
+            className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white
+                       bg-green-600 hover:bg-green-700 disabled:bg-green-400
+                       rounded-lg transition-colors duration-200 shadow-sm
+                       focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                       dark:focus:ring-offset-slate-900"
+          >
+            {isProcessing ? (
+              <>
+                <span className="animate-spin">⏳</span>
+                {t.home.processing}
+              </>
+            ) : (
+              <>
+                <span>✓</span>
+                {t.home.send}
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleCancel}
+            className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white
+                       bg-red-600 hover:bg-red-700
+                       rounded-lg transition-colors duration-200 shadow-sm
+                       focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
+                       dark:focus:ring-offset-slate-900"
+          >
+            <span>✕</span>
+            {t.home.cancel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

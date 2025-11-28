@@ -1,37 +1,167 @@
-export interface AgeKeyPair {
-  publicKey: string;
-  privateKey: string;
-  comment?: string;
+// AI Anywhere TypeScript Types
+
+// ============================================================================
+// Configuration Types
+// ============================================================================
+
+export type PasteBehavior = 'autoPaste' | 'clipboardMode' | 'reviewMode';
+
+export interface Configuration {
+  hotkey: string;
+  apiBaseUrl: string;
+  apiKeySet: boolean;
+  llmModel: string;
+  imageModel: string;
+  audioModel: string;
+  ttsModel: string;
+  pasteBehavior: PasteBehavior;
+  disableTextSelection: boolean;
+  disableThinking: boolean;
+  enableDebugLogging: boolean;
+  models: string[];
+  imageModels: string[];
+  audioModels: string[];
 }
 
-export interface EncryptionResult {
-  success: boolean;
-  inputFile: string;
-  outputFile: string;
-  publicKeys: string[];
+export interface SaveConfigRequest {
+  hotkey: string;
+  apiBaseUrl: string;
+  apiKey?: string;
+  llmModel: string;
+  imageModel: string;
+  audioModel: string;
+  ttsModel: string;
+  pasteBehavior: PasteBehavior;
+  disableTextSelection: boolean;
+  disableThinking: boolean;
+  enableDebugLogging: boolean;
 }
 
-export interface DecryptionResult {
-  success: boolean;
-  inputFile: string;
-  outputFile: string;
-  identity: string;
-}
+// ============================================================================
+// Operation Types
+// ============================================================================
 
-export interface StoredKey {
-  id: string;
+export type OperationType =
+  | 'generalChat'
+  | 'imageGeneration'
+  | 'textRewrite'
+  | 'textTranslation'
+  | 'textSummarization'
+  | 'textToSpeech'
+  | 'emailReply'
+  | 'whatsAppResponse'
+  | 'speechToText'
+  | 'unicodeSymbols';
+
+export type OptionType = 'select' | 'text' | 'number';
+
+export interface OperationOption {
+  key: string;
   name: string;
-  publicKey: string;
-  privateKey?: string;
-  comment?: string;
-  createdAt: number;
+  type: OptionType;
+  values: string[];
+  defaultValue: string;
+  required: boolean;
 }
 
-export interface EncryptedKeyEntry {
-  id: string;
+export interface Operation {
+  type: OperationType;
   name: string;
-  publicKey: string;
-  comment?: string;
-  createdAt: number;
-  encryptedPrivateKey?: string; // encrypted with passphrase
+  description: string;
+  systemPrompt: string;
+  options: OperationOption[];
+}
+
+// ============================================================================
+// LLM Request/Response Types
+// ============================================================================
+
+export interface LlmRequest {
+  operationType: OperationType;
+  prompt: string;
+  selectedText?: string;
+  options: Record<string, string>;
+  audioFilePath?: string;
+}
+
+export interface LlmResponse {
+  success: boolean;
+  content?: string;
+  error?: string;
+  isImage: boolean;
+  imageUrl?: string;
+  isAudio: boolean;
+  audioData?: number[];
+  audioFormat?: string;
+}
+
+// ============================================================================
+// UI State Types
+// ============================================================================
+
+export type ModalType = 'none' | 'settings' | 'about' | 'review';
+
+export interface AppState {
+  // Configuration
+  config: Configuration | null;
+  configLoading: boolean;
+  
+  // Operations
+  operations: Operation[];
+  selectedOperation: Operation | null;
+  operationOptions: Record<string, string>;
+  
+  // Prompt
+  promptText: string;
+  selectedText: string;
+  audioFilePath: string;
+  
+  // Processing
+  isProcessing: boolean;
+  
+  // Result
+  result: LlmResponse | null;
+  
+  // UI State
+  activeModal: ModalType;
+}
+
+// ============================================================================
+// Toast Types
+// ============================================================================
+
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+export interface ToastMessage {
+  id: string;
+  type: ToastType;
+  title: string;
+  message?: string;
+}
+
+// ============================================================================
+// Drag and Drop Types
+// ============================================================================
+
+export interface DragState {
+  isDragging: boolean;
+  isValidFile: boolean;
+}
+
+// Supported audio formats for STT
+export const SUPPORTED_AUDIO_FORMATS = [
+  'mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'wav', 'webm', 'ogg', 'flac', 'aac', 'wma'
+];
+
+export const MAX_AUDIO_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+
+export function isValidAudioFile(file: File): boolean {
+  const extension = file.name.split('.').pop()?.toLowerCase() || '';
+  return SUPPORTED_AUDIO_FORMATS.includes(extension) && file.size <= MAX_AUDIO_FILE_SIZE;
+}
+
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

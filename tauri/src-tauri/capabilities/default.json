@@ -2,45 +2,14 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
     "opener:default",
     "dialog:default",
     "clipboard-manager:allow-read-text",
-    "clipboard-manager:allow-write-text",
-    {
-      "identifier": "shell:allow-execute",
-      "allow": [
-        {
-          "name": "install-age-windows",
-          "cmd": "powershell.exe",
-          "args": [
-            "-NoProfile",
-            "-Command",
-            "winget install --id FiloSottile.age"
-          ],
-          "sidecar": false
-        },
-        {
-          "name": "install-age-linux",
-          "cmd": "sh",
-          "args": [
-            "-c",
-            "sudo apt-get update && sudo apt-get install -y age || sudo dnf install -y age"
-          ],
-          "sidecar": false
-        },
-        {
-          "name": "install-age-macos",
-          "cmd": "sh",
-          "args": [
-            "-c",
-            "brew install age"
-          ],
-          "sidecar": false
-        }
-      ]
-    }
+    "clipboard-manager:allow-write-text"
   ]
 }

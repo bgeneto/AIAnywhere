@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    tauriage_lib::run()
+    ai_anywhere_lib::run()
 }
