@@ -127,6 +127,26 @@ impl LlmService {
         }
     }
 
+    /// Build the correct API URL for the given endpoint path
+    fn build_api_url(&self, endpoint: &str) -> String {
+        let base = self.config.api_base_url.trim_end_matches('/');
+        
+        // Check if the base URL already ends with /v1 or similar API version
+        // If not, and it doesn't already contain the endpoint, add /v1
+        let needs_v1 = !base.ends_with("/v1") 
+            && !base.ends_with("/v1/")
+            && !base.contains("/chat/")
+            && !base.contains("/images/")
+            && !base.contains("/audio/")
+            && !base.contains("/models");
+        
+        if needs_v1 {
+            format!("{}/v1{}", base, endpoint)
+        } else {
+            format!("{}{}", base, endpoint)
+        }
+    }
+
     /// Process text-based requests (chat completions)
     async fn process_text_request(&self, request: &LlmRequest) -> LlmResponse {
         let operations = crate::operations::get_default_operations(&self.config.system_prompts);
@@ -167,14 +187,15 @@ impl LlmService {
             "temperature": 0.6
         });
 
-        let url = format!(
-            "{}/chat/completions",
-            self.config.api_base_url.trim_end_matches('/')
-        );
+        let url = self.build_api_url("/chat/completions");
 
         if self.config.enable_debug_logging {
             println!("--- LLM Request ---");
-            println!("URL: POST {}", url);
+            println!("Config API Base URL: {}", self.config.api_base_url);
+            println!("Final URL: POST {}", url);
+            println!("Model: {}", self.config.llm_model);
+            println!("API Key (first 8 chars): {}...", 
+                self.config.get_api_key().chars().take(8).collect::<String>());
             println!(
                 "Body: {}",
                 serde_json::to_string_pretty(&body).unwrap_or_default()
@@ -182,13 +203,15 @@ impl LlmService {
             println!("-------------------");
         }
 
+        let api_key = self.config.get_api_key();
+        if api_key.is_empty() {
+            return LlmResponse::error("API key is empty. Please configure your API key in settings.".to_string());
+        }
+
         let response = self
             .client
             .post(&url)
-            .header(
-                "Authorization",
-                format!("Bearer {}", self.config.get_api_key()),
-            )
+            .header("Authorization", format!("Bearer {}", api_key))
             .header("Content-Type", "application/json")
             .json(&body)
             .send()
@@ -275,14 +298,12 @@ impl LlmService {
             "n": 1
         });
 
-        let url = format!(
-            "{}/images/generations",
-            self.config.api_base_url.trim_end_matches('/')
-        );
+        let url = self.build_api_url("/images/generations");
 
         if self.config.enable_debug_logging {
             println!("--- Image Generation Request ---");
-            println!("URL: POST {}", url);
+            println!("Config API Base URL: {}", self.config.api_base_url);
+            println!("Final URL: POST {}", url);
             println!(
                 "Body: {}",
                 serde_json::to_string_pretty(&body).unwrap_or_default()
@@ -392,14 +413,13 @@ impl LlmService {
             form = form.text("language", language.to_string());
         }
 
-        let url = format!(
-            "{}/audio/transcriptions",
-            self.config.api_base_url.trim_end_matches('/')
-        );
+        let url = self.build_api_url("/audio/transcriptions");
 
         if self.config.enable_debug_logging {
             println!("--- Speech to Text Request ---");
-            println!("URL: POST {}", url);
+            println!("Config API Base URL: {}", self.config.api_base_url);
+            println!("Final URL: POST {}", url);
+            println!("Model: {}", model);
             println!("(Multipart form data not logged)");
             println!("------------------------------");
         }
@@ -503,14 +523,12 @@ impl LlmService {
             "language": language
         });
 
-        let url = format!(
-            "{}/audio/speech",
-            self.config.api_base_url.trim_end_matches('/')
-        );
+        let url = self.build_api_url("/audio/speech");
 
         if self.config.enable_debug_logging {
             println!("--- Text to Speech Request ---");
-            println!("URL: POST {}", url);
+            println!("Config API Base URL: {}", self.config.api_base_url);
+            println!("Final URL: POST {}", url);
             println!(
                 "Body: {}",
                 serde_json::to_string_pretty(&body).unwrap_or_default()
@@ -576,7 +594,14 @@ impl LlmService {
 
     /// Fetch available models from API
     pub async fn get_models(&self) -> Result<ModelsResponse, String> {
-        let url = format!("{}/models", self.config.api_base_url.trim_end_matches('/'));
+        let url = self.build_api_url("/models");
+
+        if self.config.enable_debug_logging {
+            println!("--- Fetching Models ---");
+            println!("Config API Base URL: {}", self.config.api_base_url);
+            println!("Final URL: GET {}", url);
+            println!("-----------------------");
+        }
 
         let response = self
             .client
@@ -589,9 +614,16 @@ impl LlmService {
             .await
             .map_err(|e| format!("Request failed: {}", e))?;
 
-        if !response.status().is_success() {
+        let status = response.status();
+        if !status.is_success() {
             let error_text = response.text().await.unwrap_or_default();
-            return Err(format!("Failed to fetch models: {}", error_text));
+            if self.config.enable_debug_logging {
+                println!("--- Models Response Error ---");
+                println!("Status: {}", status);
+                println!("Error: {}", error_text);
+                println!("-----------------------------");
+            }
+            return Err(format!("Failed to fetch models ({}): {}", status, error_text));
         }
 
         response

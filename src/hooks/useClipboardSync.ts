@@ -75,12 +75,11 @@ export function useClipboardSync(options: UseClipboardSyncOptions) {
         // Listen for focus events
         unlistenFocus = await appWindow.onFocusChanged(({ payload: focused }) => {
           if (focused) {
-            console.debug('Window focused, syncing clipboard...');
             syncClipboard();
           }
         });
 
-        // Also sync on initial mount
+        // Also sync on initial mount (only if enabled)
         syncClipboard();
       } catch (error) {
         console.error('Failed to set up window focus listener:', error);

@@ -12,6 +12,7 @@ interface HomePageProps {
 
 export function HomePage({ onShowToast }: HomePageProps) {
   const {
+    config,
     operations,
     selectedOperation,
     setSelectedOperation,
@@ -29,9 +30,11 @@ export function HomePage({ onShowToast }: HomePageProps) {
     setPromptText(text);
   }, [setPromptText]);
 
-  // Sync clipboard when window gains focus
+  // Sync clipboard when window gains focus (respects disableTextSelection setting)
+  // Default to disabled when config hasn't loaded yet
+  const clipboardSyncEnabled = config ? !config.disableTextSelection : false;
   const { syncClipboard } = useClipboardSync({
-    enabled: true,
+    enabled: clipboardSyncEnabled,
     onClipboardRead: handleClipboardSync,
     onlyIfEmpty: false, // Always sync to keep in sync with latest clipboard
     currentText: promptText,
@@ -146,17 +149,19 @@ export function HomePage({ onShowToast }: HomePageProps) {
                 {t.home.promptContent}
               </label>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={syncClipboard}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium
-                             text-slate-600 dark:text-slate-400 
-                             hover:text-slate-900 dark:hover:text-white
-                             bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700
-                             rounded-lg transition-colors"
-                  title="Refresh from clipboard"
-                >
-                  📋 Sync
-                </button>
+                {clipboardSyncEnabled && (
+                  <button
+                    onClick={syncClipboard}
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium
+                               text-slate-600 dark:text-slate-400 
+                               hover:text-slate-900 dark:hover:text-white
+                               bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700
+                               rounded-lg transition-colors"
+                    title="Refresh from clipboard"
+                  >
+                    📋 Sync
+                  </button>
+                )}
                 <button
                   onClick={handleClear}
                   className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium
