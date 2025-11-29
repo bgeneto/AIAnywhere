@@ -16,7 +16,6 @@ export interface Configuration {
   ttsModel: string;
   pasteBehavior: PasteBehavior;
   disableTextSelection: boolean;
-  disableThinking: boolean;
   enableDebugLogging: boolean;
   copyDelayMs: number;
   models: string[];
@@ -34,7 +33,6 @@ export interface SaveConfigRequest {
   ttsModel: string;
   pasteBehavior: PasteBehavior;
   disableTextSelection: boolean;
-  disableThinking: boolean;
   enableDebugLogging: boolean;
   copyDelayMs: number;
   models: string[];

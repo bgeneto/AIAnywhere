@@ -63,10 +63,6 @@ pub struct Configuration {
     #[serde(default)]
     pub disable_text_selection: bool,
     
-    /// Disable thinking mode for LLM models
-    #[serde(default = "default_disable_thinking")]
-    pub disable_thinking: bool,
-    
     /// Enable debug logging for API requests
     #[serde(default)]
     pub enable_debug_logging: bool,
@@ -104,10 +100,6 @@ fn default_tts_model() -> String {
     "tts-1-hd".to_string()
 }
 
-fn default_disable_thinking() -> bool {
-    true
-}
-
 fn default_copy_delay_ms() -> u64 {
     200
 }
@@ -125,7 +117,6 @@ impl Default for Configuration {
             tts_model: default_tts_model(),
             paste_behavior: PasteBehavior::default(),
             disable_text_selection: false,
-            disable_thinking: true,
             enable_debug_logging: false,
             copy_delay_ms: default_copy_delay_ms(),
             system_prompts: get_default_system_prompts(),
@@ -221,7 +212,6 @@ pub struct ConfigurationDto {
     pub tts_model: String,
     pub paste_behavior: PasteBehavior,
     pub disable_text_selection: bool,
-    pub disable_thinking: bool,
     pub enable_debug_logging: bool,
     pub copy_delay_ms: u64,
     pub models: Vec<String>,
@@ -241,7 +231,6 @@ impl From<&Configuration> for ConfigurationDto {
             tts_model: config.tts_model.clone(),
             paste_behavior: config.paste_behavior,
             disable_text_selection: config.disable_text_selection,
-            disable_thinking: config.disable_thinking,
             enable_debug_logging: config.enable_debug_logging,
             copy_delay_ms: config.copy_delay_ms,
             models: config.models.clone(),

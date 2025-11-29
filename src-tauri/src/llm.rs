@@ -157,7 +157,7 @@ impl LlmService {
         };
 
         // Build request body
-        let mut body = json!({
+        let body = json!({
             "model": self.config.llm_model,
             "messages": [
                 {"role": "system", "content": system_prompt},
@@ -166,11 +166,6 @@ impl LlmService {
             "max_tokens": 4096,
             "temperature": 0.6
         });
-
-        // Add reasoning_effort if thinking is disabled
-        if self.config.disable_thinking {
-            body["reasoning_effort"] = json!("low");
-        }
 
         let url = format!(
             "{}/chat/completions",

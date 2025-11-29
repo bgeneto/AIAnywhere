@@ -26,7 +26,6 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   const [ttsModel, setTtsModel] = useState('');
   const [pasteBehavior, setPasteBehavior] = useState<PasteBehavior>('reviewMode');
   const [disableTextSelection, setDisableTextSelection] = useState(false);
-  const [disableThinking, setDisableThinking] = useState(false);
   const [enableDebugLogging, setEnableDebugLogging] = useState(false);
   const [copyDelayMs, setCopyDelayMs] = useState(200);
 
@@ -69,7 +68,6 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
       setTtsModel(config.ttsModel);
       setPasteBehavior(config.pasteBehavior);
       setDisableTextSelection(config.disableTextSelection);
-      setDisableThinking(config.disableThinking);
       setEnableDebugLogging(config.enableDebugLogging);
       setCopyDelayMs(config.copyDelayMs);
       setModels(config.models);
@@ -167,7 +165,6 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
         ttsModel,
         pasteBehavior,
         disableTextSelection,
-        disableThinking,
         enableDebugLogging,
         copyDelayMs,
         models,
@@ -455,24 +452,6 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                     type="checkbox"
                     checked={disableTextSelection}
                     onChange={(e) => setDisableTextSelection(e.target.checked)}
-                    className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 
-                               text-blue-600 focus:ring-blue-500"
-                  />
-                </label>
-
-                <label className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg cursor-pointer">
-                  <div>
-                    <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      {t.settings.general.disableThinking}
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      {t.settings.general.disableThinkingDesc}
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={disableThinking}
-                    onChange={(e) => setDisableThinking(e.target.checked)}
                     className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 
                                text-blue-600 focus:ring-blue-500"
                   />

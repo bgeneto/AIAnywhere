@@ -27,7 +27,6 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
   const [ttsModel, setTtsModel] = useState('');
   const [pasteBehavior, setPasteBehavior] = useState<PasteBehavior>('reviewMode');
   const [disableTextSelection, setDisableTextSelection] = useState(false);
-  const [disableThinking, setDisableThinking] = useState(false);
   const [enableDebugLogging, setEnableDebugLogging] = useState(false);
   const [copyDelayMs, setCopyDelayMs] = useState(200);
 
@@ -70,7 +69,6 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
       setTtsModel(config.ttsModel);
       setPasteBehavior(config.pasteBehavior);
       setDisableTextSelection(config.disableTextSelection);
-      setDisableThinking(config.disableThinking);
       setEnableDebugLogging(config.enableDebugLogging);
       setCopyDelayMs(config.copyDelayMs);
       setModels(config.models);
@@ -146,7 +144,6 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
         ttsModel,
         pasteBehavior,
         disableTextSelection,
-        disableThinking,
         enableDebugLogging,
         copyDelayMs,
         models,
@@ -382,24 +379,6 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
                   </span>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     Faster window opening, no auto text capture
-                  </p>
-                </div>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={disableThinking}
-                  onChange={(e) => setDisableThinking(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 
-                             text-blue-600 focus:ring-blue-500"
-                />
-                <div>
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Disable Thinking Mode
-                  </span>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Faster responses with reasoning_effort=low
                   </p>
                 </div>
               </label>

@@ -3,7 +3,9 @@ import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeFile } from '@tauri-apps/plugin-fs';
 import { invoke } from '@tauri-apps/api/core';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useApp } from '../context/AppContext';
+import { useI18n } from '../i18n/index';
 import { ToastType } from '../types';
 
 interface ReviewModalProps {
@@ -12,6 +14,7 @@ interface ReviewModalProps {
 
 export function ReviewModal({ onShowToast }: ReviewModalProps) {
   const { result, closeModal, clearResult, selectedOperation, config } = useApp();
+  const { t } = useI18n();
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
   const [imageLoading, setImageLoading] = useState(true);
@@ -34,9 +37,9 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
     try {
       const textToCopy = isEditing ? editedContent : (result.content || '');
       await writeText(textToCopy);
-      onShowToast('success', 'Copied', 'Content copied to clipboard');
+      onShowToast('success', t.review.copied, t.review.copied);
     } catch (error) {
-      onShowToast('error', 'Error', 'Failed to copy to clipboard');
+      onShowToast('error', t.toast.error, 'Failed to copy to clipboard');
     }
   };
 
@@ -49,22 +52,26 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
       closeModal();
       clearResult();
       
-      // Small delay to allow modal to close
+      // Hide the window to allow focus to return to original app
+      const appWindow = getCurrentWindow();
+      await appWindow.hide();
+      
+      // Small delay to allow window to hide
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Restore focus to the previously active window (Windows-specific)
       // On macOS/Linux, focus should return automatically when our window hides
       await invoke('restore_foreground_window');
       
-      // Another small delay to ensure focus is restored
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Another small delay to ensure focus is restored (configurable via copyDelayMs)
+      await new Promise(resolve => setTimeout(resolve, config?.copyDelayMs || 200));
       
       // Simulate paste (Ctrl+V / Cmd+V)
       await invoke('simulate_paste');
       
-      onShowToast('success', 'Pasted', 'Content pasted to application');
+      onShowToast('success', t.review.pasted, t.review.pasted);
     } catch (error) {
-      onShowToast('error', 'Error', 'Failed to paste content');
+      onShowToast('error', t.toast.error, 'Failed to paste content');
     }
   };
 
@@ -235,7 +242,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                        rounded-lg transition-colors duration-200"
           >
             <span>←</span>
-            Back
+            {t.review.back}
           </button>
 
           <div className="flex items-center gap-2">
@@ -246,7 +253,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                            border border-slate-300 dark:border-slate-600 rounded-lg
                            hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
-                💾 Save Image
+                💾 {t.review.saveImage}
               </button>
             )}
 
@@ -257,7 +264,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                            border border-slate-300 dark:border-slate-600 rounded-lg
                            hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
-                💾 Save Audio
+                💾 {t.review.save}
               </button>
             )}
 
@@ -269,7 +276,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                              border border-slate-300 dark:border-slate-600 rounded-lg
                              hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
-                  📋 Copy
+                  📋 {t.review.copy}
                 </button>
 
                 {config?.pasteBehavior !== 'clipboardMode' && (
@@ -278,7 +285,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white
                                bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                   >
-                    📋 Paste
+                    📋 {t.review.paste}
                   </button>
                 )}
               </>

@@ -122,8 +122,6 @@ export interface Translations {
       reviewMode: string;
       disableTextSelection: string;
       disableTextSelectionDesc: string;
-      disableThinking: string;
-      disableThinkingDesc: string;
       enableDebugLogging: string;
       enableDebugLoggingDesc: string;
       copyDelay: string;
@@ -302,8 +300,6 @@ export const translations: Record<Language, Translations> = {
         reviewMode: 'Review Mode (Show preview window)',
         disableTextSelection: 'Disable automatic text selection and clipboard detection',
         disableTextSelectionDesc: 'Enabling this feature makes the app more responsive but less productive',
-        disableThinking: 'Disable thinking mode (for compatible models)',
-        disableThinkingDesc: 'Reduces thinking time for reasoning models like OpenAI o1',
         enableDebugLogging: 'Enable debug logging for API requests',
         enableDebugLoggingDesc: 'Logs API requests/responses to help diagnose custom endpoint compatibility issues',
         copyDelay: 'Clipboard Delay (ms)',
@@ -484,8 +480,6 @@ export const translations: Record<Language, Translations> = {
         reviewMode: 'Modo Revisão (Mostra janela de pré-visualização)',
         disableTextSelection: 'Desabilitar seleção automática de texto e detecção de área de transferência',
         disableTextSelectionDesc: 'Habilitar este recurso torna o app mais responsivo, mas menos produtivo',
-        disableThinking: 'Desabilitar modo de pensamento (para modelos compatíveis)',
-        disableThinkingDesc: 'Reduz o tempo de pensamento para modelos de raciocínio como OpenAI o1',
         enableDebugLogging: 'Habilitar registro de depuração para requisições de API',
         enableDebugLoggingDesc: 'Registra requisições/respostas de API para ajudar a diagnosticar problemas de compatibilidade de endpoints personalizados',
         copyDelay: 'Atraso de Clipboard (ms)',

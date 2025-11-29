@@ -55,7 +55,6 @@ struct SaveConfigRequest {
     tts_model: String,
     paste_behavior: PasteBehavior,
     disable_text_selection: bool,
-    disable_thinking: bool,
     enable_debug_logging: bool,
     copy_delay_ms: u64,
     models: Vec<String>,
@@ -78,7 +77,6 @@ async fn save_configuration(
     config.tts_model = request.tts_model;
     config.paste_behavior = request.paste_behavior;
     config.disable_text_selection = request.disable_text_selection;
-    config.disable_thinking = request.disable_thinking;
     config.enable_debug_logging = request.enable_debug_logging;
     config.copy_delay_ms = request.copy_delay_ms;
     config.models = request.models;
