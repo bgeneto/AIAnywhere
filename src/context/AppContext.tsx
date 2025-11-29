@@ -104,9 +104,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let unlistenChunk: UnlistenFn | null = null;
     let unlistenCancelled: UnlistenFn | null = null;
+    let isMounted = true; // Track if effect is still active
 
     const setupListeners = async () => {
-      unlistenChunk = await listen<StreamingChunk>('llm-stream-chunk', (event) => {
+      const chunkListener = await listen<StreamingChunk>('llm-stream-chunk', (event) => {
+        if (!isMounted) return; // Don't update state if unmounted
         if (event.payload.done) {
           setIsStreaming(false);
         } else {
@@ -114,15 +116,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       });
 
-      unlistenCancelled = await listen('llm-stream-cancelled', () => {
+      const cancelledListener = await listen('llm-stream-cancelled', () => {
+        if (!isMounted) return; // Don't update state if unmounted
         setIsStreaming(false);
         setStreamingContent('');
       });
+
+      // Only assign if still mounted
+      if (isMounted) {
+        unlistenChunk = chunkListener;
+        unlistenCancelled = cancelledListener;
+      } else {
+        // Component unmounted before listeners were set up, clean them up immediately
+        chunkListener();
+        cancelledListener();
+      }
     };
 
     setupListeners();
 
     return () => {
+      isMounted = false;
       unlistenChunk?.();
       unlistenCancelled?.();
     };
@@ -201,6 +215,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [selectedOperation]);
 
+  // Save to history helper
+  const saveToHistory = useCallback(async (
+    operationType: string,
+    promptText: string,
+    responseText: string | undefined,
+    options: Record<string, string>
+  ) => {
+    try {
+      await invoke('save_history_entry', {
+        operationType,
+        promptText,
+        responseText: responseText || null,
+        operationOptions: options,
+        mediaPath: null, // Media saved separately if needed
+      });
+    } catch (error) {
+      console.error('Failed to save to history:', error);
+    }
+  }, []);
+
   // Process LLM request
   const processRequest = useCallback(async (): Promise<LlmResponse | null> => {
     if (!selectedOperation) return null;
@@ -219,6 +253,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setResult(response);
 
       if (response.success) {
+        // Save to history
+        await saveToHistory(
+          selectedOperation.type,
+          promptText,
+          response.content,
+          operationOptions
+        );
+
         // Open review modal only if in review mode
         if (config?.pasteBehavior === 'reviewMode') {
           setActiveModal('review');
@@ -238,7 +280,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsProcessing(false);
     }
-  }, [selectedOperation, promptText, selectedText, operationOptions, audioFilePath]);
+  }, [selectedOperation, promptText, selectedText, operationOptions, audioFilePath, saveToHistory, config?.pasteBehavior]);
 
   // Process LLM request with streaming
   const processRequestStreaming = useCallback(async (): Promise<LlmResponse | null> => {
@@ -262,6 +304,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsStreaming(false);
 
       if (response.success) {
+        // Save to history
+        await saveToHistory(
+          selectedOperation.type,
+          promptText,
+          response.content,
+          operationOptions
+        );
+
         // Open review modal only if in review mode
         if (config?.pasteBehavior === 'reviewMode') {
           setActiveModal('review');
@@ -282,7 +332,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsProcessing(false);
     }
-  }, [selectedOperation, promptText, selectedText, operationOptions, audioFilePath, config?.pasteBehavior]);
+  }, [selectedOperation, promptText, selectedText, operationOptions, audioFilePath, config?.pasteBehavior, saveToHistory]);
 
   // Cancel the current request
   const cancelRequest = useCallback(async () => {

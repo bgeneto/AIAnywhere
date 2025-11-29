@@ -79,9 +79,18 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
   };
 
   const handleSaveImage = async () => {
-    if (!result.imageUrl) return;
+    if (!result.imageUrl) {
+      console.error('[SaveImage] No image URL available in result');
+      onShowToast('error', 'Error', 'No image URL available');
+      return;
+    }
+    
+    console.log('[SaveImage] Starting save process...');
+    console.log('[SaveImage] Image URL:', result.imageUrl);
     
     try {
+      // Show save dialog
+      console.log('[SaveImage] Opening save dialog...');
       const savePath = await save({
         filters: [{
           name: 'Images',
@@ -90,17 +99,107 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
         defaultPath: 'generated-image.png',
       });
       
-      if (savePath) {
-        // Fetch the image
-        const response = await fetch(result.imageUrl);
-        const arrayBuffer = await response.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        
-        await writeFile(savePath, uint8Array);
-        onShowToast('success', 'Saved', 'Image saved successfully');
+      console.log('[SaveImage] Save path selected:', savePath);
+      
+      if (!savePath) {
+        console.log('[SaveImage] User cancelled save dialog');
+        return;
       }
+      
+      // Try to download and save via backend command (bypasses CORS)
+      console.log('[SaveImage] Attempting to download image via backend...');
+      try {
+        await invoke('download_and_save_image', { 
+          imageUrl: result.imageUrl, 
+          savePath: savePath 
+        });
+        console.log('[SaveImage] Backend download successful!');
+        onShowToast('success', 'Saved', 'Image saved successfully');
+        return;
+      } catch (backendError) {
+        console.warn('[SaveImage] Backend download failed, trying frontend fetch...', backendError);
+      }
+      
+      // Fallback: Try frontend fetch (may fail due to CORS)
+      console.log('[SaveImage] Attempting frontend fetch...');
+      console.log('[SaveImage] Fetching from URL:', result.imageUrl);
+      
+      const response = await fetch(result.imageUrl);
+      console.log('[SaveImage] Fetch response status:', response.status);
+      console.log('[SaveImage] Fetch response ok:', response.ok);
+      console.log('[SaveImage] Fetch response headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        throw new Error(`Fetch failed with status ${response.status}: ${response.statusText}`);
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      console.log('[SaveImage] ArrayBuffer size:', arrayBuffer.byteLength);
+      
+      if (arrayBuffer.byteLength === 0) {
+        throw new Error('Downloaded image is empty (0 bytes)');
+      }
+      
+      const uint8Array = new Uint8Array(arrayBuffer);
+      console.log('[SaveImage] Uint8Array length:', uint8Array.length);
+      
+      console.log('[SaveImage] Writing file to:', savePath);
+      await writeFile(savePath, uint8Array);
+      console.log('[SaveImage] File written successfully!');
+      
+      onShowToast('success', 'Saved', 'Image saved successfully');
     } catch (error) {
-      onShowToast('error', 'Error', 'Failed to save image');
+      console.error('[SaveImage] Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
+      });
+      onShowToast('error', 'Error', `Failed to save image: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  const handleCopyImage = async () => {
+    if (!result.imageUrl) return;
+    
+    try {
+      await invoke('copy_image_to_clipboard_command', { imageUrl: result.imageUrl });
+      onShowToast('success', t.review.copied, t.review.copied);
+    } catch (error) {
+      onShowToast('error', t.toast.error, `Failed to copy image: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  const handlePasteImage = async () => {
+    if (!result.imageUrl) return;
+    
+    try {
+      // First copy the image to clipboard
+      await invoke('copy_image_to_clipboard_command', { imageUrl: result.imageUrl });
+      
+      // Close the modal first
+      closeModal();
+      clearResult();
+      
+      // Hide the window to allow focus to return to original app
+      const appWindow = getCurrentWindow();
+      await appWindow.hide();
+      
+      // Small delay to allow window to hide
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Restore focus to the previously active window
+      await invoke('restore_foreground_window');
+      
+      // Another small delay to ensure focus is restored
+      await new Promise(resolve => setTimeout(resolve, config?.copyDelayMs || 200));
+      
+      // Simulate paste (Ctrl+V / Cmd+V)
+      await invoke('simulate_paste');
+      
+      onShowToast('success', t.review.pasted, t.review.pasted);
+    } catch (error) {
+      onShowToast('error', t.toast.error, `Failed to paste image: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -273,12 +372,30 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
 
           <div className="flex items-center gap-2">
             {result.isImage && (
-              <button
-                onClick={handleSaveImage}
-                className="btn-outline"
-              >
-                💾 {t.review.saveImage}
-              </button>
+              <>
+                <button
+                  onClick={handleCopyImage}
+                  className="btn-outline"
+                >
+                  📋 {t.review.copy}
+                </button>
+                
+                {config?.pasteBehavior !== 'clipboardMode' && (
+                  <button
+                    onClick={handlePasteImage}
+                    className="btn-primary"
+                  >
+                    📋 {t.review.paste}
+                  </button>
+                )}
+                
+                <button
+                  onClick={handleSaveImage}
+                  className="btn-outline"
+                >
+                  💾 {t.review.saveImage}
+                </button>
+              </>
             )}
 
             {result.isAudio && (

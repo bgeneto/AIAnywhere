@@ -109,8 +109,13 @@ export function HomePage({ onShowToast }: HomePageProps) {
     }
 
     const response = await processRequestStreaming();
-    if (response && !response.success) {
-      onShowToast('error', t.toast.error, response.error || 'Request failed');
+    if (response) {
+      if (!response.success) {
+        onShowToast('error', t.toast.error, response.error || 'Request failed');
+      } else if (config?.pasteBehavior === 'clipboardMode') {
+        // Notify user that content was copied to clipboard
+        onShowToast('success', t.toast.success, t.review.copied);
+      }
     }
   };
 

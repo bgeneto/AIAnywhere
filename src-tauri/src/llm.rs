@@ -244,6 +244,7 @@ impl LlmService {
                 // Process the streaming response
                 let mut full_content = String::new();
                 let mut stream = resp.bytes_stream();
+                let mut buffer = String::new(); // Buffer for incomplete SSE lines
 
                 while let Some(chunk_result) = stream.next().await {
                     // Check if cancelled
@@ -256,9 +257,13 @@ impl LlmService {
                     match chunk_result {
                         Ok(chunk) => {
                             let chunk_str = String::from_utf8_lossy(&chunk);
+                            buffer.push_str(&chunk_str);
                             
-                            // Parse SSE lines
-                            for line in chunk_str.lines() {
+                            // Process complete lines from buffer
+                            while let Some(newline_pos) = buffer.find('\n') {
+                                let line = buffer[..newline_pos].trim_end_matches('\r').to_string();
+                                buffer = buffer[newline_pos + 1..].to_string();
+                                
                                 if line.starts_with("data: ") {
                                     let data = &line[6..];
                                     

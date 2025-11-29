@@ -12,7 +12,7 @@ mod text;
 
 use config::{Configuration, ConfigurationDto, PasteBehavior};
 use custom_tasks::{CustomTask, CustomTaskOption, CustomTasksManager};
-use history::{HistoryEntry, HistoryEntryResponse, HistoryManager};
+use history::{HistoryEntry, HistoryManager};
 use llm::{LlmRequest, LlmResponse, LlmService};
 use operations::Operation;
 use serde::{Deserialize, Serialize};
@@ -39,6 +39,74 @@ impl AppState {
             cancel_flag: Arc::new(AtomicBool::new(false)),
         }
     }
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/// Download an image from URL and copy it to the system clipboard
+async fn copy_image_to_clipboard(app: &AppHandle, image_url: &str, debug_logging: bool) -> Result<(), String> {
+    use tauri_plugin_clipboard_manager::ClipboardExt;
+
+    if debug_logging {
+        println!("[copy_image_to_clipboard] Starting download from: {}", image_url);
+    }
+
+    // Create HTTP client
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+    // Download the image
+    let response = client
+        .get(image_url)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to download image: {}", e))?;
+
+    let status = response.status();
+    if !status.is_success() {
+        return Err(format!("Download failed with status: {}", status));
+    }
+
+    let bytes = response.bytes().await
+        .map_err(|e| format!("Failed to read image bytes: {}", e))?;
+
+    if debug_logging {
+        println!("[copy_image_to_clipboard] Downloaded {} bytes", bytes.len());
+    }
+
+    if bytes.is_empty() {
+        return Err("Downloaded image is empty".to_string());
+    }
+
+    // Decode the image to get RGBA data
+    let img = image::load_from_memory(&bytes)
+        .map_err(|e| format!("Failed to decode image: {}", e))?;
+    
+    let rgba = img.to_rgba8();
+    let (width, height) = rgba.dimensions();
+    let raw_pixels = rgba.into_raw();
+
+    if debug_logging {
+        println!("[copy_image_to_clipboard] Image decoded: {}x{}, {} bytes of RGBA data", width, height, raw_pixels.len());
+    }
+
+    // Create Tauri Image from RGBA data
+    let tauri_image = tauri::image::Image::new_owned(raw_pixels, width, height);
+
+    // Copy to clipboard
+    app.clipboard()
+        .write_image(&tauri_image)
+        .map_err(|e| format!("Failed to write image to clipboard: {}", e))?;
+
+    if debug_logging {
+        println!("[copy_image_to_clipboard] Image copied to clipboard successfully!");
+    }
+
+    Ok(())
 }
 
 // ============================================================================
@@ -145,37 +213,20 @@ async fn get_history(search_query: Option<String>) -> Result<Vec<HistoryEntry>, 
 async fn save_history_entry(
     state: State<'_, AppState>,
     operation_type: String,
-    operation_name: String,
-    prompt: String,
-    options: HashMap<String, String>,
+    prompt_text: String,
     response_text: Option<String>,
-    response_image_data: Option<Vec<u8>>,
-    response_image_format: Option<String>,
-    response_audio_data: Option<Vec<u8>>,
-    response_audio_format: Option<String>,
+    operation_options: HashMap<String, String>,
+    media_path: Option<String>,
 ) -> Result<HistoryEntry, String> {
     let config = state.config.lock().map_err(|e| e.to_string())?;
     
-    // Save media files if provided
-    let image_path = if let (Some(data), Some(format)) = (response_image_data, response_image_format) {
-        Some(HistoryManager::save_image(&data, &format)?)
-    } else {
-        None
-    };
-    
-    let audio_path = if let (Some(data), Some(format)) = (response_audio_data, response_audio_format) {
-        Some(HistoryManager::save_audio(&data, &format)?)
-    } else {
-        None
-    };
-    
-    let response = HistoryEntryResponse {
-        text: response_text,
-        image_path,
-        audio_path,
-    };
-    
-    let entry = HistoryEntry::new(operation_type, operation_name, prompt, options, response);
+    let entry = HistoryEntry::new(
+        operation_type,
+        prompt_text,
+        response_text,
+        operation_options,
+        media_path,
+    );
     HistoryManager::add_entry(entry.clone(), config.history_limit)?;
     
     Ok(entry)
@@ -268,7 +319,38 @@ async fn process_llm_request(
     let response = service.process_request(request).await;
 
     if response.success {
-        if let Some(content) = &response.content {
+        // Handle image responses
+        if response.is_image {
+            if let Some(image_url) = &response.image_url {
+                match config.paste_behavior {
+                    PasteBehavior::AutoPaste => {
+                        // Download and copy image to clipboard
+                        if let Err(e) = copy_image_to_clipboard(&app, image_url, config.enable_debug_logging).await {
+                            if config.enable_debug_logging {
+                                println!("[process_llm_request] Failed to copy image to clipboard: {}", e);
+                            }
+                            // Don't fail the whole request, just log the error
+                        } else {
+                            // Restore window focus and paste
+                            clipboard::restore_foreground_window()?;
+                            clipboard::simulate_paste()?;
+                        }
+                    }
+                    PasteBehavior::ClipboardMode => {
+                        // Download and copy image to clipboard only
+                        if let Err(e) = copy_image_to_clipboard(&app, image_url, config.enable_debug_logging).await {
+                            if config.enable_debug_logging {
+                                println!("[process_llm_request] Failed to copy image to clipboard: {}", e);
+                            }
+                        }
+                    }
+                    PasteBehavior::ReviewMode => {
+                        // Do nothing, frontend handles it
+                    }
+                }
+            }
+        } else if let Some(content) = &response.content {
+            // Handle text responses
             match config.paste_behavior {
                 PasteBehavior::AutoPaste => {
                     // Copy to clipboard
@@ -319,9 +401,37 @@ async fn process_llm_request_streaming(
 
     // Check if operation supports streaming
     if !LlmService::supports_streaming(&request.operation_type) {
-        // Fall back to non-streaming for non-text operations
+        // Fall back to non-streaming for non-text operations (images, audio, etc.)
         let service = LlmService::new(config.clone());
         let response = service.process_request(request).await;
+        
+        // Handle image responses for non-streaming operations
+        if response.success && response.is_image {
+            if let Some(image_url) = &response.image_url {
+                match config.paste_behavior {
+                    PasteBehavior::AutoPaste => {
+                        if let Err(e) = copy_image_to_clipboard(&app, image_url, config.enable_debug_logging).await {
+                            if config.enable_debug_logging {
+                                println!("[process_llm_request_streaming] Failed to copy image to clipboard: {}", e);
+                            }
+                        } else {
+                            // Restore window focus and paste
+                            clipboard::restore_foreground_window()?;
+                            clipboard::simulate_paste()?;
+                        }
+                    }
+                    PasteBehavior::ClipboardMode => {
+                        if let Err(e) = copy_image_to_clipboard(&app, image_url, config.enable_debug_logging).await {
+                            if config.enable_debug_logging {
+                                println!("[process_llm_request_streaming] Failed to copy image to clipboard: {}", e);
+                            }
+                        }
+                    }
+                    PasteBehavior::ReviewMode => {}
+                }
+            }
+        }
+        
         return Ok(response);
     }
 
@@ -573,6 +683,129 @@ fn mask_api_key(key: String) -> String {
 }
 
 // ============================================================================
+// File Download Commands
+// ============================================================================
+
+/// Download an image from a URL and save it to a local file
+/// This bypasses CORS restrictions by using the backend HTTP client
+#[tauri::command]
+async fn download_and_save_image(
+    state: State<'_, AppState>,
+    image_url: String,
+    save_path: String,
+) -> Result<(), String> {
+    let debug_logging = {
+        let config = state.config.lock().map_err(|e| e.to_string())?;
+        config.enable_debug_logging
+    };
+
+    if debug_logging {
+        println!("[download_and_save_image] Starting download...");
+        println!("[download_and_save_image] URL: {}", image_url);
+        println!("[download_and_save_image] Save path: {}", save_path);
+    }
+
+    // Create HTTP client with timeout
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .build()
+        .map_err(|e| {
+            let err = format!("Failed to create HTTP client: {}", e);
+            if debug_logging {
+                println!("[download_and_save_image] Error: {}", err);
+            }
+            err
+        })?;
+
+    // Download the image
+    if debug_logging {
+        println!("[download_and_save_image] Sending GET request...");
+    }
+    
+    let response = client
+        .get(&image_url)
+        .send()
+        .await
+        .map_err(|e| {
+            let err = format!("Failed to download image: {}", e);
+            if debug_logging {
+                println!("[download_and_save_image] Request error: {}", err);
+            }
+            err
+        })?;
+
+    let status = response.status();
+    if debug_logging {
+        println!("[download_and_save_image] Response status: {}", status);
+    }
+
+    if !status.is_success() {
+        let error_text = response.text().await.unwrap_or_default();
+        let err = format!("Download failed with status {}: {}", status, error_text);
+        if debug_logging {
+            println!("[download_and_save_image] Error response: {}", err);
+        }
+        return Err(err);
+    }
+
+    // Get the image bytes
+    let bytes = response.bytes().await.map_err(|e| {
+        let err = format!("Failed to read image bytes: {}", e);
+        if debug_logging {
+            println!("[download_and_save_image] Error reading bytes: {}", err);
+        }
+        err
+    })?;
+
+    if debug_logging {
+        println!("[download_and_save_image] Downloaded {} bytes", bytes.len());
+    }
+
+    if bytes.is_empty() {
+        let err = "Downloaded image is empty (0 bytes)".to_string();
+        if debug_logging {
+            println!("[download_and_save_image] Error: {}", err);
+        }
+        return Err(err);
+    }
+
+    // Write to file
+    if debug_logging {
+        println!("[download_and_save_image] Writing to file: {}", save_path);
+    }
+
+    std::fs::write(&save_path, &bytes).map_err(|e| {
+        let err = format!("Failed to write image file: {} (path: {})", e, save_path);
+        if debug_logging {
+            println!("[download_and_save_image] Write error: {}", err);
+        }
+        err
+    })?;
+
+    if debug_logging {
+        println!("[download_and_save_image] Successfully saved image!");
+    }
+
+    Ok(())
+}
+
+/// Copy an image from URL to clipboard (exposed as Tauri command)
+/// This is used by the frontend to copy images to clipboard
+#[tauri::command]
+async fn copy_image_to_clipboard_command(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    image_url: String,
+) -> Result<(), String> {
+    let debug_logging = {
+        let config = state.config.lock().map_err(|e| e.to_string())?;
+        config.enable_debug_logging
+    };
+
+    copy_image_to_clipboard(&app, &image_url, debug_logging).await
+}
+
+// ============================================================================
 // Tray and Window Management
 // ============================================================================
 
@@ -703,6 +936,10 @@ pub fn run() {
             encrypt_api_key,
             decrypt_api_key,
             mask_api_key,
+            // File Downloads
+            download_and_save_image,
+            // Image to Clipboard
+            copy_image_to_clipboard_command,
         ])
         .setup(|app| {
             // Create system tray

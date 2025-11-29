@@ -16,11 +16,25 @@
     "core:window:allow-is-minimized",
     "opener:default",
     "dialog:default",
+    "dialog:allow-save",
+    "dialog:allow-open",
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-write-text",
     "fs:default",
     "fs:allow-write",
     "fs:allow-read",
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-write-file",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-read-file",
+      "allow": [{ "path": "**" }]
+    },
     "shell:default",
     "notification:default",
     "global-shortcut:default",

@@ -7,44 +7,35 @@ use std::fs;
 use std::path::PathBuf;
 use uuid::Uuid;
 
-/// Response data stored in history
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct HistoryEntryResponse {
-    pub text: Option<String>,
-    pub image_path: Option<String>,
-    pub audio_path: Option<String>,
-}
-
-/// A single history entry
+/// A single history entry - matches TypeScript HistoryEntry/HistoryEntryResponse
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HistoryEntry {
     pub id: String,
-    pub timestamp: String,
     pub operation_type: String,
-    pub operation_name: String,
-    pub prompt: String,
-    pub options: HashMap<String, String>,
-    pub response: HistoryEntryResponse,
+    pub prompt_text: String,
+    pub response_text: Option<String>,
+    pub operation_options: HashMap<String, String>,
+    pub media_path: Option<String>,
+    pub created_at: String,
 }
 
 impl HistoryEntry {
     pub fn new(
         operation_type: String,
-        operation_name: String,
-        prompt: String,
-        options: HashMap<String, String>,
-        response: HistoryEntryResponse,
+        prompt_text: String,
+        response_text: Option<String>,
+        operation_options: HashMap<String, String>,
+        media_path: Option<String>,
     ) -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
-            timestamp: chrono::Utc::now().to_rfc3339(),
             operation_type,
-            operation_name,
-            prompt,
-            options,
-            response,
+            prompt_text,
+            response_text,
+            operation_options,
+            media_path,
+            created_at: chrono::Utc::now().to_rfc3339(),
         }
     }
 
@@ -53,12 +44,12 @@ impl HistoryEntry {
         let query_lower = query.to_lowercase();
         
         // Search in prompt
-        if self.prompt.to_lowercase().contains(&query_lower) {
+        if self.prompt_text.to_lowercase().contains(&query_lower) {
             return true;
         }
         
         // Search in response text
-        if let Some(ref text) = self.response.text {
+        if let Some(ref text) = self.response_text {
             if text.to_lowercase().contains(&query_lower) {
                 return true;
             }
@@ -163,10 +154,7 @@ impl HistoryManager {
 
     /// Delete media files associated with an entry
     fn delete_entry_media(entry: &HistoryEntry) {
-        if let Some(ref path) = entry.response.image_path {
-            fs::remove_file(path).ok();
-        }
-        if let Some(ref path) = entry.response.audio_path {
+        if let Some(ref path) = entry.media_path {
             fs::remove_file(path).ok();
         }
     }
@@ -201,6 +189,7 @@ impl HistoryManager {
     }
 
     /// Save image to media folder and return the path
+    #[allow(dead_code)]
     pub fn save_image(data: &[u8], format: &str) -> Result<String, String> {
         let media_path = Self::get_media_path();
         let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
@@ -214,6 +203,7 @@ impl HistoryManager {
     }
 
     /// Save audio to media folder and return the path
+    #[allow(dead_code)]
     pub fn save_audio(data: &[u8], format: &str) -> Result<String, String> {
         let media_path = Self::get_media_path();
         let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
@@ -261,13 +251,9 @@ impl HistoryManager {
         let mut history = Self::load()?;
         history.retain(|entry| {
             // Keep entries without media or with existing media
-            let image_exists = entry.response.image_path.as_ref()
+            entry.media_path.as_ref()
                 .map(|p| std::path::Path::new(p).exists())
-                .unwrap_or(true);
-            let audio_exists = entry.response.audio_path.as_ref()
-                .map(|p| std::path::Path::new(p).exists())
-                .unwrap_or(true);
-            image_exists && audio_exists
+                .unwrap_or(true)
         });
         Self::save(&history)?;
 

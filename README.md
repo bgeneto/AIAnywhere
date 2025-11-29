@@ -17,6 +17,34 @@ A powerful multiplatform desktop application that provides universal AI assistan
 - **Text Translation**: Translate to 14+ languages including Spanish, French, German, Chinese, Japanese, Arabic, and more
 - **Text Rewriting**: Improve text with configurable tones (formal, informal, professional, casual, academic, creative)
 - **Image Generation**: Generate images with DALL-E, FLUX.1 or any compatible models with size and quality options
+- **Speech-to-Text**: Transcribe audio files using Whisper or compatible models
+- **Text-to-Speech**: Convert text to natural-sounding audio
+- **Unicode Symbols**: Quick access to special characters and symbols
+
+### 📝 Markdown Rendering
+- **Rich Text Display**: AI responses render with full Markdown support in the Review Modal
+- **Syntax Highlighting**: Code blocks are beautifully highlighted with OneDark theme
+- **Professional Formatting**: Headers, lists, bold, italics, links, and more render properly
+
+### 🌊 Streaming Responses
+- **Real-time Output**: Watch AI responses generate token-by-token as they're created
+- **Cancel Anytime**: Stop generation mid-stream with the Cancel button
+- **Live Preview**: See streaming content in real-time before final result
+
+### 📜 Conversation History
+- **Automatic Saving**: All successful AI interactions are automatically saved to history
+- **Searchable**: Search through past prompts and responses by keyword
+- **Re-run Prompts**: Quickly re-run any previous prompt with one click
+- **Expandable View**: Click any history entry to see full details including response and options used
+- **Easy Management**: Delete individual entries or clear entire history
+- **Persistent Storage**: History survives app restarts (stored in `{AppData}/ai-anywhere/history.json`)
+
+### ✨ Custom Tasks Library
+- **Create Your Own**: Build custom AI tasks with personalized system prompts
+- **Dynamic Options**: Add select dropdowns, text inputs, or number fields to your tasks
+- **Placeholder Support**: Use `{placeholders}` in prompts that get replaced with option values
+- **Import/Export**: Share your custom tasks as JSON files with others
+- **Validation**: Built-in validation ensures placeholders match your defined options
 
 ### 🔧 Advanced Features
 - **Multiple Response Modes**: Auto-paste, clipboard mode, or review mode with preview window
@@ -24,6 +52,7 @@ A powerful multiplatform desktop application that provides universal AI assistan
 - **Custom System Prompts**: Advanced users can customize AI behaviour per task/operation type
 - **Flexible API Support**: Works with OpenAI, Anthropic Claude, local LLMs, or any OpenAI-compatible endpoint (can be used with e.g. LiteLLM or Openrouter)
 - **Robust Text Handling**: Intelligent text selection using both UI Automation and clipboard methods
+- **History Limits**: Configure maximum history entries and media retention days
 
 ## 🛠️ Technology Stack
 
