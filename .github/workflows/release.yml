@@ -115,7 +115,8 @@ jobs:
             libssl-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
-            libfuse2
+            libfuse2 \
+            libxdo-dev
 
       - name: Install dependencies
         run: npm ci

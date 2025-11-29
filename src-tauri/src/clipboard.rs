@@ -6,12 +6,14 @@
 //! - Window focus tracking for auto-paste functionality (Windows-only)
 //! - Clipboard preservation to restore user's original clipboard content
 
+#[cfg(target_os = "windows")]
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
 
 /// Global storage for the foreground window handle before our app was activated
+#[cfg(target_os = "windows")]
 static PREVIOUS_FOREGROUND_WINDOW: AtomicIsize = AtomicIsize::new(0);
 
 /// Global storage for preserving clipboard content during capture operations
