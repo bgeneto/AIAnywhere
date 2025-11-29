@@ -71,6 +71,10 @@ pub struct Configuration {
     #[serde(default)]
     pub enable_debug_logging: bool,
     
+    /// Delay in milliseconds after simulating copy (to allow clipboard to update)
+    #[serde(default = "default_copy_delay_ms")]
+    pub copy_delay_ms: u64,
+    
     /// Custom system prompts for each operation type
     #[serde(default = "get_default_system_prompts")]
     pub system_prompts: HashMap<String, String>,
@@ -104,6 +108,10 @@ fn default_disable_thinking() -> bool {
     true
 }
 
+fn default_copy_delay_ms() -> u64 {
+    200
+}
+
 impl Default for Configuration {
     fn default() -> Self {
         Self {
@@ -119,6 +127,7 @@ impl Default for Configuration {
             disable_text_selection: false,
             disable_thinking: true,
             enable_debug_logging: false,
+            copy_delay_ms: default_copy_delay_ms(),
             system_prompts: get_default_system_prompts(),
             models: Vec::new(),
             image_models: Vec::new(),
@@ -214,6 +223,7 @@ pub struct ConfigurationDto {
     pub disable_text_selection: bool,
     pub disable_thinking: bool,
     pub enable_debug_logging: bool,
+    pub copy_delay_ms: u64,
     pub models: Vec<String>,
     pub image_models: Vec<String>,
     pub audio_models: Vec<String>,
@@ -233,6 +243,7 @@ impl From<&Configuration> for ConfigurationDto {
             disable_text_selection: config.disable_text_selection,
             disable_thinking: config.disable_thinking,
             enable_debug_logging: config.enable_debug_logging,
+            copy_delay_ms: config.copy_delay_ms,
             models: config.models.clone(),
             image_models: config.image_models.clone(),
             audio_models: config.audio_models.clone(),

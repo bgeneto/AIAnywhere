@@ -1,5 +1,6 @@
 import { useEffect, useRef, KeyboardEvent, useCallback } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { listen } from '@tauri-apps/api/event';
 import { useApp } from '../context/AppContext';
 import { useClipboardSync } from '../hooks/useClipboardSync';
 import { OperationOptionsPanel } from './OperationOptionsPanel';
@@ -28,6 +29,25 @@ export function PromptWindow({ onShowToast }: PromptWindowProps) {
   // Clipboard sync callback - updates prompt text with clipboard content
   const handleClipboardSync = useCallback((text: string) => {
     setPromptText(text);
+  }, [setPromptText]);
+
+  // Listen for text captured from global shortcut
+  useEffect(() => {
+    const setupListener = async () => {
+      const unlisten = await listen<string>('text-captured', (event) => {
+        console.log('Received captured text:', event.payload?.length || 0, 'chars');
+        if (event.payload && event.payload.trim()) {
+          setPromptText(event.payload);
+        }
+      });
+      return unlisten;
+    };
+
+    const unlistenPromise = setupListener();
+
+    return () => {
+      unlistenPromise.then((unlisten) => unlisten());
+    };
   }, [setPromptText]);
 
   // Sync clipboard when window gains focus

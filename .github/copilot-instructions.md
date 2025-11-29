@@ -149,3 +149,10 @@ Operations are defined in `operations.rs` with:
 - **API Key Encryption**: Uses portable AES-GCM; ensure cross-platform compatibility when changing encryption logic
 - **Clipboard Ops**: Requires `tauri-plugin-clipboard-manager`; sensitive on some systems (WSL, restricted environments)
 - **Tray Icon**: Windows tray integration via `tauri-plugin-global-shortcut` + custom tray menu; paths relative to bundled resources
+
+## Important Notes
+- This Tauri 2.0 app that was migrated from C# .net project contained in the /dotnet folder.
+- You can inspect the legacy C# .net code in order to understand the complete legacy app    features and to adapt to our new multiplatform Tauri app, the legacy code is in /dotnet folder.
+- Please make sure to keep both the Rust backend and TypeScript frontend code well-documented and maintain type safety across the boundary.
+- Follow best practices for React component design and Tauri command implementation.
+- Ensure cross-platform compatibility, especially for Windows-specific features.

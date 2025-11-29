@@ -57,6 +57,7 @@ struct SaveConfigRequest {
     disable_text_selection: bool,
     disable_thinking: bool,
     enable_debug_logging: bool,
+    copy_delay_ms: u64,
     models: Vec<String>,
     image_models: Vec<String>,
     audio_models: Vec<String>,
@@ -79,6 +80,7 @@ async fn save_configuration(
     config.disable_text_selection = request.disable_text_selection;
     config.disable_thinking = request.disable_thinking;
     config.enable_debug_logging = request.enable_debug_logging;
+    config.copy_delay_ms = request.copy_delay_ms;
     config.models = request.models;
     config.image_models = request.image_models;
     config.audio_models = request.audio_models;
@@ -285,6 +287,78 @@ async fn restore_foreground_window() -> Result<bool, String> {
     clipboard::restore_foreground_window()
 }
 
+/// Capture selected text from the foreground window.
+/// This is an atomic operation that:
+/// 1. Saves the current foreground window handle (for later auto-paste)
+/// 2. Saves the current clipboard content (for later restoration)
+/// 3. Simulates Ctrl+C to copy the selected text
+/// 4. Reads the new clipboard content
+/// 5. Returns the captured text
+/// 
+/// Note: Window focus tracking is Windows-only. On macOS/Linux, 
+/// only clipboard capture works; focus restoration uses OS defaults.
+#[tauri::command]
+async fn capture_selected_text(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    use tauri_plugin_clipboard_manager::ClipboardExt;
+
+    // Get configuration for delay settings
+    let config = {
+        let config = state.config.lock().map_err(|e| e.to_string())?;
+        config.clone()
+    };
+
+    // Check if text selection is disabled
+    if config.disable_text_selection {
+        return Ok(String::new());
+    }
+
+    // 1. Save the current foreground window handle (Windows-only)
+    clipboard::save_foreground_window()?;
+
+    // 2. Save the current clipboard content for later restoration
+    let original_clipboard = app
+        .clipboard()
+        .read_text()
+        .unwrap_or_default();
+    
+    clipboard::save_clipboard_content(&original_clipboard);
+
+    // 3. Simulate Ctrl+C with configurable delay
+    clipboard::simulate_copy_with_delay(config.copy_delay_ms)?;
+
+    // 4. Read the new clipboard content
+    let captured_text = app
+        .clipboard()
+        .read_text()
+        .unwrap_or_default();
+
+    // If clipboard content hasn't changed, return empty (nothing was selected)
+    if captured_text == original_clipboard {
+        // Restore original clipboard since nothing was captured
+        clipboard::clear_saved_clipboard_content();
+        return Ok(String::new());
+    }
+
+    Ok(captured_text)
+}
+
+/// Restore clipboard to its original content before capture
+#[tauri::command]
+async fn restore_clipboard_content(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_clipboard_manager::ClipboardExt;
+
+    if let Some(original) = clipboard::get_saved_clipboard_content() {
+        app.clipboard()
+            .write_text(original)
+            .map_err(|e| format!("Failed to restore clipboard: {}", e))?;
+    }
+    clipboard::clear_saved_clipboard_content();
+    Ok(())
+}
+
 // ============================================================================
 // Encryption Commands
 // ============================================================================
@@ -413,6 +487,8 @@ pub fn run() {
             get_platform,
             save_foreground_window,
             restore_foreground_window,
+            capture_selected_text,
+            restore_clipboard_content,
             // Encryption
             encrypt_api_key,
             decrypt_api_key,

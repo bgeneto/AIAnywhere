@@ -18,6 +18,7 @@ export interface Configuration {
   disableTextSelection: boolean;
   disableThinking: boolean;
   enableDebugLogging: boolean;
+  copyDelayMs: number;
   models: string[];
   imageModels: string[];
   audioModels: string[];
@@ -35,6 +36,7 @@ export interface SaveConfigRequest {
   disableTextSelection: boolean;
   disableThinking: boolean;
   enableDebugLogging: boolean;
+  copyDelayMs: number;
   models: string[];
   imageModels: string[];
   audioModels: string[];

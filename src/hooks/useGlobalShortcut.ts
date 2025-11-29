@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { register, unregister, isRegistered } from '@tauri-apps/plugin-global-shortcut';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { invoke } from '@tauri-apps/api/core';
 
 /**
  * Converts a hotkey string from our format to Tauri's expected format.
@@ -100,37 +101,45 @@ export function useGlobalShortcut(options: UseGlobalShortcutOptions) {
         if (event.state === 'Pressed') {
           console.log('Global shortcut triggered:', normalizedKey);
           
-          // Show and focus the main window using explicit label lookup
           try {
+            // First, capture selected text from the currently focused window
+            // This also saves the foreground window handle for auto-paste
+            console.log('Capturing selected text...');
+            const capturedText = await invoke<string>('capture_selected_text');
+            console.log('Captured text length:', capturedText?.length || 0);
+            
+            // Show and focus the main window
             const appWindow = await WebviewWindow.getByLabel('main');
             if (appWindow) {
-              // Log current window state
               const isVisible = await appWindow.isVisible();
               const isMinimized = await appWindow.isMinimized();
               console.log(`Window state - visible: ${isVisible}, minimized: ${isMinimized}`);
               
-              // If minimized, unminimize first
               if (isMinimized) {
                 console.log('Unminimizing window...');
                 await appWindow.unminimize();
               }
               
-              // If not visible, show it
               if (!isVisible) {
                 console.log('Showing window...');
                 await appWindow.show();
               }
               
-              // Always try to focus
               console.log('Setting focus...');
               await appWindow.setFocus();
+              
+              // Emit the captured text to the window so PromptWindow can use it
+              if (capturedText && capturedText.trim()) {
+                console.log('Emitting captured text to window...');
+                await appWindow.emit('text-captured', capturedText);
+              }
               
               console.log('Window operations completed');
             } else {
               console.error('Could not find window with label "main"');
             }
           } catch (e) {
-            console.error('Failed to show/focus window:', e);
+            console.error('Failed to capture text or show window:', e);
           }
 
           // Call the trigger callback

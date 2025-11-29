@@ -29,6 +29,7 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
   const [disableTextSelection, setDisableTextSelection] = useState(false);
   const [disableThinking, setDisableThinking] = useState(false);
   const [enableDebugLogging, setEnableDebugLogging] = useState(false);
+  const [copyDelayMs, setCopyDelayMs] = useState(200);
 
   // Model lists
   const [models, setModels] = useState<string[]>([]);
@@ -71,6 +72,7 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
       setDisableTextSelection(config.disableTextSelection);
       setDisableThinking(config.disableThinking);
       setEnableDebugLogging(config.enableDebugLogging);
+      setCopyDelayMs(config.copyDelayMs);
       setModels(config.models);
       setImageModels(config.imageModels);
       setAudioModels(config.audioModels);
@@ -146,6 +148,7 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
         disableTextSelection,
         disableThinking,
         enableDebugLogging,
+        copyDelayMs,
         models,
         imageModels,
         audioModels,

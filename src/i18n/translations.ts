@@ -126,6 +126,8 @@ export interface Translations {
       disableThinkingDesc: string;
       enableDebugLogging: string;
       enableDebugLoggingDesc: string;
+      copyDelay: string;
+      copyDelayDesc: string;
     };
   };
 
@@ -304,6 +306,8 @@ export const translations: Record<Language, Translations> = {
         disableThinkingDesc: 'Reduces thinking time for reasoning models like OpenAI o1',
         enableDebugLogging: 'Enable debug logging for API requests',
         enableDebugLoggingDesc: 'Logs API requests/responses to help diagnose custom endpoint compatibility issues',
+        copyDelay: 'Clipboard Delay (ms)',
+        copyDelayDesc: 'Time waited before relying on the copied content in the clipboard.',
       },
     },
 
@@ -484,6 +488,8 @@ export const translations: Record<Language, Translations> = {
         disableThinkingDesc: 'Reduz o tempo de pensamento para modelos de raciocínio como OpenAI o1',
         enableDebugLogging: 'Habilitar registro de depuração para requisições de API',
         enableDebugLoggingDesc: 'Registra requisições/respostas de API para ajudar a diagnosticar problemas de compatibilidade de endpoints personalizados',
+        copyDelay: 'Atraso de Clipboard (ms)',
+        copyDelayDesc: 'Tempo se espera antes de contar com o conteúdo copiado para a área de transferência.',
       },
     },
 

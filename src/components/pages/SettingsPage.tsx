@@ -28,6 +28,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   const [disableTextSelection, setDisableTextSelection] = useState(false);
   const [disableThinking, setDisableThinking] = useState(false);
   const [enableDebugLogging, setEnableDebugLogging] = useState(false);
+  const [copyDelayMs, setCopyDelayMs] = useState(200);
 
   // Model lists
   const [models, setModels] = useState<string[]>([]);
@@ -70,6 +71,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
       setDisableTextSelection(config.disableTextSelection);
       setDisableThinking(config.disableThinking);
       setEnableDebugLogging(config.enableDebugLogging);
+      setCopyDelayMs(config.copyDelayMs);
       setModels(config.models);
       setImageModels(config.imageModels);
       setAudioModels(config.audioModels);
@@ -167,6 +169,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
         disableTextSelection,
         disableThinking,
         enableDebugLogging,
+        copyDelayMs,
         models,
         imageModels,
         audioModels,
@@ -492,6 +495,27 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                                text-blue-600 focus:ring-blue-500"
                   />
                 </label>
+              </div>
+
+              {/* Copy Delay Setting */}
+              <div className="space-y-2 pt-4">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t.settings.general.copyDelay || 'Copy Delay (ms)'}
+                </label>
+                <input
+                  type="number"
+                  min="50"
+                  max="1000"
+                  step="50"
+                  value={copyDelayMs}
+                  onChange={(e) => setCopyDelayMs(Math.max(50, Math.min(1000, parseInt(e.target.value) || 200)))}
+                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t.settings.general.copyDelayDesc || 'Time waited before relying on the copied content in the clipboard.'}
+                </p>
               </div>
             </div>
           )}

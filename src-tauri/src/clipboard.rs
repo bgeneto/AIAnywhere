@@ -1,12 +1,21 @@
 //! Platform-specific text capture module for AI Anywhere
 //! Implements cross-platform text selection capture using clipboard simulation
+//!
+//! Key features:
+//! - Text capture via keyboard simulation (Ctrl+C / Cmd+C)
+//! - Window focus tracking for auto-paste functionality (Windows-only)
+//! - Clipboard preservation to restore user's original clipboard content
 
 use std::sync::atomic::{AtomicIsize, Ordering};
+use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
 
 /// Global storage for the foreground window handle before our app was activated
 static PREVIOUS_FOREGROUND_WINDOW: AtomicIsize = AtomicIsize::new(0);
+
+/// Global storage for preserving clipboard content during capture operations
+static SAVED_CLIPBOARD_CONTENT: Mutex<Option<String>> = Mutex::new(None);
 
 /// Platform detection
 pub fn get_platform() -> &'static str {
@@ -130,6 +139,82 @@ pub fn simulate_paste() -> Result<(), String> {
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     {
         Err("Keyboard simulation not supported on this platform".to_string())
+    }
+}
+
+/// Simulate Ctrl+C with configurable delay
+/// Returns the captured text from clipboard after the copy operation
+pub fn simulate_copy_with_delay(delay_ms: u64) -> Result<(), String> {
+    #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
+    {
+        use enigo::{Enigo, Key, Keyboard, Settings};
+
+        let mut enigo = Enigo::new(&Settings::default())
+            .map_err(|e| format!("Failed to initialize keyboard simulation: {}", e))?;
+
+        // Small delay to ensure the system is ready
+        thread::sleep(Duration::from_millis(50));
+
+        #[cfg(target_os = "macos")]
+        {
+            // macOS uses Command+C
+            enigo
+                .key(Key::Meta, enigo::Direction::Press)
+                .map_err(|e| format!("Failed to press Meta key: {}", e))?;
+            enigo
+                .key(Key::Unicode('c'), enigo::Direction::Click)
+                .map_err(|e| format!("Failed to press C key: {}", e))?;
+            enigo
+                .key(Key::Meta, enigo::Direction::Release)
+                .map_err(|e| format!("Failed to release Meta key: {}", e))?;
+        }
+
+        #[cfg(not(target_os = "macos"))]
+        {
+            // Windows and Linux use Ctrl+C
+            enigo
+                .key(Key::Control, enigo::Direction::Press)
+                .map_err(|e| format!("Failed to press Ctrl key: {}", e))?;
+            enigo
+                .key(Key::Unicode('c'), enigo::Direction::Click)
+                .map_err(|e| format!("Failed to press C key: {}", e))?;
+            enigo
+                .key(Key::Control, enigo::Direction::Release)
+                .map_err(|e| format!("Failed to release Ctrl key: {}", e))?;
+        }
+
+        // Wait for clipboard to be updated with configurable delay
+        thread::sleep(Duration::from_millis(delay_ms));
+
+        Ok(())
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+    {
+        Err("Keyboard simulation not supported on this platform".to_string())
+    }
+}
+
+/// Save current clipboard content for later restoration
+pub fn save_clipboard_content(content: &str) {
+    if let Ok(mut saved) = SAVED_CLIPBOARD_CONTENT.lock() {
+        *saved = Some(content.to_string());
+    }
+}
+
+/// Get saved clipboard content
+pub fn get_saved_clipboard_content() -> Option<String> {
+    if let Ok(saved) = SAVED_CLIPBOARD_CONTENT.lock() {
+        saved.clone()
+    } else {
+        None
+    }
+}
+
+/// Clear saved clipboard content
+pub fn clear_saved_clipboard_content() {
+    if let Ok(mut saved) = SAVED_CLIPBOARD_CONTENT.lock() {
+        *saved = None;
     }
 }
 
