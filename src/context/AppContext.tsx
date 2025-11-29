@@ -1,12 +1,16 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { listen, UnlistenFn } from '@tauri-apps/api/event';
 import {
   Configuration,
   Operation,
   LlmRequest,
   LlmResponse,
   ModalType,
-  SaveConfigRequest
+  SaveConfigRequest,
+  StreamingChunk,
+  CustomTask,
+  HistoryEntry,
 } from '../types';
 
 interface AppContextType {
@@ -24,6 +28,10 @@ interface AppContextType {
   setOperationOption: (key: string, value: string) => void;
   resetOperationOptions: () => void;
 
+  // Custom Tasks
+  customTasks: CustomTask[];
+  loadCustomTasks: () => Promise<void>;
+
   // Prompt
   promptText: string;
   setPromptText: (text: string) => void;
@@ -32,14 +40,22 @@ interface AppContextType {
   audioFilePath: string;
   setAudioFilePath: (path: string) => void;
 
-  // Processing
+  // Processing & Streaming
   isProcessing: boolean;
+  streamingContent: string;
+  isStreaming: boolean;
+  clearStreamingContent: () => void;
   processRequest: () => Promise<LlmResponse | null>;
+  processRequestStreaming: () => Promise<LlmResponse | null>;
+  cancelRequest: () => Promise<void>;
 
   // Result
   result: LlmResponse | null;
   setResult: (result: LlmResponse | null) => void;
   clearResult: () => void;
+
+  // History
+  loadHistoryEntry: (entry: HistoryEntry) => void;
 
   // UI State
   activeModal: ModalType;
@@ -65,19 +81,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [selectedOperation, setSelectedOperationState] = useState<Operation | null>(null);
   const [operationOptions, setOperationOptions] = useState<Record<string, string>>({});
 
+  // Custom Tasks state
+  const [customTasks, setCustomTasks] = useState<CustomTask[]>([]);
+
   // Prompt state
   const [promptText, setPromptText] = useState('');
   const [selectedText, setSelectedText] = useState('');
   const [audioFilePath, setAudioFilePath] = useState('');
 
-  // Processing state
+  // Processing & streaming state
   const [isProcessing, setIsProcessing] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
 
   // Result state
   const [result, setResult] = useState<LlmResponse | null>(null);
 
   // UI state
   const [activeModal, setActiveModal] = useState<ModalType>('none');
+
+  // Set up streaming event listeners
+  useEffect(() => {
+    let unlistenChunk: UnlistenFn | null = null;
+    let unlistenCancelled: UnlistenFn | null = null;
+
+    const setupListeners = async () => {
+      unlistenChunk = await listen<StreamingChunk>('llm-stream-chunk', (event) => {
+        if (event.payload.done) {
+          setIsStreaming(false);
+        } else {
+          setStreamingContent(prev => prev + event.payload.content);
+        }
+      });
+
+      unlistenCancelled = await listen('llm-stream-cancelled', () => {
+        setIsStreaming(false);
+        setStreamingContent('');
+      });
+    };
+
+    setupListeners();
+
+    return () => {
+      unlistenChunk?.();
+      unlistenCancelled?.();
+    };
+  }, []);
 
   // Load configuration
   const loadConfig = useCallback(async () => {
@@ -88,6 +137,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const ops = await invoke<Operation[]>('get_operations');
       setOperations(ops);
+
+      // Load custom tasks
+      const tasks = await invoke<CustomTask[]>('get_custom_tasks');
+      setCustomTasks(tasks);
 
       // Select first operation by default
       if (ops.length > 0 && !selectedOperation) {
@@ -106,6 +159,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await invoke('save_configuration', { request });
     await loadConfig();
   }, [loadConfig]);
+
+  // Load custom tasks
+  const loadCustomTasks = useCallback(async () => {
+    try {
+      const tasks = await invoke<CustomTask[]>('get_custom_tasks');
+      setCustomTasks(tasks);
+    } catch (error) {
+      console.error('Failed to load custom tasks:', error);
+    }
+  }, []);
 
   // Initialize operation options with defaults
   const initializeOptions = (operation: Operation) => {
@@ -177,9 +240,81 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [selectedOperation, promptText, selectedText, operationOptions, audioFilePath]);
 
+  // Process LLM request with streaming
+  const processRequestStreaming = useCallback(async (): Promise<LlmResponse | null> => {
+    if (!selectedOperation) return null;
+
+    setIsProcessing(true);
+    setStreamingContent('');
+    setIsStreaming(true);
+
+    try {
+      const request: LlmRequest = {
+        operationType: selectedOperation.type,
+        prompt: promptText,
+        selectedText: selectedText || undefined,
+        options: operationOptions,
+        audioFilePath: audioFilePath || undefined,
+      };
+
+      const response = await invoke<LlmResponse>('process_llm_request_streaming', { request });
+      setResult(response);
+      setIsStreaming(false);
+
+      if (response.success) {
+        // Open review modal only if in review mode
+        if (config?.pasteBehavior === 'reviewMode') {
+          setActiveModal('review');
+        }
+      }
+
+      return response;
+    } catch (error) {
+      const errorResponse: LlmResponse = {
+        success: false,
+        error: String(error),
+        isImage: false,
+        isAudio: false,
+      };
+      setResult(errorResponse);
+      setIsStreaming(false);
+      return errorResponse;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [selectedOperation, promptText, selectedText, operationOptions, audioFilePath, config?.pasteBehavior]);
+
+  // Cancel the current request
+  const cancelRequest = useCallback(async () => {
+    try {
+      await invoke('cancel_llm_request');
+      setIsStreaming(false);
+      setIsProcessing(false);
+      setStreamingContent('');
+    } catch (error) {
+      console.error('Failed to cancel request:', error);
+    }
+  }, []);
+
+  // Load history entry (for re-running from history)
+  const loadHistoryEntry = useCallback((entry: HistoryEntry) => {
+    // Find the operation by type
+    const operation = operations.find(op => op.type === entry.operationType);
+    if (operation) {
+      setSelectedOperationState(operation);
+      setOperationOptions(entry.operationOptions || {});
+    }
+    setPromptText(entry.promptText);
+  }, [operations]);
+
   // Clear result
   const clearResult = useCallback(() => {
     setResult(null);
+  }, []);
+
+  // Clear streaming content
+  const clearStreamingContent = useCallback(() => {
+    setStreamingContent('');
   }, []);
 
   // Modal controls
@@ -222,6 +357,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     operationOptions,
     setOperationOption,
     resetOperationOptions,
+    customTasks,
+    loadCustomTasks,
     promptText,
     setPromptText,
     selectedText,
@@ -229,10 +366,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     audioFilePath,
     setAudioFilePath,
     isProcessing,
+    streamingContent,
+    isStreaming,
+    clearStreamingContent,
     processRequest,
+    processRequestStreaming,
+    cancelRequest,
     result,
     setResult,
     clearResult,
+    loadHistoryEntry,
     activeModal,
     openModal,
     closeModal,

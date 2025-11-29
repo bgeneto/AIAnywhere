@@ -6,7 +6,7 @@ import { AppProvider, useApp } from '../context/AppContext';
 import { I18nProvider } from '../i18n/index';
 import { useGlobalShortcut } from '../hooks/useGlobalShortcut';
 import { MainLayout, PageId } from './MainLayout';
-import { HomePage, SettingsPage, AboutPage } from './pages';
+import { HomePage, HistoryPage, CustomTasksPage, SettingsPage, AboutPage } from './pages';
 import { ReviewModal } from './ReviewModal';
 import Toast, { ToastMessage } from './Toast';
 
@@ -109,6 +109,10 @@ function AppContent() {
     switch (activePage) {
       case 'home':
         return <HomePage onShowToast={showToast} />;
+      case 'history':
+        return <HistoryPage onNavigateToHome={() => setActivePage('home')} />;
+      case 'custom-tasks':
+        return <CustomTasksPage showToast={showToast} />;
       case 'api-settings':
         return <SettingsPage onShowToast={showToast} />;
       case 'about':

@@ -29,6 +29,8 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
   const [disableTextSelection, setDisableTextSelection] = useState(false);
   const [enableDebugLogging, setEnableDebugLogging] = useState(false);
   const [copyDelayMs, setCopyDelayMs] = useState(200);
+  const [historyLimit, setHistoryLimit] = useState(500);
+  const [mediaRetentionDays, setMediaRetentionDays] = useState(0);
 
   // Model lists
   const [models, setModels] = useState<string[]>([]);
@@ -74,6 +76,8 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
       setModels(config.models);
       setImageModels(config.imageModels);
       setAudioModels(config.audioModels);
+      setHistoryLimit(config.historyLimit ?? 500);
+      setMediaRetentionDays(config.mediaRetentionDays ?? 0);
     }
   }, [config]);
 
@@ -149,6 +153,8 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
         models,
         imageModels,
         audioModels,
+        historyLimit,
+        mediaRetentionDays,
       };
       
       await saveConfig(request);

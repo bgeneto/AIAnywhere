@@ -1,11 +1,15 @@
 //! LLM Service module for AI Anywhere
 //! Handles all AI API communication with OpenAI-compatible endpoints
 
+use futures_util::StreamExt;
 use reqwest::multipart;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use tauri::{AppHandle, Emitter};
 
 use crate::config::Configuration;
 use crate::operations::OperationType;
@@ -90,6 +94,14 @@ impl LlmResponse {
     }
 }
 
+/// Streaming chunk event payload
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StreamingChunk {
+    pub content: String,
+    pub done: bool,
+}
+
 /// Models response from API
 #[derive(Debug, Deserialize)]
 pub struct ModelsResponse {
@@ -124,6 +136,180 @@ impl LlmService {
             OperationType::SpeechToText => self.process_speech_to_text(&request).await,
             OperationType::TextToSpeech => self.process_text_to_speech(&request).await,
             _ => self.process_text_request(&request).await,
+        }
+    }
+
+    /// Check if an operation type supports streaming
+    pub fn supports_streaming(operation_type: &OperationType) -> bool {
+        !matches!(
+            operation_type,
+            OperationType::ImageGeneration
+                | OperationType::SpeechToText
+                | OperationType::TextToSpeech
+        )
+    }
+
+    /// Process a streaming text request with real-time chunk emission
+    pub async fn process_streaming_request(
+        &self,
+        request: &LlmRequest,
+        app: &AppHandle,
+        cancel_flag: Arc<AtomicBool>,
+    ) -> LlmResponse {
+        // Only text operations support streaming
+        if !Self::supports_streaming(&request.operation_type) {
+            return LlmResponse::error("Streaming not supported for this operation type".to_string());
+        }
+
+        let operations = crate::operations::get_default_operations(&self.config.system_prompts);
+        let operation = operations
+            .iter()
+            .find(|op| op.operation_type == request.operation_type);
+
+        let operation = match operation {
+            Some(op) => op,
+            None => return LlmResponse::error("Unknown operation type".to_string()),
+        };
+
+        // Build system prompt with options
+        let mut system_prompt = operation.system_prompt.clone();
+        for (key, value) in &request.options {
+            system_prompt = system_prompt.replace(&format!("{{{}}}", key), value);
+        }
+
+        // Build user prompt
+        let user_prompt = if let Some(ref selected_text) = request.selected_text {
+            if !selected_text.is_empty() {
+                format!("{}\n\nText to process:\n{}", request.prompt, selected_text)
+            } else {
+                request.prompt.clone()
+            }
+        } else {
+            request.prompt.clone()
+        };
+
+        // Build request body with streaming enabled
+        let body = json!({
+            "model": self.config.llm_model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "max_tokens": 4096,
+            "temperature": 0.6,
+            "stream": true
+        });
+
+        let url = self.build_api_url("/chat/completions");
+
+        if self.config.enable_debug_logging {
+            println!("--- LLM Streaming Request ---");
+            println!("Config API Base URL: {}", self.config.api_base_url);
+            println!("Final URL: POST {}", url);
+            println!("Model: {}", self.config.llm_model);
+            println!("-------------------");
+        }
+
+        let api_key = self.config.get_api_key();
+        if api_key.is_empty() {
+            return LlmResponse::error("API key is empty. Please configure your API key in settings.".to_string());
+        }
+
+        let response = self
+            .client
+            .post(&url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await;
+
+        match response {
+            Ok(resp) => {
+                let status = resp.status();
+                if self.config.enable_debug_logging {
+                    println!("--- LLM Streaming Response ---");
+                    println!("Status: {}", status);
+                }
+
+                if !status.is_success() {
+                    let error_text = resp.text().await.unwrap_or_default();
+                    if self.config.enable_debug_logging {
+                        println!("Error Body: {}", error_text);
+                        println!("--------------------");
+                    }
+                    return LlmResponse::error(format!("API Error: {}", error_text));
+                }
+
+                // Process the streaming response
+                let mut full_content = String::new();
+                let mut stream = resp.bytes_stream();
+
+                while let Some(chunk_result) = stream.next().await {
+                    // Check if cancelled
+                    if cancel_flag.load(Ordering::Relaxed) {
+                        // Emit cancelled event
+                        let _ = app.emit("llm-stream-cancelled", ());
+                        return LlmResponse::error("Request cancelled".to_string());
+                    }
+
+                    match chunk_result {
+                        Ok(chunk) => {
+                            let chunk_str = String::from_utf8_lossy(&chunk);
+                            
+                            // Parse SSE lines
+                            for line in chunk_str.lines() {
+                                if line.starts_with("data: ") {
+                                    let data = &line[6..];
+                                    
+                                    if data == "[DONE]" {
+                                        // Emit final done event
+                                        let _ = app.emit("llm-stream-chunk", StreamingChunk {
+                                            content: String::new(),
+                                            done: true,
+                                        });
+                                        continue;
+                                    }
+                                    
+                                    // Parse JSON data
+                                    if let Ok(json) = serde_json::from_str::<Value>(data) {
+                                        if let Some(content) = json["choices"][0]["delta"]["content"].as_str() {
+                                            full_content.push_str(content);
+                                            
+                                            // Emit chunk event
+                                            let _ = app.emit("llm-stream-chunk", StreamingChunk {
+                                                content: content.to_string(),
+                                                done: false,
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            if self.config.enable_debug_logging {
+                                println!("Stream error: {}", e);
+                            }
+                            return LlmResponse::error(format!("Stream error: {}", e));
+                        }
+                    }
+                }
+
+                if self.config.enable_debug_logging {
+                    println!("Full streamed content length: {}", full_content.len());
+                    println!("--------------------");
+                }
+
+                let processed = process_llm_response(&full_content);
+                LlmResponse::success(processed)
+            }
+            Err(e) => {
+                if self.config.enable_debug_logging {
+                    println!("Request Failed: {}", e);
+                    println!("--------------------");
+                }
+                LlmResponse::error(format!("Request failed: {}", e))
+            }
         }
     }
 

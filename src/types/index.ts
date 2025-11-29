@@ -21,6 +21,9 @@ export interface Configuration {
   models: string[];
   imageModels: string[];
   audioModels: string[];
+  // History settings
+  historyLimit: number;
+  mediaRetentionDays: number;
 }
 
 export interface SaveConfigRequest {
@@ -38,6 +41,9 @@ export interface SaveConfigRequest {
   models: string[];
   imageModels: string[];
   audioModels: string[];
+  // History settings
+  historyLimit: number;
+  mediaRetentionDays: number;
 }
 
 // ============================================================================
@@ -167,4 +173,68 @@ export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// ============================================================================
+// History Types
+// ============================================================================
+
+export interface HistoryEntryResponse {
+  id: string;
+  operationType: OperationType | string;
+  promptText: string;
+  responseText?: string;
+  operationOptions: Record<string, string>;
+  mediaPath?: string;
+  createdAt: string;
+}
+
+export interface HistoryEntry {
+  id: string;
+  operationType: OperationType | string;
+  promptText: string;
+  responseText?: string;
+  operationOptions: Record<string, string>;
+  mediaPath?: string;
+  createdAt: string;
+}
+
+// ============================================================================
+// Custom Task Types
+// ============================================================================
+
+export interface CustomTaskOption {
+  name: string;
+  optionType: 'select' | 'text' | 'number';
+  required: boolean;
+  values?: string[];
+  defaultValue?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+}
+
+export interface CustomTask {
+  id: string;
+  name: string;
+  description: string;
+  systemPrompt: string;
+  options: CustomTaskOption[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================================================
+// Streaming Types
+// ============================================================================
+
+export interface StreamingState {
+  isStreaming: boolean;
+  content: string;
+  error?: string;
+}
+
+export interface StreamingChunk {
+  content: string;
+  done: boolean;
 }

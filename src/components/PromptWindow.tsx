@@ -228,7 +228,7 @@ export function PromptWindow({ onShowToast }: PromptWindowProps) {
               ? "Optional: Add instructions for transcription..." 
               : "Enter your prompt here... (Ctrl+Enter to send)"
             }
-            className="flex-1 min-h-[200px] w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+            className="flex-1 min-h-[120px] w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
                        bg-white dark:bg-slate-800 text-slate-900 dark:text-white
                        placeholder-slate-400 dark:placeholder-slate-500
                        focus:ring-2 focus:ring-blue-500 focus:border-transparent

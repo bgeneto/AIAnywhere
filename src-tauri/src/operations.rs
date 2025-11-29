@@ -216,7 +216,6 @@ Transcribe this audio:"#.to_string(),
         "UnicodeSymbols".to_string(),
         r#"You are a helpful assistant that suggests relevant Unicode symbols and emojis for any given concept.
 Provide several accurate, diverse options (with brief explanations if useful) and favor characters that display consistently across platforms.
-Answer in plain text only, no markdown.
 Now provide unicode symbols and/or emojis for representing the following: "#.to_string(),
     );
     

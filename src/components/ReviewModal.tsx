@@ -4,6 +4,9 @@ import { save } from '@tauri-apps/plugin-dialog';
 import { writeFile } from '@tauri-apps/plugin-fs';
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n/index';
 import { ToastType } from '../types';
@@ -210,12 +213,39 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                 />
               ) : (
                 <div 
-                  className="w-full min-h-[300px] px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 
+                  className="w-full min-h-[300px] px-4 py-3 text-sm rounded-lg border border-slate-200 dark:border-slate-700 
                              bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white
-                             whitespace-pre-wrap overflow-y-auto"
+                             overflow-y-auto prose prose-sm dark:prose-invert max-w-none
+                             prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2
+                             prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0
+                             prose-code:before:content-none prose-code:after:content-none
+                             prose-code:bg-slate-200 dark:prose-code:bg-slate-700 prose-code:px-1 prose-code:py-0.5 prose-code:rounded"
                   onClick={() => setIsEditing(true)}
                 >
-                  {result.content}
+                  <ReactMarkdown
+                    components={{
+                      code({ className, children, ...props }) {
+                        const match = /language-(\w+)/.exec(className || '');
+                        const isInline = !match && !className;
+                        return !isInline ? (
+                          <SyntaxHighlighter
+                            style={oneDark as { [key: string]: React.CSSProperties }}
+                            language={match ? match[1] : 'text'}
+                            PreTag="div"
+                            className="rounded-lg !mt-2 !mb-2"
+                          >
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        ) : (
+                          <code className={className} {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                    }}
+                  >
+                    {result.content || ''}
+                  </ReactMarkdown>
                 </div>
               )}
               <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">

@@ -86,6 +86,14 @@ pub struct Configuration {
     /// Cached list of available audio models
     #[serde(default)]
     pub audio_models: Vec<String>,
+    
+    /// Maximum number of history entries to keep (0 = unlimited)
+    #[serde(default = "default_history_limit")]
+    pub history_limit: usize,
+    
+    /// Number of days to keep media files (0 = never delete)
+    #[serde(default)]
+    pub media_retention_days: u32,
 }
 
 fn default_hotkey() -> String {
@@ -102,6 +110,10 @@ fn default_tts_model() -> String {
 
 fn default_copy_delay_ms() -> u64 {
     200
+}
+
+fn default_history_limit() -> usize {
+    500
 }
 
 impl Default for Configuration {
@@ -123,6 +135,8 @@ impl Default for Configuration {
             models: Vec::new(),
             image_models: Vec::new(),
             audio_models: Vec::new(),
+            history_limit: default_history_limit(),
+            media_retention_days: 0,
         }
     }
 }
@@ -217,6 +231,8 @@ pub struct ConfigurationDto {
     pub models: Vec<String>,
     pub image_models: Vec<String>,
     pub audio_models: Vec<String>,
+    pub history_limit: usize,
+    pub media_retention_days: u32,
 }
 
 impl From<&Configuration> for ConfigurationDto {
@@ -236,6 +252,8 @@ impl From<&Configuration> for ConfigurationDto {
             models: config.models.clone(),
             image_models: config.image_models.clone(),
             audio_models: config.audio_models.clone(),
+            history_limit: config.history_limit,
+            media_retention_days: config.media_retention_days,
         }
     }
 }

@@ -81,11 +81,11 @@ const Toast: React.FC<ToastProps> = ({ toast, onClose, duration = 2500 }) => {
         <span className={`text-xl shrink-0 ${iconColors[toast.type]}`}>{icons[toast.type]}</span>
         <div className="flex-1">
           <div className={`font-semibold ${titleColors[toast.type]}`}>{toast.title}</div>
-          {toast.message && <div className="text-sm mt-1">{toast.message}</div>}
+          {toast.message && <div className="text-sm mt-1 text-slate-600 dark:text-slate-300">{toast.message}</div>}
         </div>
         <button
           onClick={() => onClose(toast.id)}
-          className="shrink-0 text-xl opacity-50 hover:opacity-100 transition-opacity"
+          className="shrink-0 text-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
         >
           ✕
         </button>

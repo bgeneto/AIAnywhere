@@ -4,7 +4,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
 import appIcon from '../assets/icon.png';
 
-export type PageId = 'home' | 'api-settings' | 'about';
+export type PageId = 'home' | 'history' | 'custom-tasks' | 'api-settings' | 'about';
 
 interface NavItem {
   id: PageId;
@@ -15,6 +15,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: 'home', icon: '🏠', labelKey: 'home', section: 'main' },
+  { id: 'history', icon: '📜', labelKey: 'history', section: 'main' },
+  { id: 'custom-tasks', icon: '✨', labelKey: 'customTasks', section: 'main' },
   { id: 'api-settings', icon: '⚙', labelKey: 'appSettings', section: 'settings' },
   { id: 'about', icon: 'ℹ️', labelKey: 'about', section: 'bottom' },
 ];

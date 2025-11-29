@@ -43,6 +43,20 @@ html {
   animation: spin 1s linear infinite;
 }
 
+/* Ghostwriter cursor blink animation */
+@keyframes cursor-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+.animate-cursor {
+  animation: cursor-blink 0.8s ease-in-out infinite;
+}
+
 /* Drag and drop states */
 .drag-over {
   border-color: #667eea;
@@ -98,4 +112,46 @@ textarea {
   @apply p-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 
          hover:bg-slate-200 dark:hover:bg-slate-700 
          rounded-lg transition-colors;
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR STYLES
+   ============================================ */
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #94a3b8;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #475569;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent;
+}
+
+.dark * {
+  scrollbar-color: #475569 transparent;
 }

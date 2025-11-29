@@ -10,6 +10,8 @@ export interface Translations {
   // Navigation
   nav: {
     home: string;
+    history: string;
+    customTasks: string;
     settings: string;
     apiSettings: string;
     appSettings: string;
@@ -28,6 +30,9 @@ export interface Translations {
     cancel: string;
     processing: string;
     enterPrompt: string;
+    customTasks: string;
+    generating: string;
+    waitingForResponse: string;
   };
 
   // Operations
@@ -188,6 +193,68 @@ export interface Translations {
     no: string;
     required: string;
   };
+
+  // History
+  history: {
+    title: string;
+    search: string;
+    searchPlaceholder: string;
+    noHistory: string;
+    noResults: string;
+    rerun: string;
+    delete: string;
+    clearAll: string;
+    confirmDelete: string;
+    confirmClearAll: string;
+    deleted: string;
+    cleared: string;
+    task: string;
+    date: string;
+    prompt: string;
+    response: string;
+  };
+
+  // Custom Tasks
+  customTasks: {
+    title: string;
+    create: string;
+    edit: string;
+    delete: string;
+    confirmDelete: string;
+    noTasks: string;
+    name: string;
+    namePlaceholder: string;
+    description: string;
+    descriptionPlaceholder: string;
+    systemPrompt: string;
+    systemPromptPlaceholder: string;
+    systemPromptHelp: string;
+    options: string;
+    addOption: string;
+    removeOption: string;
+    optionName: string;
+    optionNamePlaceholder: string;
+    optionType: string;
+    optionTypeSelect: string;
+    optionTypeText: string;
+    optionTypeNumber: string;
+    optionRequired: string;
+    optionValues: string;
+    optionValuesPlaceholder: string;
+    optionDefault: string;
+    optionMin: string;
+    optionMax: string;
+    optionStep: string;
+    save: string;
+    cancel: string;
+    validationError: string;
+    placeholderMismatch: string;
+    exportTasks: string;
+    importTasks: string;
+    exported: string;
+    imported: string;
+    importFailed: string;
+  };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -196,6 +263,8 @@ export const translations: Record<Language, Translations> = {
 
     nav: {
       home: 'Home',
+      history: 'History',
+      customTasks: 'My Tasks',
       settings: 'Settings',
       apiSettings: 'API Settings',
       appSettings: 'Settings',
@@ -213,6 +282,9 @@ export const translations: Record<Language, Translations> = {
       cancel: 'Cancel',
       processing: 'Processing...',
       enterPrompt: 'Enter your prompt here... (Ctrl+Enter to send)',
+      customTasks: 'My Tasks',
+      generating: 'Generating...',
+      waitingForResponse: 'Waiting for response...',
     },
 
     operations: {
@@ -369,6 +441,66 @@ export const translations: Record<Language, Translations> = {
       no: 'No',
       required: 'Required',
     },
+
+    history: {
+      title: 'History',
+      search: 'Search',
+      searchPlaceholder: 'Search by prompt or response...',
+      noHistory: 'No history entries yet',
+      noResults: 'No matching entries found',
+      rerun: 'Re-run',
+      delete: 'Delete',
+      clearAll: 'Clear All',
+      confirmDelete: 'Are you sure you want to delete this entry?',
+      confirmClearAll: 'Are you sure you want to clear all history? This cannot be undone.',
+      deleted: 'Entry deleted',
+      cleared: 'History cleared',
+      task: 'Task',
+      date: 'Date',
+      prompt: 'Prompt',
+      response: 'Response',
+    },
+
+    customTasks: {
+      title: 'My Tasks',
+      create: 'Create Task',
+      edit: 'Edit',
+      delete: 'Delete',
+      confirmDelete: 'Are you sure you want to delete this task?',
+      noTasks: 'No custom tasks yet. Create one to get started!',
+      name: 'Task Name',
+      namePlaceholder: 'Enter task name...',
+      description: 'Description',
+      descriptionPlaceholder: 'Enter task description...',
+      systemPrompt: 'System Prompt',
+      systemPromptPlaceholder: 'Enter the system prompt template...',
+      systemPromptHelp: 'Use {placeholder} syntax to reference option values',
+      options: 'Options',
+      addOption: 'Add Option',
+      removeOption: 'Remove',
+      optionName: 'Name',
+      optionNamePlaceholder: 'option_name',
+      optionType: 'Type',
+      optionTypeSelect: 'Select',
+      optionTypeText: 'Text',
+      optionTypeNumber: 'Number',
+      optionRequired: 'Required',
+      optionValues: 'Values',
+      optionValuesPlaceholder: 'value1, value2, value3',
+      optionDefault: 'Default',
+      optionMin: 'Min',
+      optionMax: 'Max',
+      optionStep: 'Step',
+      save: 'Save Task',
+      cancel: 'Cancel',
+      validationError: 'Please fix the validation errors',
+      placeholderMismatch: 'System prompt must contain all option placeholders',
+      exportTasks: 'Export Tasks',
+      importTasks: 'Import Tasks',
+      exported: 'Tasks exported successfully',
+      imported: 'Tasks imported successfully',
+      importFailed: 'Failed to import tasks',
+    },
   },
 
   'pt-BR': {
@@ -376,6 +508,8 @@ export const translations: Record<Language, Translations> = {
 
     nav: {
       home: 'Início',
+      history: 'Histórico',
+      customTasks: 'Minhas Tarefas',
       settings: 'Configurações',
       apiSettings: 'Configurações de API',
       appSettings: 'Configurações do Aplicativo',
@@ -393,6 +527,9 @@ export const translations: Record<Language, Translations> = {
       cancel: 'Cancelar',
       processing: 'Processando...',
       enterPrompt: 'Digite seu prompt aqui... (Ctrl+Enter para enviar)',
+      customTasks: 'Minhas Tarefas',
+      generating: 'Gerando...',
+      waitingForResponse: 'Aguardando resposta...',
     },
 
     operations: {
@@ -548,6 +685,66 @@ export const translations: Record<Language, Translations> = {
       yes: 'Sim',
       no: 'Não',
       required: 'Obrigatório',
+    },
+
+    history: {
+      title: 'Histórico',
+      search: 'Buscar',
+      searchPlaceholder: 'Buscar por prompt ou resposta...',
+      noHistory: 'Nenhuma entrada no histórico ainda',
+      noResults: 'Nenhuma entrada encontrada',
+      rerun: 'Reexecutar',
+      delete: 'Excluir',
+      clearAll: 'Limpar Tudo',
+      confirmDelete: 'Tem certeza que deseja excluir esta entrada?',
+      confirmClearAll: 'Tem certeza que deseja limpar todo o histórico? Esta ação não pode ser desfeita.',
+      deleted: 'Entrada excluída',
+      cleared: 'Histórico limpo',
+      task: 'Tarefa',
+      date: 'Data',
+      prompt: 'Prompt',
+      response: 'Resposta',
+    },
+
+    customTasks: {
+      title: 'Minhas Tarefas',
+      create: 'Criar Tarefa',
+      edit: 'Editar',
+      delete: 'Excluir',
+      confirmDelete: 'Tem certeza que deseja excluir esta tarefa?',
+      noTasks: 'Nenhuma tarefa personalizada ainda. Crie uma para começar!',
+      name: 'Nome da Tarefa',
+      namePlaceholder: 'Digite o nome da tarefa...',
+      description: 'Descrição',
+      descriptionPlaceholder: 'Digite a descrição da tarefa...',
+      systemPrompt: 'Prompt do Sistema',
+      systemPromptPlaceholder: 'Digite o modelo do prompt do sistema...',
+      systemPromptHelp: 'Use a sintaxe {placeholder} para referenciar valores de opções',
+      options: 'Opções',
+      addOption: 'Adicionar Opção',
+      removeOption: 'Remover',
+      optionName: 'Nome',
+      optionNamePlaceholder: 'nome_opcao',
+      optionType: 'Tipo',
+      optionTypeSelect: 'Seleção',
+      optionTypeText: 'Texto',
+      optionTypeNumber: 'Número',
+      optionRequired: 'Obrigatório',
+      optionValues: 'Valores',
+      optionValuesPlaceholder: 'valor1, valor2, valor3',
+      optionDefault: 'Padrão',
+      optionMin: 'Mín',
+      optionMax: 'Máx',
+      optionStep: 'Passo',
+      save: 'Salvar Tarefa',
+      cancel: 'Cancelar',
+      validationError: 'Por favor, corrija os erros de validação',
+      placeholderMismatch: 'O prompt do sistema deve conter todos os placeholders das opções',
+      exportTasks: 'Exportar Tarefas',
+      importTasks: 'Importar Tarefas',
+      exported: 'Tarefas exportadas com sucesso',
+      imported: 'Tarefas importadas com sucesso',
+      importFailed: 'Falha ao importar tarefas',
     },
   },
 };

@@ -28,6 +28,8 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   const [disableTextSelection, setDisableTextSelection] = useState(false);
   const [enableDebugLogging, setEnableDebugLogging] = useState(false);
   const [copyDelayMs, setCopyDelayMs] = useState(200);
+  const [historyLimit, setHistoryLimit] = useState(500);
+  const [mediaRetentionDays, setMediaRetentionDays] = useState(0);
 
   // Model lists
   const [models, setModels] = useState<string[]>([]);
@@ -73,6 +75,8 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
       setModels(config.models);
       setImageModels(config.imageModels);
       setAudioModels(config.audioModels);
+      setHistoryLimit(config.historyLimit ?? 500);
+      setMediaRetentionDays(config.mediaRetentionDays ?? 0);
     }
   }, [config]);
 
@@ -170,6 +174,8 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
         models,
         imageModels,
         audioModels,
+        historyLimit,
+        mediaRetentionDays,
       };
       await saveConfig(request);
       await loadConfig();
@@ -487,6 +493,55 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {t.settings.general.copyDelayDesc || 'Time waited before relying on the copied content in the clipboard.'}
                 </p>
+              </div>
+
+              {/* History Settings Section */}
+              <div className="pt-6 border-t border-slate-200 dark:border-slate-700 mt-6">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                  History Settings
+                </h3>
+
+                {/* History Limit */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    History Limit
+                  </label>
+                  <input
+                    type="number"
+                    min="10"
+                    max="10000"
+                    step="10"
+                    value={historyLimit}
+                    onChange={(e) => setHistoryLimit(Math.max(10, Math.min(10000, parseInt(e.target.value) || 500)))}
+                    className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                               bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                               focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Maximum number of history entries to keep. Older entries will be automatically deleted.
+                  </p>
+                </div>
+
+                {/* Media Retention Days */}
+                <div className="space-y-2 mt-4">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Media Retention (Days)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="365"
+                    step="1"
+                    value={mediaRetentionDays}
+                    onChange={(e) => setMediaRetentionDays(Math.max(0, Math.min(365, parseInt(e.target.value) || 0)))}
+                    className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                               bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                               focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Number of days to keep generated images and audio files. Set to 0 to keep forever.
+                  </p>
+                </div>
               </div>
             </div>
           )}

@@ -3,16 +3,22 @@
 
 mod clipboard;
 mod config;
+mod custom_tasks;
 mod encryption;
+mod history;
 mod llm;
 mod operations;
 mod text;
 
 use config::{Configuration, ConfigurationDto, PasteBehavior};
+use custom_tasks::{CustomTask, CustomTaskOption, CustomTasksManager};
+use history::{HistoryEntry, HistoryEntryResponse, HistoryManager};
 use llm::{LlmRequest, LlmResponse, LlmService};
 use operations::Operation;
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
+use std::collections::HashMap;
+use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, Mutex};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -22,6 +28,7 @@ use tauri::{
 /// Application state
 pub struct AppState {
     config: Mutex<Configuration>,
+    cancel_flag: Arc<AtomicBool>,
 }
 
 impl AppState {
@@ -29,6 +36,7 @@ impl AppState {
         let config = Configuration::load().unwrap_or_default();
         Self {
             config: Mutex::new(config),
+            cancel_flag: Arc::new(AtomicBool::new(false)),
         }
     }
 }
@@ -60,6 +68,8 @@ struct SaveConfigRequest {
     models: Vec<String>,
     image_models: Vec<String>,
     audio_models: Vec<String>,
+    history_limit: usize,
+    media_retention_days: u32,
 }
 
 #[tauri::command]
@@ -82,6 +92,8 @@ async fn save_configuration(
     config.models = request.models;
     config.image_models = request.image_models;
     config.audio_models = request.audio_models;
+    config.history_limit = request.history_limit;
+    config.media_retention_days = request.media_retention_days;
 
     // Only update API key if provided
     if let Some(key) = request.api_key {
@@ -115,6 +127,126 @@ async fn update_models(
 async fn get_operations(state: State<'_, AppState>) -> Result<Vec<Operation>, String> {
     let config = state.config.lock().map_err(|e| e.to_string())?;
     Ok(operations::get_default_operations(&config.system_prompts))
+}
+
+// ============================================================================
+// History Commands
+// ============================================================================
+
+#[tauri::command]
+async fn get_history(search_query: Option<String>) -> Result<Vec<HistoryEntry>, String> {
+    match search_query {
+        Some(query) if !query.trim().is_empty() => HistoryManager::search(&query),
+        _ => HistoryManager::load(),
+    }
+}
+
+#[tauri::command]
+async fn save_history_entry(
+    state: State<'_, AppState>,
+    operation_type: String,
+    operation_name: String,
+    prompt: String,
+    options: HashMap<String, String>,
+    response_text: Option<String>,
+    response_image_data: Option<Vec<u8>>,
+    response_image_format: Option<String>,
+    response_audio_data: Option<Vec<u8>>,
+    response_audio_format: Option<String>,
+) -> Result<HistoryEntry, String> {
+    let config = state.config.lock().map_err(|e| e.to_string())?;
+    
+    // Save media files if provided
+    let image_path = if let (Some(data), Some(format)) = (response_image_data, response_image_format) {
+        Some(HistoryManager::save_image(&data, &format)?)
+    } else {
+        None
+    };
+    
+    let audio_path = if let (Some(data), Some(format)) = (response_audio_data, response_audio_format) {
+        Some(HistoryManager::save_audio(&data, &format)?)
+    } else {
+        None
+    };
+    
+    let response = HistoryEntryResponse {
+        text: response_text,
+        image_path,
+        audio_path,
+    };
+    
+    let entry = HistoryEntry::new(operation_type, operation_name, prompt, options, response);
+    HistoryManager::add_entry(entry.clone(), config.history_limit)?;
+    
+    Ok(entry)
+}
+
+#[tauri::command]
+async fn delete_history_entry(id: String) -> Result<(), String> {
+    HistoryManager::delete_entry(&id)
+}
+
+#[tauri::command]
+async fn clear_history() -> Result<(), String> {
+    HistoryManager::clear()
+}
+
+#[tauri::command]
+async fn cleanup_old_media(state: State<'_, AppState>) -> Result<u32, String> {
+    let config = state.config.lock().map_err(|e| e.to_string())?;
+    HistoryManager::cleanup_old_media(config.media_retention_days)
+}
+
+// ============================================================================
+// Custom Tasks Commands
+// ============================================================================
+
+#[tauri::command]
+async fn get_custom_tasks() -> Result<Vec<CustomTask>, String> {
+    CustomTasksManager::load()
+}
+
+#[tauri::command]
+async fn get_custom_task(id: String) -> Result<Option<CustomTask>, String> {
+    CustomTasksManager::get(&id)
+}
+
+#[tauri::command]
+async fn create_custom_task(
+    name: String,
+    description: String,
+    system_prompt: String,
+    options: Vec<CustomTaskOption>,
+) -> Result<CustomTask, String> {
+    let task = CustomTask::new(name, description, system_prompt, options);
+    CustomTasksManager::create(task)
+}
+
+#[tauri::command]
+async fn update_custom_task(
+    id: String,
+    name: String,
+    description: String,
+    system_prompt: String,
+    options: Vec<CustomTaskOption>,
+) -> Result<CustomTask, String> {
+    let task = CustomTask::new(name, description, system_prompt, options);
+    CustomTasksManager::update(&id, task)
+}
+
+#[tauri::command]
+async fn delete_custom_task(id: String) -> Result<(), String> {
+    CustomTasksManager::delete(&id)
+}
+
+#[tauri::command]
+async fn export_custom_tasks() -> Result<String, String> {
+    CustomTasksManager::export()
+}
+
+#[tauri::command]
+async fn import_custom_tasks(json: String) -> Result<usize, String> {
+    CustomTasksManager::import(&json)
 }
 
 // ============================================================================
@@ -166,6 +298,70 @@ async fn process_llm_request(
     }
 
     Ok(response)
+}
+
+/// Process LLM request with streaming (emits llm-stream-chunk events)
+#[tauri::command]
+async fn process_llm_request_streaming(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    request: LlmRequest,
+) -> Result<LlmResponse, String> {
+    use std::sync::atomic::Ordering;
+    
+    let (config, cancel_flag) = {
+        let config = state.config.lock().map_err(|e| e.to_string())?;
+        (config.clone(), state.cancel_flag.clone())
+    };
+
+    // Reset cancel flag
+    cancel_flag.store(false, Ordering::Relaxed);
+
+    // Check if operation supports streaming
+    if !LlmService::supports_streaming(&request.operation_type) {
+        // Fall back to non-streaming for non-text operations
+        let service = LlmService::new(config.clone());
+        let response = service.process_request(request).await;
+        return Ok(response);
+    }
+
+    let service = LlmService::new(config.clone());
+    let response = service.process_streaming_request(&request, &app, cancel_flag).await;
+
+    // Handle paste behavior for successful responses
+    if response.success {
+        if let Some(content) = &response.content {
+            match config.paste_behavior {
+                PasteBehavior::AutoPaste => {
+                    use tauri_plugin_clipboard_manager::ClipboardExt;
+                    app.clipboard()
+                        .write_text(content.clone())
+                        .map_err(|e| e.to_string())?;
+                    clipboard::restore_foreground_window()?;
+                    clipboard::simulate_paste()?;
+                }
+                PasteBehavior::ClipboardMode => {
+                    use tauri_plugin_clipboard_manager::ClipboardExt;
+                    app.clipboard()
+                        .write_text(content.clone())
+                        .map_err(|e| e.to_string())?;
+                }
+                PasteBehavior::ReviewMode => {
+                    // Do nothing, frontend handles it
+                }
+            }
+        }
+    }
+
+    Ok(response)
+}
+
+/// Cancel the current streaming request
+#[tauri::command]
+async fn cancel_llm_request(state: State<'_, AppState>) -> Result<(), String> {
+    use std::sync::atomic::Ordering;
+    state.cancel_flag.store(true, Ordering::Relaxed);
+    Ok(())
 }
 
 #[tauri::command]
@@ -473,8 +669,24 @@ pub fn run() {
             update_models,
             // Operations
             get_operations,
+            // History
+            get_history,
+            save_history_entry,
+            delete_history_entry,
+            clear_history,
+            cleanup_old_media,
+            // Custom Tasks
+            get_custom_tasks,
+            get_custom_task,
+            create_custom_task,
+            update_custom_task,
+            delete_custom_task,
+            export_custom_tasks,
+            import_custom_tasks,
             // LLM
             process_llm_request,
+            process_llm_request_streaming,
+            cancel_llm_request,
             get_models_from_api,
             test_connection,
             get_models_with_endpoint,
