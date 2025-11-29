@@ -1,5 +1,6 @@
-import { useState, useEffect, KeyboardEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { useHotkeyCapture } from '../hooks/useHotkeyCapture';
 import { SaveConfigRequest, PasteBehavior, ToastType } from '../types';
 
 interface SettingsModalProps {
@@ -35,10 +36,27 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
   const [audioModels, setAudioModels] = useState<string[]>([]);
 
   // UI state
-  const [isCapturingHotkey, setIsCapturingHotkey] = useState(false);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Hotkey capture hook
+  const {
+    isCapturing: isCapturingHotkey,
+    isValidating: isValidatingHotkey,
+    startCapture: startHotkeyCapture,
+    stopCapture: stopHotkeyCapture,
+    handleKeyDown: handleHotkeyKeyDown,
+  } = useHotkeyCapture({
+    onHotkeyCapture: setHotkey,
+    onBlockedHotkey: (_hotkey, reason) => {
+      onShowToast('warning', 'Blocked Hotkey', reason);
+    },
+    onUnavailableHotkey: (_hotkey, reason) => {
+      onShowToast('error', 'Hotkey Unavailable', reason);
+    },
+    currentHotkey: config?.hotkey,
+  });
 
   // Initialize form from config
   useEffect(() => {
@@ -58,26 +76,6 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
       setAudioModels(config.audioModels);
     }
   }, [config]);
-
-  const handleHotkeyKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (!isCapturingHotkey) return;
-    
-    e.preventDefault();
-    
-    const parts: string[] = [];
-    if (e.ctrlKey) parts.push('Ctrl');
-    if (e.altKey) parts.push('Alt');
-    if (e.shiftKey) parts.push('Shift');
-    if (e.metaKey) parts.push('Meta');
-    
-    // Get the key, excluding modifier keys themselves
-    const key = e.key;
-    if (!['Control', 'Alt', 'Shift', 'Meta'].includes(key)) {
-      parts.push(key.length === 1 ? key.toUpperCase() : key);
-      setHotkey(parts.join('+'));
-      setIsCapturingHotkey(false);
-    }
-  };
 
   const handleFetchModels = async () => {
     setIsFetchingModels(true);
@@ -199,17 +197,18 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
                 type="text"
                 value={hotkey}
                 readOnly
-                onFocus={() => setIsCapturingHotkey(true)}
-                onBlur={() => setIsCapturingHotkey(false)}
+                disabled={isValidatingHotkey}
+                onFocus={startHotkeyCapture}
+                onBlur={stopHotkeyCapture}
                 onKeyDown={handleHotkeyKeyDown}
-                placeholder={isCapturingHotkey ? 'Press key combination...' : 'Click to capture'}
+                placeholder={isValidatingHotkey ? 'Validating...' : (isCapturingHotkey ? 'Press key combination...' : 'Click to capture')}
                 className={`w-full px-3 py-2 text-sm rounded-lg border 
-                           ${isCapturingHotkey 
+                           ${isCapturingHotkey || isValidatingHotkey
                              ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' 
                              : 'border-slate-300 dark:border-slate-600'
                            }
                            bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                           cursor-pointer transition-all duration-200`}
+                           cursor-pointer transition-all duration-200 disabled:opacity-50`}
               />
             </div>
 

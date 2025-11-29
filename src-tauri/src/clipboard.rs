@@ -1,8 +1,12 @@
 //! Platform-specific text capture module for AI Anywhere
 //! Implements cross-platform text selection capture using clipboard simulation
 
+use std::sync::atomic::{AtomicIsize, Ordering};
 use std::time::Duration;
 use std::thread;
+
+/// Global storage for the foreground window handle before our app was activated
+static PREVIOUS_FOREGROUND_WINDOW: AtomicIsize = AtomicIsize::new(0);
 
 /// Platform detection
 pub fn get_platform() -> &'static str {
@@ -117,5 +121,65 @@ mod tests {
     fn test_get_platform() {
         let platform = get_platform();
         assert!(["windows", "macos", "linux", "unknown"].contains(&platform));
+    }
+}
+
+// ============================================================================
+// Window Focus Tracking (for paste functionality)
+// ============================================================================
+
+/// Save the currently focused window (before our app activates)
+/// Returns true if a window handle was saved
+pub fn save_foreground_window() -> Result<bool, String> {
+    #[cfg(target_os = "windows")]
+    {
+        use windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
+        
+        let hwnd = unsafe { GetForegroundWindow() };
+        let handle = hwnd.0 as isize;
+        
+        if handle != 0 {
+            PREVIOUS_FOREGROUND_WINDOW.store(handle, Ordering::SeqCst);
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+    
+    #[cfg(not(target_os = "windows"))]
+    {
+        // On macOS and Linux, we'll rely on the OS to handle focus
+        // when our window is hidden
+        Ok(false)
+    }
+}
+
+/// Restore focus to the previously saved window
+/// Returns true if focus was restored
+pub fn restore_foreground_window() -> Result<bool, String> {
+    #[cfg(target_os = "windows")]
+    {
+        use windows::Win32::Foundation::HWND;
+        use windows::Win32::UI::WindowsAndMessaging::SetForegroundWindow;
+        
+        let handle = PREVIOUS_FOREGROUND_WINDOW.load(Ordering::SeqCst);
+        
+        if handle != 0 {
+            let hwnd = HWND(handle as *mut std::ffi::c_void);
+            let result = unsafe { SetForegroundWindow(hwnd) };
+            
+            // Clear the stored handle
+            PREVIOUS_FOREGROUND_WINDOW.store(0, Ordering::SeqCst);
+            
+            Ok(result.as_bool())
+        } else {
+            Ok(false)
+        }
+    }
+    
+    #[cfg(not(target_os = "windows"))]
+    {
+        // On macOS and Linux, focusing happens automatically when our window hides
+        Ok(true)
     }
 }

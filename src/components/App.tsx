@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { listen } from '@tauri-apps/api/event';
+import { ask } from '@tauri-apps/plugin-dialog';
+import { relaunch } from '@tauri-apps/plugin-process';
 import { AppProvider, useApp } from '../context/AppContext';
 import { I18nProvider } from '../i18n/index';
+import { useGlobalShortcut } from '../hooks/useGlobalShortcut';
 import { MainLayout, PageId } from './MainLayout';
 import { HomePage, SettingsPage, AboutPage } from './pages';
 import { ReviewModal } from './ReviewModal';
@@ -26,6 +29,47 @@ function AppContent() {
   const removeToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
+
+  // Handle hotkey registration failure - offer to restart the app
+  const handleHotkeyError = useCallback(async (error: string) => {
+    console.error('Global shortcut error:', error);
+    
+    // Show initial error toast
+    showToast('error', 'Hotkey Error', `Failed to register hotkey: ${error}`);
+    
+    // Ask user if they want to restart the app
+    const shouldRestart = await ask(
+      'The hotkey could not be registered. This might happen if it\'s being used by another application.\n\nWould you like to restart the app to try again?',
+      {
+        title: 'Hotkey Registration Failed',
+        kind: 'warning',
+        okLabel: 'Restart App',
+        cancelLabel: 'Later',
+      }
+    );
+    
+    if (shouldRestart) {
+      await relaunch();
+    }
+  }, [showToast]);
+
+  // Register global shortcut when config is loaded
+  useGlobalShortcut({
+    hotkey: config?.hotkey || '',
+    enabled: !!config?.hotkey,
+    onTrigger: () => {
+      // When hotkey is triggered, navigate to home page and focus the prompt
+      setActivePage('home');
+    },
+    onError: handleHotkeyError,
+    onRegistered: (hotkey) => {
+      console.log('Global shortcut registered successfully:', hotkey);
+    },
+    onHotkeyChanged: (oldHotkey, newHotkey) => {
+      console.log(`Hotkey changed from "${oldHotkey}" to "${newHotkey}"`);
+      showToast('success', 'Hotkey Updated', `New hotkey "${newHotkey}" is now active.`);
+    },
+  });
 
   // Load configuration on mount
   useEffect(() => {

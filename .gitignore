@@ -277,3 +277,4 @@ src-tauri/bundle/
 # Test coverage
 coverage/
 .coverage
+dotnet/

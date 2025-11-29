@@ -1,6 +1,7 @@
-import { useEffect, useRef, KeyboardEvent } from 'react';
+import { useEffect, useRef, KeyboardEvent, useCallback } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useApp } from '../context/AppContext';
+import { useClipboardSync } from '../hooks/useClipboardSync';
 import { OperationOptionsPanel } from './OperationOptionsPanel';
 import { AudioUpload } from './AudioUpload';
 import { ThemeToggle } from './ThemeToggle';
@@ -23,6 +24,19 @@ export function PromptWindow({ onShowToast }: PromptWindowProps) {
   } = useApp();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Clipboard sync callback - updates prompt text with clipboard content
+  const handleClipboardSync = useCallback((text: string) => {
+    setPromptText(text);
+  }, [setPromptText]);
+
+  // Sync clipboard when window gains focus
+  const { syncClipboard } = useClipboardSync({
+    enabled: true,
+    onClipboardRead: handleClipboardSync,
+    onlyIfEmpty: false, // Always sync to keep in sync with latest clipboard
+    currentText: promptText,
+  });
 
   // Focus textarea on mount
   useEffect(() => {
@@ -157,15 +171,27 @@ export function PromptWindow({ onShowToast }: PromptWindowProps) {
             >
               Prompt Content:
             </label>
-            <button
-              onClick={handleClear}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 
-                         hover:text-slate-900 dark:hover:text-white
-                         bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700
-                         rounded transition-colors"
-            >
-              🗑️ Clear
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={syncClipboard}
+                className="flex items-center gap-1 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 
+                           hover:text-slate-900 dark:hover:text-white
+                           bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700
+                           rounded transition-colors"
+                title="Refresh from clipboard"
+              >
+                📋 Sync
+              </button>
+              <button
+                onClick={handleClear}
+                className="flex items-center gap-1 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 
+                           hover:text-slate-900 dark:hover:text-white
+                           bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700
+                           rounded transition-colors"
+              >
+                🗑️ Clear
+              </button>
+            </div>
           </div>
           <textarea
             ref={textareaRef}

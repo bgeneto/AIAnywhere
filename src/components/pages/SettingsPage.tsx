@@ -1,6 +1,7 @@
-import { useState, useEffect, KeyboardEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useI18n } from '../../i18n/index';
+import { useHotkeyCapture } from '../../hooks/useHotkeyCapture';
 import { ToastType, SaveConfigRequest, PasteBehavior } from '../../types';
 
 type SettingsTab = 'api' | 'audio' | 'general';
@@ -34,10 +35,27 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   const [audioModels, setAudioModels] = useState<string[]>([]);
 
   // UI state
-  const [isCapturingHotkey, setIsCapturingHotkey] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
+
+  // Hotkey capture hook
+  const {
+    isCapturing: isCapturingHotkey,
+    isValidating: isValidatingHotkey,
+    startCapture: startHotkeyCapture,
+    stopCapture: stopHotkeyCapture,
+    handleKeyDown: hotkeyKeyDownHandler,
+  } = useHotkeyCapture({
+    onHotkeyCapture: setHotkey,
+    onBlockedHotkey: (_hotkey, reason) => {
+      onShowToast('warning', 'Blocked Hotkey', reason);
+    },
+    onUnavailableHotkey: (_hotkey, reason) => {
+      onShowToast('error', 'Hotkey Unavailable', reason);
+    },
+    currentHotkey: config?.hotkey,
+  });
 
   // Initialize form from config
   useEffect(() => {
@@ -59,29 +77,12 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   }, [config]);
 
   const tabs: { id: SettingsTab; label: string; icon: string }[] = [
-    { id: 'api', label: t.nav.apiSettings, icon: '🔑' },
+    { id: 'api', label: t.nav.apiSettings, icon: '⚙' },
     { id: 'audio', label: t.settings.models.title, icon: '🤖' },
     { id: 'general', label: t.settings.general.title, icon: '⚙️' },
   ];
 
-  const handleHotkeyKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (!isCapturingHotkey) return;
-
-    e.preventDefault();
-
-    const parts: string[] = [];
-    if (e.ctrlKey) parts.push('Ctrl');
-    if (e.altKey) parts.push('Alt');
-    if (e.shiftKey) parts.push('Shift');
-    if (e.metaKey) parts.push('Meta');
-
-    const key = e.key;
-    if (!['Control', 'Alt', 'Shift', 'Meta'].includes(key)) {
-      parts.push(key.length === 1 ? key.toUpperCase() : key);
-      setHotkey(parts.join('+'));
-      setIsCapturingHotkey(false);
-    }
-  };
+  const handleHotkeyKeyDown = hotkeyKeyDownHandler;
 
   const handleFetchModels = async () => {
     setIsFetchingModels(true);
@@ -392,20 +393,21 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                     type="text"
                     value={hotkey}
                     readOnly
+                    disabled={isValidatingHotkey}
                     onKeyDown={handleHotkeyKeyDown}
-                    onFocus={() => setIsCapturingHotkey(true)}
-                    onBlur={() => setIsCapturingHotkey(false)}
+                    onFocus={startHotkeyCapture}
+                    onBlur={stopHotkeyCapture}
                     placeholder={t.settings.general.hotkeyPlaceholder}
                     className={`w-full px-4 py-2.5 text-sm rounded-lg border 
-                               ${isCapturingHotkey
+                               ${isCapturingHotkey || isValidatingHotkey
                         ? 'border-blue-500 ring-2 ring-blue-500'
                         : 'border-slate-300 dark:border-slate-600'} 
                                bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                               cursor-pointer`}
+                               cursor-pointer disabled:opacity-50`}
                   />
-                  {isCapturingHotkey && (
+                  {(isCapturingHotkey || isValidatingHotkey) && (
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-blue-500">
-                      Press keys...
+                      {isValidatingHotkey ? 'Validating...' : 'Press keys...'}
                     </span>
                   )}
                 </div>

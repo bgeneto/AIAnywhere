@@ -15,7 +15,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: 'home', icon: '🏠', labelKey: 'home', section: 'main' },
-  { id: 'api-settings', icon: '🔑', labelKey: 'apiSettings', section: 'settings' },
+  { id: 'api-settings', icon: '⚙', labelKey: 'appSettings', section: 'settings' },
   { id: 'about', icon: 'ℹ️', labelKey: 'about', section: 'bottom' },
 ];
 

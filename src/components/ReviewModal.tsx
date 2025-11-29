@@ -45,12 +45,24 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
       const textToPaste = isEditing ? editedContent : (result.content || '');
       await writeText(textToPaste);
       
-      // Simulate paste (Ctrl+V)
+      // Close the modal first
+      closeModal();
+      clearResult();
+      
+      // Small delay to allow modal to close
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Restore focus to the previously active window (Windows-specific)
+      // On macOS/Linux, focus should return automatically when our window hides
+      await invoke('restore_foreground_window');
+      
+      // Another small delay to ensure focus is restored
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Simulate paste (Ctrl+V / Cmd+V)
       await invoke('simulate_paste');
       
       onShowToast('success', 'Pasted', 'Content pasted to application');
-      closeModal();
-      clearResult();
     } catch (error) {
       onShowToast('error', 'Error', 'Failed to paste content');
     }

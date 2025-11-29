@@ -12,6 +12,7 @@ export interface Translations {
     home: string;
     settings: string;
     apiSettings: string;
+    appSettings: string;
     languageSettings: string;
     audioSettings: string;
     about: string;
@@ -197,6 +198,7 @@ export const translations: Record<Language, Translations> = {
       home: 'Home',
       settings: 'Settings',
       apiSettings: 'API Settings',
+      appSettings: 'Settings',
       languageSettings: 'Language Settings',
       audioSettings: 'Audio Settings',
       about: 'About',
@@ -376,6 +378,7 @@ export const translations: Record<Language, Translations> = {
       home: 'Início',
       settings: 'Configurações',
       apiSettings: 'Configurações de API',
+      appSettings: 'Configurações do Aplicativo',
       languageSettings: 'Configurações de Idioma',
       audioSettings: 'Configurações de Áudio',
       about: 'Sobre',

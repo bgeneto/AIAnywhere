@@ -242,6 +242,16 @@ fn get_platform() -> String {
     clipboard::get_platform().to_string()
 }
 
+#[tauri::command]
+async fn save_foreground_window() -> Result<bool, String> {
+    clipboard::save_foreground_window()
+}
+
+#[tauri::command]
+async fn restore_foreground_window() -> Result<bool, String> {
+    clipboard::restore_foreground_window()
+}
+
 // ============================================================================
 // Encryption Commands
 // ============================================================================
@@ -282,12 +292,16 @@ fn create_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         .tooltip("AI Anywhere")
         .on_menu_event(|app, event| match event.id.as_ref() {
             "open" => {
+                // Save the current foreground window before showing our window
+                clipboard::save_foreground_window().ok();
                 if let Some(window) = app.get_webview_window("main") {
                     window.show().ok();
                     window.set_focus().ok();
                 }
             }
             "settings" => {
+                // Save the current foreground window before showing our window
+                clipboard::save_foreground_window().ok();
                 if let Some(window) = app.get_webview_window("main") {
                     window.show().ok();
                     window.set_focus().ok();
@@ -295,6 +309,8 @@ fn create_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             "about" => {
+                // Save the current foreground window before showing our window
+                clipboard::save_foreground_window().ok();
                 if let Some(window) = app.get_webview_window("main") {
                     window.show().ok();
                     window.set_focus().ok();
@@ -313,6 +329,8 @@ fn create_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 ..
             } = event
             {
+                // Save the current foreground window before showing our window
+                clipboard::save_foreground_window().ok();
                 let app = tray.app_handle();
                 if let Some(window) = app.get_webview_window("main") {
                     window.show().ok();
@@ -339,6 +357,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_process::init())
         .manage(AppState::new())
         .invoke_handler(tauri::generate_handler![
             // Configuration
@@ -357,6 +376,8 @@ pub fn run() {
             simulate_copy,
             simulate_paste,
             get_platform,
+            save_foreground_window,
+            restore_foreground_window,
             // Encryption
             encrypt_api_key,
             decrypt_api_key,
@@ -367,6 +388,15 @@ pub fn run() {
             create_tray(app.handle())?;
 
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            // Intercept window close to minimize to tray instead of closing
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                // Prevent the default close behavior
+                api.prevent_close();
+                // Hide the window to the system tray
+                window.hide().ok();
+            }
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
