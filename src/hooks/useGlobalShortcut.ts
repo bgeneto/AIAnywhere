@@ -128,7 +128,7 @@ export function useGlobalShortcut(options: UseGlobalShortcutOptions) {
               console.log('Setting focus...');
               await appWindow.setFocus();
               
-              // Emit the captured text to the window so PromptWindow can use it
+              // Emit the captured text to the window so HomePage can use it
               if (capturedText && capturedText.trim()) {
                 console.log('Emitting captured text to window...');
                 await appWindow.emit('text-captured', capturedText);

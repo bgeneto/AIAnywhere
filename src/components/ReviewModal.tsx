@@ -10,6 +10,10 @@ import { downloadDir } from '@tauri-apps/api/path';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import remarkMath from 'remark-math';
+import remarkBreaks from 'remark-breaks';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n/index';
 import { ToastType } from '../types';
@@ -359,13 +363,16 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                   className="w-full min-h-[300px] px-4 py-3 text-sm rounded-lg border border-slate-200 dark:border-slate-700 
                              bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white
                              overflow-y-auto prose prose-sm dark:prose-invert max-w-none
-                             prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2
+                             prose-headings:mt-3 prose-headings:mb-1 prose-p:my-1 prose-ul:my-1 prose-ol:my-1
                              prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0
                              prose-code:before:content-none prose-code:after:content-none
-                             prose-code:bg-slate-200 dark:prose-code:bg-slate-700 prose-code:px-1 prose-code:py-0.5 prose-code:rounded"
+                             prose-code:bg-slate-200 dark:prose-code:bg-slate-700 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+                             [&_.katex-display]:my-2 [&_.katex]:text-inherit"
                   onClick={() => setIsEditing(true)}
                 >
                   <ReactMarkdown
+                    remarkPlugins={[remarkMath, remarkBreaks]}
+                    rehypePlugins={[rehypeKatex]}
                     components={{
                       code({ className, children, ...props }) {
                         const match = /language-(\w+)/.exec(className || '');

@@ -19,6 +19,8 @@ export function HomePage({ onShowToast }: HomePageProps) {
     setSelectedOperation,
     promptText,
     setPromptText,
+    promptLoadedFromHistory,
+    clearPromptLoadedFromHistory,
     isProcessing,
     streamingContent,
     isStreaming,
@@ -32,9 +34,14 @@ export function HomePage({ onShowToast }: HomePageProps) {
   const streamingRef = useRef<HTMLDivElement>(null);
 
   // Clipboard sync callback - updates prompt text with clipboard content
+  // Skip if prompt was loaded from history
   const handleClipboardSync = useCallback((text: string) => {
+    if (promptLoadedFromHistory) {
+      clearPromptLoadedFromHistory();
+      return; // Don't overwrite history-loaded prompt
+    }
     setPromptText(text);
-  }, [setPromptText]);
+  }, [setPromptText, promptLoadedFromHistory, clearPromptLoadedFromHistory]);
 
   // Sync clipboard when window gains focus (respects disableTextSelection setting)
   // Default to disabled when config hasn't loaded yet
@@ -201,81 +208,84 @@ export function HomePage({ onShowToast }: HomePageProps) {
           )}
 
           {/* Prompt Content and Streaming Preview - Flex container for dynamic height */}
-          <div className="flex flex-col gap-4 flex-1 min-h-0">
-            {/* Prompt Content */}
-            <div className={`flex flex-col gap-2 ${(isStreaming || streamingContent) ? 'flex-shrink-0' : 'flex-1 min-h-0'}`}>
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="prompt"
-                  className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-                >
-                  {t.home.promptContent}
-                </label>
-                <div className="flex items-center gap-2">
-                  {clipboardSyncEnabled && (
-                    <button
-                      onClick={syncClipboard}
-                      className="btn-secondary"
-                      title="Refresh from clipboard"
-                    >
-                      📋 Sync
-                    </button>
-                  )}
-                    <button
-                    onClick={handleClear}
-                    className="btn-secondary"
+          {/* Hidden for STT since audio is the input */}
+          {!isSpeechToText && (
+            <div className="flex flex-col gap-4 flex-1 min-h-0">
+              {/* Prompt Content */}
+              <div className={`flex flex-col gap-2 ${(isStreaming || streamingContent) ? 'flex-shrink-0' : 'flex-1 min-h-0'}`}>
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="prompt"
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300"
                   >
-                    🗑️ {t.home.clear}
-                  </button>
-                </div>
-              </div>
-              <textarea
-                ref={textareaRef}
-                id="prompt"
-                value={promptText}
-                onChange={(e) => setPromptText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={t.home.enterPrompt}
-                className={`w-full px-4 py-3 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                           bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                           placeholder-slate-400 dark:placeholder-slate-500
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                           resize-none transition-colors duration-200
-                           ${(isStreaming || streamingContent) ? 'h-24' : 'flex-1 min-h-[100px]'}`}
-              />
-            </div>
-
-            {/* Streaming Preview */}
-            {(isStreaming || streamingContent) && (
-              <div className="flex flex-col gap-2 flex-shrink-0">
-                <div className="flex items-center gap-2">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {t.home.generating || 'Generating...'}
+                    {t.home.promptContent}
                   </label>
-                  {isStreaming && (
-                    <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  )}
+                  <div className="flex items-center gap-2">
+                    {clipboardSyncEnabled && (
+                      <button
+                        onClick={syncClipboard}
+                        className="btn-secondary"
+                        title="Refresh from clipboard"
+                      >
+                        📋 Sync
+                      </button>
+                    )}
+                      <button
+                      onClick={handleClear}
+                      className="btn-secondary"
+                    >
+                      🗑️ {t.home.clear}
+                    </button>
+                  </div>
                 </div>
-                <div
-                  ref={streamingRef}
-                  className="h-16 w-full px-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 
-                             bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300
-                             overflow-y-auto whitespace-pre-wrap"
-                >
-                  {streamingContent ? (
-                    <>
-                      {streamingContent}
-                      {isStreaming && <span className="inline-block w-0.5 h-4 ml-0.5 bg-green-500 animate-cursor align-middle" />}
-                    </>
-                  ) : (
-                    <span className="text-slate-400 dark:text-slate-500 italic">
-                      {t.home.waitingForResponse || 'Waiting for response...'}
-                    </span>
-                  )}
-                </div>
+                <textarea
+                  ref={textareaRef}
+                  id="prompt"
+                  value={promptText}
+                  onChange={(e) => setPromptText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={t.home.enterPrompt}
+                  className={`w-full px-4 py-3 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                             placeholder-slate-400 dark:placeholder-slate-500
+                             focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                             resize-none transition-colors duration-200
+                             ${(isStreaming || streamingContent) ? 'h-24' : 'flex-1 min-h-[100px]'}`}
+                />
               </div>
-            )}
-          </div>
+
+              {/* Streaming Preview */}
+              {(isStreaming || streamingContent) && (
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {t.home.generating || 'Generating...'}
+                    </label>
+                    {isStreaming && (
+                      <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    )}
+                  </div>
+                  <div
+                    ref={streamingRef}
+                    className="h-16 w-full px-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 
+                               bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300
+                               overflow-y-auto whitespace-pre-wrap"
+                  >
+                    {streamingContent ? (
+                      <>
+                        {streamingContent}
+                        {isStreaming && <span className="inline-block w-0.5 h-4 ml-0.5 bg-green-500 animate-cursor align-middle" />}
+                      </>
+                    ) : (
+                      <span className="text-slate-400 dark:text-slate-500 italic">
+                        {t.home.waitingForResponse || 'Waiting for response...'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

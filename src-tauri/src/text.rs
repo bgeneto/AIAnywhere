@@ -5,16 +5,24 @@ use regex::Regex;
 
 /// Process LLM response text
 /// - Removes thinking tokens
-/// - Unescapes special characters
+/// - Converts LaTeX delimiters to remark-math format
 /// - Normalizes whitespace
+/// Note: We intentionally do NOT unescape text because:
+/// 1. JSON parsing already handles escape sequences properly
+/// 2. Unescaping breaks LaTeX math delimiters like \[ \] \( \)
 pub fn process_llm_response(text: &str) -> String {
     let mut result = text.to_string();
     
     // Remove thinking tokens (<think>...</think>)
     result = remove_thinking_tokens(&result);
     
-    // Unescape common escape sequences
-    result = unescape_text(&result);
+    // Convert LaTeX math delimiters to remark-math compatible format
+    // remark-math only supports $...$ and $$...$$ syntax
+    result = convert_math_delimiters(&result);
+    
+    // Note: unescape_text is disabled - JSON parsing handles escaping,
+    // and it breaks LaTeX math notation like \[ \] \( \)
+    // result = unescape_text(&result);
     
     // Normalize whitespace
     result = normalize_whitespace(&result);
@@ -29,7 +37,24 @@ fn remove_thinking_tokens(text: &str) -> String {
     re.replace_all(text, "").to_string()
 }
 
+/// Convert LaTeX math delimiters to remark-math compatible format.
+/// remark-math only supports $...$ and $$...$$ syntax, not \[...\] or \(...\)
+fn convert_math_delimiters(text: &str) -> String {
+    // Convert display math: \[...\] → $$...$$
+    let re_display = Regex::new(r"\\\[([\s\S]*?)\\\]").unwrap();
+    let result = re_display.replace_all(text, "$$$$$1$$$$");
+    
+    // Convert inline math: \(...\) → $...$
+    let re_inline = Regex::new(r"\\\(([\s\S]*?)\\\)").unwrap();
+    let result = re_inline.replace_all(&result, "$$$1$$");
+    
+    result.to_string()
+}
+
 /// Unescape common escape sequences in text
+/// Note: This is currently disabled because JSON parsing already handles escaping,
+/// and it breaks LaTeX math notation. Kept for reference/potential future use.
+#[allow(dead_code)]
 fn unescape_text(text: &str) -> String {
     text.replace("\\n", "\n")
         .replace("\\t", "\t")
@@ -107,5 +132,26 @@ mod tests {
         let input = "512x768 (2:3 Portrait)";
         let result = extract_size_dimensions(input);
         assert_eq!(result, "512x768");
+    }
+    
+    #[test]
+    fn test_convert_math_delimiters_display() {
+        let input = r"Here is math: \[ E = mc^2 \] done";
+        let result = convert_math_delimiters(input);
+        assert_eq!(result, "Here is math: $$ E = mc^2 $$ done");
+    }
+    
+    #[test]
+    fn test_convert_math_delimiters_inline() {
+        let input = r"Inline \( x^2 \) math";
+        let result = convert_math_delimiters(input);
+        assert_eq!(result, "Inline $ x^2 $ math");
+    }
+    
+    #[test]
+    fn test_convert_math_delimiters_multiline() {
+        let input = "Display:\n\\[\n\\sum F = 0\n\\]\nEnd";
+        let result = convert_math_delimiters(input);
+        assert_eq!(result, "Display:\n$$\n\\sum F = 0\n$$\nEnd");
     }
 }

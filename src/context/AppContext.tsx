@@ -35,6 +35,8 @@ interface AppContextType {
   // Prompt
   promptText: string;
   setPromptText: (text: string) => void;
+  promptLoadedFromHistory: boolean;
+  clearPromptLoadedFromHistory: () => void;
   selectedText: string;
   setSelectedText: (text: string) => void;
   audioFilePath: string;
@@ -86,6 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Prompt state
   const [promptText, setPromptText] = useState('');
+  const [promptLoadedFromHistory, setPromptLoadedFromHistory] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [audioFilePath, setAudioFilePath] = useState('');
 
@@ -265,15 +268,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // For audio responses, the audio file path IS the media path
+        // For audio responses (TTS), the audio file path IS the media path
         if (response.isAudio && response.audioFilePath) {
           mediaPath = response.audioFilePath;
         }
 
+        // For STT, use the audio file path as the prompt (since it's the input)
+        const historyPrompt = selectedOperation.type === 'speechToText' && audioFilePath
+          ? audioFilePath
+          : promptText;
+
         // Save to history with media path if available
         await saveToHistory(
           selectedOperation.type,
-          promptText,
+          historyPrompt,
           response.content,
           operationOptions,
           mediaPath
@@ -337,15 +345,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // For audio responses, the audio file path IS the media path
+        // For audio responses (TTS), the audio file path IS the media path
         if (response.isAudio && response.audioFilePath) {
           mediaPath = response.audioFilePath;
         }
 
+        // For STT, use the audio file path as the prompt (since it's the input)
+        const historyPrompt = selectedOperation.type === 'speechToText' && audioFilePath
+          ? audioFilePath
+          : promptText;
+
         // Save to history with media path if available
         await saveToHistory(
           selectedOperation.type,
-          promptText,
+          historyPrompt,
           response.content,
           operationOptions,
           mediaPath
@@ -397,8 +410,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSelectedOperationState(operation);
       setOperationOptions(entry.operationOptions || {});
     }
-    setPromptText(entry.promptText);
+    
+    // For STT entries, the promptText contains the audio file path
+    if (entry.operationType === 'speechToText') {
+      setAudioFilePath(entry.promptText);
+      setPromptText(''); // Clear prompt text for STT
+    } else {
+      setPromptText(entry.promptText);
+      setAudioFilePath(''); // Clear audio file path for non-STT
+    }
+    setPromptLoadedFromHistory(true); // Flag to prevent clipboard sync from overwriting
   }, [operations]);
+
+  // Clear promptLoadedFromHistory flag (call after clipboard sync is skipped)
+  const clearPromptLoadedFromHistory = useCallback(() => {
+    setPromptLoadedFromHistory(false);
+  }, []);
 
   // Clear result
   const clearResult = useCallback(() => {
@@ -454,6 +481,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loadCustomTasks,
     promptText,
     setPromptText,
+    promptLoadedFromHistory,
+    clearPromptLoadedFromHistory,
     selectedText,
     setSelectedText,
     audioFilePath,

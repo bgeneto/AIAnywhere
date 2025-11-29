@@ -25,6 +25,9 @@ A powerful multiplatform desktop application that provides universal AI assistan
 - **Rich Text Display**: AI responses render with full Markdown support in the Review Modal
 - **Syntax Highlighting**: Code blocks are beautifully highlighted with OneDark theme
 - **Professional Formatting**: Headers, lists, bold, italics, links, and more render properly
+- **LaTeX/Math Support**: Full KaTeX integration for mathematical equations
+  - Inline math: `$E = mc^2$` renders as $E = mc^2$
+  - Display math blocks using `$$...$$` or `\[...\]`
 
 ### 🌊 Streaming Responses
 - **Real-time Output**: Watch AI responses generate token-by-token as they're created
