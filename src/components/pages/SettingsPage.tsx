@@ -429,7 +429,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                              focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="autoPaste">{t.settings.general.autoPaste}</option>
-                  <option value="clipboardOnly">{t.settings.general.clipboardMode}</option>
+                  <option value="clipboardMode">{t.settings.general.clipboardMode}</option>
                   <option value="reviewMode">{t.settings.general.reviewMode}</option>
                 </select>
                 <p className="text-xs text-slate-500 dark:text-slate-400">

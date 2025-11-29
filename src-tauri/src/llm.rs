@@ -59,7 +59,7 @@ impl LlmResponse {
             ..Default::default()
         }
     }
-    
+
     pub fn error(message: String) -> Self {
         Self {
             success: false,
@@ -67,7 +67,7 @@ impl LlmResponse {
             ..Default::default()
         }
     }
-    
+
     pub fn image(url: String) -> Self {
         Self {
             success: true,
@@ -77,7 +77,7 @@ impl LlmResponse {
             ..Default::default()
         }
     }
-    
+
     pub fn audio(data: Vec<u8>, format: String) -> Self {
         Self {
             success: true,
@@ -113,10 +113,10 @@ impl LlmService {
             .timeout(std::time::Duration::from_secs(300))
             .build()
             .unwrap_or_default();
-        
+
         Self { config, client }
     }
-    
+
     /// Process an LLM request based on operation type
     pub async fn process_request(&self, request: LlmRequest) -> LlmResponse {
         match request.operation_type {
@@ -126,25 +126,25 @@ impl LlmService {
             _ => self.process_text_request(&request).await,
         }
     }
-    
+
     /// Process text-based requests (chat completions)
     async fn process_text_request(&self, request: &LlmRequest) -> LlmResponse {
         let operations = crate::operations::get_default_operations(&self.config.system_prompts);
         let operation = operations
             .iter()
             .find(|op| op.operation_type == request.operation_type);
-        
+
         let operation = match operation {
             Some(op) => op,
             None => return LlmResponse::error("Unknown operation type".to_string()),
         };
-        
+
         // Build system prompt with options
         let mut system_prompt = operation.system_prompt.clone();
         for (key, value) in &request.options {
             system_prompt = system_prompt.replace(&format!("{{{}}}", key), value);
         }
-        
+
         // Build user prompt
         let user_prompt = if let Some(ref selected_text) = request.selected_text {
             if !selected_text.is_empty() {
@@ -155,7 +155,7 @@ impl LlmService {
         } else {
             request.prompt.clone()
         };
-        
+
         // Build request body
         let mut body = json!({
             "model": self.config.llm_model,
@@ -166,30 +166,63 @@ impl LlmService {
             "max_tokens": 4096,
             "temperature": 0.6
         });
-        
+
         // Add reasoning_effort if thinking is disabled
         if self.config.disable_thinking {
             body["reasoning_effort"] = json!("low");
         }
-        
-        let url = format!("{}/chat/completions", self.config.api_base_url.trim_end_matches('/'));
-        
-        let response = self.client
+
+        let url = format!(
+            "{}/chat/completions",
+            self.config.api_base_url.trim_end_matches('/')
+        );
+
+        if self.config.enable_debug_logging {
+            println!("--- LLM Request ---");
+            println!("URL: POST {}", url);
+            println!(
+                "Body: {}",
+                serde_json::to_string_pretty(&body).unwrap_or_default()
+            );
+            println!("-------------------");
+        }
+
+        let response = self
+            .client
             .post(&url)
-            .header("Authorization", format!("Bearer {}", self.config.get_api_key()))
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.config.get_api_key()),
+            )
             .header("Content-Type", "application/json")
             .json(&body)
             .send()
             .await;
-        
+
         match response {
             Ok(resp) => {
-                if !resp.status().is_success() {
+                let status = resp.status();
+                if self.config.enable_debug_logging {
+                    println!("--- LLM Response ---");
+                    println!("Status: {}", status);
+                }
+
+                if !status.is_success() {
                     let error_text = resp.text().await.unwrap_or_default();
+                    if self.config.enable_debug_logging {
+                        println!("Error Body: {}", error_text);
+                        println!("--------------------");
+                    }
                     return LlmResponse::error(format!("API Error: {}", error_text));
                 }
-                
-                let json: Result<Value, _> = resp.json().await;
+
+                let text = resp.text().await.unwrap_or_default();
+                if self.config.enable_debug_logging {
+                    println!("Body: {}", text);
+                    println!("--------------------");
+                }
+
+                let json: Result<Value, _> = serde_json::from_str(&text);
                 match json {
                     Ok(data) => {
                         if let Some(content) = data["choices"][0]["message"]["content"].as_str() {
@@ -202,23 +235,41 @@ impl LlmService {
                     Err(e) => LlmResponse::error(format!("Failed to parse response: {}", e)),
                 }
             }
-            Err(e) => LlmResponse::error(format!("Request failed: {}", e)),
+            Err(e) => {
+                if self.config.enable_debug_logging {
+                    println!("Request Failed: {}", e);
+                    println!("--------------------");
+                }
+                LlmResponse::error(format!("Request failed: {}", e))
+            }
         }
     }
-    
+
     /// Process image generation requests
     async fn process_image_generation(&self, request: &LlmRequest) -> LlmResponse {
-        let size_string = request.options.get("size").map(|s| s.as_str()).unwrap_or("512x512");
+        let size_string = request
+            .options
+            .get("size")
+            .map(|s| s.as_str())
+            .unwrap_or("512x512");
         let size = extract_size_dimensions(size_string);
-        let quality = request.options.get("quality").map(|s| s.as_str()).unwrap_or("standard");
-        let style = request.options.get("style").map(|s| s.as_str()).unwrap_or("vivid");
-        
+        let quality = request
+            .options
+            .get("quality")
+            .map(|s| s.as_str())
+            .unwrap_or("standard");
+        let style = request
+            .options
+            .get("style")
+            .map(|s| s.as_str())
+            .unwrap_or("vivid");
+
         let model = if !self.config.image_model.is_empty() {
             &self.config.image_model
         } else {
             "FLUX.1-schnell"
         };
-        
+
         let body = json!({
             "model": model,
             "prompt": request.prompt,
@@ -228,25 +279,58 @@ impl LlmService {
             "response_format": "url",
             "n": 1
         });
-        
-        let url = format!("{}/images/generations", self.config.api_base_url.trim_end_matches('/'));
-        
-        let response = self.client
+
+        let url = format!(
+            "{}/images/generations",
+            self.config.api_base_url.trim_end_matches('/')
+        );
+
+        if self.config.enable_debug_logging {
+            println!("--- Image Generation Request ---");
+            println!("URL: POST {}", url);
+            println!(
+                "Body: {}",
+                serde_json::to_string_pretty(&body).unwrap_or_default()
+            );
+            println!("------------------------------");
+        }
+
+        let response = self
+            .client
             .post(&url)
-            .header("Authorization", format!("Bearer {}", self.config.get_api_key()))
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.config.get_api_key()),
+            )
             .header("Content-Type", "application/json")
             .json(&body)
             .send()
             .await;
-        
+
         match response {
             Ok(resp) => {
-                if !resp.status().is_success() {
+                let status = resp.status();
+                if self.config.enable_debug_logging {
+                    println!("--- Image Generation Response ---");
+                    println!("Status: {}", status);
+                }
+
+                if !status.is_success() {
                     let error_text = resp.text().await.unwrap_or_default();
+                    if self.config.enable_debug_logging {
+                        println!("Error Body: {}", error_text);
+                        println!("-------------------------------");
+                    }
                     return LlmResponse::error(format!("Image Generation Error: {}", error_text));
                 }
-                
-                let json: Result<Value, _> = resp.json().await;
+
+                let text = resp.text().await.unwrap_or_default();
+                if self.config.enable_debug_logging {
+                    println!("Body: {}", text);
+                    println!("-------------------------------");
+                }
+
+                let json: Result<Value, _> = serde_json::from_str(&text);
                 match json {
                     Ok(data) => {
                         if let Some(url) = data["data"][0]["url"].as_str() {
@@ -258,69 +342,107 @@ impl LlmService {
                     Err(e) => LlmResponse::error(format!("Failed to parse response: {}", e)),
                 }
             }
-            Err(e) => LlmResponse::error(format!("Request failed: {}", e)),
+            Err(e) => {
+                if self.config.enable_debug_logging {
+                    println!("Request Failed: {}", e);
+                    println!("-------------------------------");
+                }
+                LlmResponse::error(format!("Request failed: {}", e))
+            }
         }
     }
-    
+
     /// Process speech-to-text (audio transcription) requests
     async fn process_speech_to_text(&self, request: &LlmRequest) -> LlmResponse {
         let audio_path = match &request.audio_file_path {
             Some(path) if Path::new(path).exists() => path,
             _ => return LlmResponse::error("Audio file not found or not specified".to_string()),
         };
-        
+
         let model = if !self.config.audio_model.is_empty() {
             &self.config.audio_model
         } else {
             "whisper-1"
         };
-        
-        let language = request.options.get("language").map(|s| s.as_str()).unwrap_or("auto");
-        
+
+        let language = request
+            .options
+            .get("language")
+            .map(|s| s.as_str())
+            .unwrap_or("auto");
+
         // Read file for multipart upload
         let file_bytes = match std::fs::read(audio_path) {
             Ok(bytes) => bytes,
             Err(e) => return LlmResponse::error(format!("Failed to read audio file: {}", e)),
         };
-        
+
         let file_name = Path::new(audio_path)
             .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or("audio.mp3")
             .to_string();
-        
+
         let file_part = multipart::Part::bytes(file_bytes)
             .file_name(file_name)
             .mime_str("audio/mpeg")
             .unwrap();
-        
+
         let mut form = multipart::Form::new()
             .part("file", file_part)
             .text("model", model.to_string())
             .text("response_format", "text");
-        
+
         if language != "auto" && !language.is_empty() {
             form = form.text("language", language.to_string());
         }
-        
-        let url = format!("{}/audio/transcriptions", self.config.api_base_url.trim_end_matches('/'));
-        
-        let response = self.client
+
+        let url = format!(
+            "{}/audio/transcriptions",
+            self.config.api_base_url.trim_end_matches('/')
+        );
+
+        if self.config.enable_debug_logging {
+            println!("--- Speech to Text Request ---");
+            println!("URL: POST {}", url);
+            println!("(Multipart form data not logged)");
+            println!("------------------------------");
+        }
+
+        let response = self
+            .client
             .post(&url)
-            .header("Authorization", format!("Bearer {}", self.config.get_api_key()))
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.config.get_api_key()),
+            )
             .multipart(form)
             .send()
             .await;
-        
+
         match response {
             Ok(resp) => {
-                if !resp.status().is_success() {
+                let status = resp.status();
+                if self.config.enable_debug_logging {
+                    println!("--- Speech to Text Response ---");
+                    println!("Status: {}", status);
+                }
+
+                if !status.is_success() {
                     let error_text = resp.text().await.unwrap_or_default();
+                    if self.config.enable_debug_logging {
+                        println!("Error Body: {}", error_text);
+                        println!("-------------------------------");
+                    }
                     return LlmResponse::error(format!("Transcription Error: {}", error_text));
                 }
-                
+
                 let text = resp.text().await.unwrap_or_default();
-                
+                if self.config.enable_debug_logging {
+                    println!("Body: {}", text);
+                    println!("-------------------------------");
+                }
+
                 // Try to parse as JSON first (some APIs return JSON)
                 if let Ok(json) = serde_json::from_str::<Value>(&text) {
                     if let Some(transcript) = json["text"].as_str() {
@@ -328,33 +450,55 @@ impl LlmService {
                         return LlmResponse::success(normalized);
                     }
                 }
-                
+
                 // Otherwise treat as plain text
                 let normalized = normalize_transcription(&text);
                 LlmResponse::success(normalized)
             }
-            Err(e) => LlmResponse::error(format!("Request failed: {}", e)),
+            Err(e) => {
+                if self.config.enable_debug_logging {
+                    println!("Request Failed: {}", e);
+                    println!("-------------------------------");
+                }
+                LlmResponse::error(format!("Request failed: {}", e))
+            }
         }
     }
-    
+
     /// Process text-to-speech requests
     async fn process_text_to_speech(&self, request: &LlmRequest) -> LlmResponse {
         if request.prompt.trim().is_empty() {
             return LlmResponse::error("Text prompt is required for Text to Speech".to_string());
         }
-        
-        let model = request.options.get("model")
+
+        let model = request
+            .options
+            .get("model")
             .map(|s| s.as_str())
             .unwrap_or(&self.config.tts_model);
-        
-        let voice = request.options.get("voice").map(|s| s.as_str()).unwrap_or("alloy");
-        let speed: f32 = request.options.get("speed")
+
+        let voice = request
+            .options
+            .get("voice")
+            .map(|s| s.as_str())
+            .unwrap_or("alloy");
+        let speed: f32 = request
+            .options
+            .get("speed")
             .and_then(|s| s.parse::<f32>().ok())
             .unwrap_or(1.0_f32)
             .clamp(0.25_f32, 2.0_f32);
-        let format = request.options.get("format").map(|s| s.as_str()).unwrap_or("mp3");
-        let language = request.options.get("language").map(|s| s.as_str()).unwrap_or("pt");
-        
+        let format = request
+            .options
+            .get("format")
+            .map(|s| s.as_str())
+            .unwrap_or("mp3");
+        let language = request
+            .options
+            .get("language")
+            .map(|s| s.as_str())
+            .unwrap_or("pt");
+
         let body = json!({
             "model": model,
             "input": request.prompt,
@@ -363,54 +507,104 @@ impl LlmService {
             "speed": speed,
             "language": language
         });
-        
-        let url = format!("{}/audio/speech", self.config.api_base_url.trim_end_matches('/'));
-        
-        let response = self.client
+
+        let url = format!(
+            "{}/audio/speech",
+            self.config.api_base_url.trim_end_matches('/')
+        );
+
+        if self.config.enable_debug_logging {
+            println!("--- Text to Speech Request ---");
+            println!("URL: POST {}", url);
+            println!(
+                "Body: {}",
+                serde_json::to_string_pretty(&body).unwrap_or_default()
+            );
+            println!("------------------------------");
+        }
+
+        let response = self
+            .client
             .post(&url)
-            .header("Authorization", format!("Bearer {}", self.config.get_api_key()))
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.config.get_api_key()),
+            )
             .header("Content-Type", "application/json")
             .json(&body)
             .send()
             .await;
-        
+
         match response {
             Ok(resp) => {
-                if !resp.status().is_success() {
+                let status = resp.status();
+                if self.config.enable_debug_logging {
+                    println!("--- Text to Speech Response ---");
+                    println!("Status: {}", status);
+                }
+
+                if !status.is_success() {
                     let error_text = resp.text().await.unwrap_or_default();
+                    if self.config.enable_debug_logging {
+                        println!("Error Body: {}", error_text);
+                        println!("-------------------------------");
+                    }
                     return LlmResponse::error(format!("TTS Error: {}", error_text));
                 }
-                
+
                 match resp.bytes().await {
-                    Ok(bytes) => LlmResponse::audio(bytes.to_vec(), format.to_string()),
-                    Err(e) => LlmResponse::error(format!("Failed to read audio data: {}", e)),
+                    Ok(bytes) => {
+                        if self.config.enable_debug_logging {
+                            println!("Received {} bytes of audio data", bytes.len());
+                            println!("-------------------------------");
+                        }
+                        LlmResponse::audio(bytes.to_vec(), format.to_string())
+                    }
+                    Err(e) => {
+                        if self.config.enable_debug_logging {
+                            println!("Failed to read audio data: {}", e);
+                            println!("-------------------------------");
+                        }
+                        LlmResponse::error(format!("Failed to read audio data: {}", e))
+                    }
                 }
             }
-            Err(e) => LlmResponse::error(format!("Request failed: {}", e)),
+            Err(e) => {
+                if self.config.enable_debug_logging {
+                    println!("Request Failed: {}", e);
+                    println!("-------------------------------");
+                }
+                LlmResponse::error(format!("Request failed: {}", e))
+            }
         }
     }
-    
+
     /// Fetch available models from API
     pub async fn get_models(&self) -> Result<ModelsResponse, String> {
         let url = format!("{}/models", self.config.api_base_url.trim_end_matches('/'));
-        
-        let response = self.client
+
+        let response = self
+            .client
             .get(&url)
-            .header("Authorization", format!("Bearer {}", self.config.get_api_key()))
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.config.get_api_key()),
+            )
             .send()
             .await
             .map_err(|e| format!("Request failed: {}", e))?;
-        
+
         if !response.status().is_success() {
             let error_text = response.text().await.unwrap_or_default();
             return Err(format!("Failed to fetch models: {}", error_text));
         }
-        
-        response.json::<ModelsResponse>()
+
+        response
+            .json::<ModelsResponse>()
             .await
             .map_err(|e| format!("Failed to parse models: {}", e))
     }
-    
+
     /// Test API connection
     pub async fn test_connection(&self) -> Result<(), String> {
         self.get_models().await?;

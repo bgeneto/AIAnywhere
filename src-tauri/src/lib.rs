@@ -123,6 +123,7 @@ async fn get_operations(state: State<'_, AppState>) -> Result<Vec<Operation>, St
 
 #[tauri::command]
 async fn process_llm_request(
+    app: AppHandle,
     state: State<'_, AppState>,
     request: LlmRequest,
 ) -> Result<LlmResponse, String> {
@@ -131,8 +132,40 @@ async fn process_llm_request(
         config.clone()
     };
 
-    let service = LlmService::new(config);
-    Ok(service.process_request(request).await)
+    let service = LlmService::new(config.clone());
+    let response = service.process_request(request).await;
+
+    if response.success {
+        if let Some(content) = &response.content {
+            match config.paste_behavior {
+                PasteBehavior::AutoPaste => {
+                    // Copy to clipboard
+                    use tauri_plugin_clipboard_manager::ClipboardExt;
+                    app.clipboard()
+                        .write_text(content.clone())
+                        .map_err(|e| e.to_string())?;
+
+                    // Restore window focus
+                    clipboard::restore_foreground_window()?;
+
+                    // Simulate Paste
+                    clipboard::simulate_paste()?;
+                }
+                PasteBehavior::ClipboardMode => {
+                    // Copy to clipboard
+                    use tauri_plugin_clipboard_manager::ClipboardExt;
+                    app.clipboard()
+                        .write_text(content.clone())
+                        .map_err(|e| e.to_string())?;
+                }
+                PasteBehavior::ReviewMode => {
+                    // Do nothing, frontend handles it
+                }
+            }
+        }
+    }
+
+    Ok(response)
 }
 
 #[tauri::command]
@@ -170,11 +203,11 @@ async fn get_models_with_endpoint(
         let config = state.config.lock().map_err(|e| e.to_string())?;
         config.clone()
     };
-    
+
     // Create a temporary config with the provided endpoint
     let mut config = Configuration::default();
     config.api_base_url = api_base_url;
-    
+
     // Use provided API key if given (as plaintext), otherwise use the stored encrypted one
     if let Some(key) = api_key {
         if !key.is_empty() {
@@ -185,7 +218,7 @@ async fn get_models_with_endpoint(
     } else {
         config.api_key = stored_config.api_key;
     }
-    
+
     let service = LlmService::new(config);
     let response = service.get_models().await?;
 
@@ -203,11 +236,11 @@ async fn test_connection_with_endpoint(
         let config = state.config.lock().map_err(|e| e.to_string())?;
         config.clone()
     };
-    
+
     // Create a temporary config with the provided endpoint
     let mut config = Configuration::default();
     config.api_base_url = api_base_url;
-    
+
     // Use provided API key if given (as plaintext), otherwise use the stored encrypted one
     if let Some(key) = api_key {
         if !key.is_empty() {
@@ -218,7 +251,7 @@ async fn test_connection_with_endpoint(
     } else {
         config.api_key = stored_config.api_key;
     }
-    
+
     let service = LlmService::new(config);
     service.test_connection().await
 }
@@ -285,9 +318,11 @@ fn create_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 
     // Use the default app icon - Tauri handles icon embedding
     let _tray = TrayIconBuilder::new()
-        .icon(app.default_window_icon().cloned().unwrap_or_else(|| {
-            tauri::image::Image::new_owned(vec![0, 0, 0, 255], 1, 1)
-        }))
+        .icon(
+            app.default_window_icon()
+                .cloned()
+                .unwrap_or_else(|| tauri::image::Image::new_owned(vec![0, 0, 0, 255], 1, 1)),
+        )
         .menu(&menu)
         .tooltip("AI Anywhere")
         .on_menu_event(|app, event| match event.id.as_ref() {
