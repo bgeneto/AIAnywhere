@@ -60,3 +60,42 @@ input,
 textarea {
   transition: color 0.2s;
 }
+
+/* ============================================
+   BUTTON UTILITY CLASSES
+   ============================================ */
+
+/* Primary button - dark slate, for main actions like Send, Save */
+.btn-primary {
+  @apply flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white
+         bg-slate-700 hover:bg-slate-800 disabled:bg-slate-500
+         rounded-lg transition-colors duration-200 shadow-sm
+         focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2
+         dark:focus:ring-offset-slate-900;
+}
+
+/* Secondary button - lighter background, for secondary actions like Sync, Clear */
+.btn-secondary {
+  @apply flex items-center gap-1 px-3 py-1.5 text-xs font-medium
+         text-slate-700 dark:text-slate-300 
+         hover:text-white dark:hover:text-white
+         bg-slate-200 dark:bg-slate-700 hover:bg-slate-600 dark:hover:bg-slate-600
+         rounded-lg transition-colors;
+}
+
+/* Outline button - bordered, for actions like Copy, Back */
+.btn-outline {
+  @apply flex items-center gap-2 px-4 py-2 text-sm font-medium 
+         text-slate-700 dark:text-slate-300
+         border border-slate-300 dark:border-slate-600 
+         bg-white dark:bg-slate-800
+         hover:bg-slate-100 dark:hover:bg-slate-700 
+         rounded-lg transition-colors;
+}
+
+/* Ghost button - minimal, for close buttons and toggles */
+.btn-ghost {
+  @apply p-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 
+         hover:bg-slate-200 dark:hover:bg-slate-700 
+         rounded-lg transition-colors;
+}

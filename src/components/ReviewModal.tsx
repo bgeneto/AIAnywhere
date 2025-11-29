@@ -146,8 +146,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
           </div>
           <button
             onClick={handleBack}
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 
-                       hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            className="btn-ghost"
           >
             ✕
           </button>
@@ -236,10 +235,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
         <div className="flex items-center justify-between p-4 border-t border-slate-200 dark:border-slate-700">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-900 dark:text-white
-                       border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800
-                       hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500
-                       rounded-lg transition-colors duration-200"
+            className="btn-outline"
           >
             <span>←</span>
             {t.review.back}
@@ -249,9 +245,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
             {result.isImage && (
               <button
                 onClick={handleSaveImage}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300
-                           border border-slate-300 dark:border-slate-600 rounded-lg
-                           hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="btn-outline"
               >
                 💾 {t.review.saveImage}
               </button>
@@ -260,9 +254,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
             {result.isAudio && (
               <button
                 onClick={handleSaveAudio}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300
-                           border border-slate-300 dark:border-slate-600 rounded-lg
-                           hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="btn-outline"
               >
                 💾 {t.review.save}
               </button>
@@ -272,9 +264,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
               <>
                 <button
                   onClick={handleCopy}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300
-                             border border-slate-300 dark:border-slate-600 rounded-lg
-                             hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="btn-outline"
                 >
                   📋 {t.review.copy}
                 </button>
@@ -282,8 +272,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                 {config?.pasteBehavior !== 'clipboardMode' && (
                   <button
                     onClick={handlePaste}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white
-                               bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                    className="btn-primary"
                   >
                     📋 {t.review.paste}
                   </button>

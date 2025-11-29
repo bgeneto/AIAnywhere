@@ -152,23 +152,15 @@ export function HomePage({ onShowToast }: HomePageProps) {
                 {clipboardSyncEnabled && (
                   <button
                     onClick={syncClipboard}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium
-                               text-slate-600 dark:text-slate-400 
-                               hover:text-slate-900 dark:hover:text-white
-                               bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700
-                               rounded-lg transition-colors"
+                    className="btn-secondary"
                     title="Refresh from clipboard"
                   >
                     📋 Sync
                   </button>
                 )}
-                <button
+                  <button
                   onClick={handleClear}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium
-                             text-slate-600 dark:text-slate-400 
-                             hover:text-slate-900 dark:hover:text-white
-                             bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700
-                             rounded-lg transition-colors"
+                  className="btn-secondary"
                 >
                   🗑️ {t.home.clear}
                 </button>
@@ -197,11 +189,7 @@ export function HomePage({ onShowToast }: HomePageProps) {
           <button
             onClick={handleSend}
             disabled={isProcessing}
-            className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white
-                       bg-green-600 hover:bg-green-700 disabled:bg-green-400
-                       rounded-lg transition-colors duration-200 shadow-sm
-                       focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
-                       dark:focus:ring-offset-slate-900"
+            className="btn-primary"
           >
             {isProcessing ? (
               <>

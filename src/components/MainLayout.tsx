@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { useI18n } from '../i18n/index';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
@@ -27,6 +27,7 @@ interface MainLayoutProps {
 
 export function MainLayout({ activePage, onPageChange, children }: MainLayoutProps) {
   const { t } = useI18n();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const mainItems = navItems.filter(item => item.section === 'main');
   const settingsItems = navItems.filter(item => item.section === 'settings');
@@ -40,16 +41,18 @@ export function MainLayout({ activePage, onPageChange, children }: MainLayoutPro
       <button
         key={item.id}
         onClick={() => onPageChange(item.id)}
+        title={sidebarCollapsed ? label : undefined}
         className={`
           w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200
+          ${sidebarCollapsed ? 'px-3 justify-center' : 'justify-start'}
           ${isActive
-            ? 'bg-blue-600 text-white shadow-md'
+            ? 'bg-slate-700 dark:bg-slate-700 text-white shadow-md'
             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
           }
         `}
       >
         <span className="text-xl shrink-0">{item.icon}</span>
-        <span className="font-medium text-sm truncate">{label}</span>
+        {!sidebarCollapsed && <span className="font-medium text-sm truncate">{label}</span>}
       </button>
     );
   };
@@ -57,19 +60,42 @@ export function MainLayout({ activePage, onPageChange, children }: MainLayoutPro
   return (
     <div className="flex h-screen bg-slate-100 dark:bg-slate-950 transition-colors duration-200">
       {/* Sidebar */}
-      <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+      <aside className={`bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'}`}>
         {/* App Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <img
-              src={appIcon}
-              alt="AI Anywhere"
-              className="w-10 h-10 rounded-lg shadow-lg"
-            />
-            <div>
-              <h1 className="font-bold text-slate-900 dark:text-white">{t.appName}</h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">v1.0.0</p>
-            </div>
+          <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+            {sidebarCollapsed ? (
+              /* Collapsed: hamburger icon replaces logo */
+              <button
+                onClick={() => setSidebarCollapsed(false)}
+                title="Expand sidebar"
+                className="w-10 h-10 flex items-center justify-center rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-xl"
+              >
+                ☰
+              </button>
+            ) : (
+              /* Expanded: logo + text + hamburger on right */
+              <>
+                <div className="flex items-center gap-3">
+                  <img
+                    src={appIcon}
+                    alt="AI Anywhere"
+                    className="w-10 h-10 rounded-lg shadow-lg shrink-0"
+                  />
+                  <div>
+                    <h1 className="font-bold text-slate-900 dark:text-white">{t.appName}</h1>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">v1.0.0</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSidebarCollapsed(true)}
+                  title="Collapse sidebar"
+                  className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-lg"
+                >
+                  ☰
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -81,22 +107,31 @@ export function MainLayout({ activePage, onPageChange, children }: MainLayoutPro
           </div>
 
           {/* Settings Section */}
-          <div className="pt-4">
-            <p className="px-4 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              {t.nav.settings}
-            </p>
+          {!sidebarCollapsed && (
+            <div className="pt-4">
+              <p className="px-4 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                {t.nav.settings}
+              </p>
+              <div className="space-y-1">
+                {settingsItems.map(renderNavItem)}
+              </div>
+            </div>
+          )}
+
+          {/* Settings Item (shown as icon when collapsed) */}
+          {sidebarCollapsed && (
             <div className="space-y-1">
               {settingsItems.map(renderNavItem)}
             </div>
-          </div>
+          )}
         </nav>
 
         {/* Bottom Section */}
-        <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-1">
+        <div className={`p-3 border-t border-slate-200 dark:border-slate-800 space-y-1`}>
           {bottomItems.map(renderNavItem)}
 
           {/* Theme and Language Toggles */}
-          <div className="flex items-center justify-center gap-2 pt-2">
+          <div className={`flex items-center gap-2 pt-2 ${sidebarCollapsed ? 'flex-col' : 'justify-center'}`}>
             <ThemeToggle />
             <LanguageToggle />
           </div>
