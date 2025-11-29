@@ -25,10 +25,6 @@ A powerful multiplatform desktop application that provides universal AI assistan
 - **Flexible API Support**: Works with OpenAI, Anthropic Claude, local LLMs, or any OpenAI-compatible endpoint (can be used with e.g. LiteLLM or Openrouter)
 - **Robust Text Handling**: Intelligent text selection using both UI Automation and clipboard methods
 
-![screen-shot](https://github.com/user-attachments/assets/c9247a50-48ad-4c60-a85d-d62761911fc0)
-
-![screen-shot2](https://github.com/user-attachments/assets/2389bd40-0765-40f2-a26b-e69c9b081300)
-
 ## 🛠️ Technology Stack
 
 ### Frontend
