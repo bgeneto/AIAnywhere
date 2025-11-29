@@ -20,9 +20,11 @@
     "dialog:allow-open",
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-write-text",
+    "clipboard-manager:allow-write-image",
     "fs:default",
     "fs:allow-write",
     "fs:allow-read",
+    "fs:allow-copy-file",
     {
       "identifier": "fs:allow-write-text-file",
       "allow": [{ "path": "**" }]
@@ -34,6 +36,14 @@
     {
       "identifier": "fs:allow-read-file",
       "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-copy-file",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "$APPDATA/**" }, { "path": "$DOWNLOAD/**" }, { "path": "**" }]
     },
     "shell:default",
     "notification:default",

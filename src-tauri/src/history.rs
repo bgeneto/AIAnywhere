@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use uuid::Uuid;
+use tokio::fs as async_fs;
 
 /// A single history entry - matches TypeScript HistoryEntry/HistoryEntryResponse
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -84,15 +85,16 @@ impl HistoryManager {
         config_dir
     }
 
-    /// Load history from file
-    pub fn load() -> Result<Vec<HistoryEntry>, String> {
+    /// Load history from file (async version)
+    pub async fn load() -> Result<Vec<HistoryEntry>, String> {
         let history_path = Self::get_history_path();
         
         if !history_path.exists() {
             return Ok(Vec::new());
         }
         
-        let content = fs::read_to_string(&history_path)
+        let content = async_fs::read_to_string(&history_path)
+            .await
             .map_err(|e| format!("Failed to read history file: {}", e))?;
         
         if content.trim().is_empty() {
@@ -105,22 +107,23 @@ impl HistoryManager {
         Ok(history)
     }
 
-    /// Save history to file
-    pub fn save(history: &[HistoryEntry]) -> Result<(), String> {
+    /// Save history to file (async version)
+    pub async fn save(history: &[HistoryEntry]) -> Result<(), String> {
         let history_path = Self::get_history_path();
         
         let content = serde_json::to_string_pretty(history)
             .map_err(|e| format!("Failed to serialize history: {}", e))?;
         
-        fs::write(&history_path, content)
+        async_fs::write(&history_path, content)
+            .await
             .map_err(|e| format!("Failed to write history file: {}", e))?;
         
         Ok(())
     }
 
-    /// Add a new entry to history (respects limit)
-    pub fn add_entry(entry: HistoryEntry, limit: usize) -> Result<(), String> {
-        let mut history = Self::load()?;
+    /// Add a new entry to history (respects limit) - async version
+    pub async fn add_entry(entry: HistoryEntry, limit: usize) -> Result<(), String> {
+        let mut history = Self::load().await?;
         
         // Add new entry at the beginning
         history.insert(0, entry);
@@ -136,12 +139,12 @@ impl HistoryManager {
             }
         }
         
-        Self::save(&history)
+        Self::save(&history).await
     }
 
-    /// Delete a specific entry by ID
-    pub fn delete_entry(id: &str) -> Result<(), String> {
-        let mut history = Self::load()?;
+    /// Delete a specific entry by ID - async version
+    pub async fn delete_entry(id: &str) -> Result<(), String> {
+        let mut history = Self::load().await?;
         
         // Find and remove the entry
         if let Some(pos) = history.iter().position(|e| e.id == id) {
@@ -149,7 +152,7 @@ impl HistoryManager {
             Self::delete_entry_media(&entry);
         }
         
-        Self::save(&history)
+        Self::save(&history).await
     }
 
     /// Delete media files associated with an entry
@@ -159,9 +162,9 @@ impl HistoryManager {
         }
     }
 
-    /// Clear all history
-    pub fn clear() -> Result<(), String> {
-        let history = Self::load()?;
+    /// Clear all history - async version
+    pub async fn clear() -> Result<(), String> {
+        let history = Self::load().await?;
         
         // Delete all media files
         for entry in &history {
@@ -169,12 +172,12 @@ impl HistoryManager {
         }
         
         // Save empty history
-        Self::save(&Vec::new())
+        Self::save(&Vec::new()).await
     }
 
-    /// Search history entries
-    pub fn search(query: &str) -> Result<Vec<HistoryEntry>, String> {
-        let history = Self::load()?;
+    /// Search history entries - async version
+    pub async fn search(query: &str) -> Result<Vec<HistoryEntry>, String> {
+        let history = Self::load().await?;
         
         if query.trim().is_empty() {
             return Ok(history);
@@ -216,8 +219,8 @@ impl HistoryManager {
         Ok(file_path.to_string_lossy().to_string())
     }
 
-    /// Clean up old media files based on retention policy
-    pub fn cleanup_old_media(retention_days: u32) -> Result<u32, String> {
+    /// Clean up old media files based on retention policy - async version
+    pub async fn cleanup_old_media(retention_days: u32) -> Result<u32, String> {
         if retention_days == 0 {
             return Ok(0); // Disabled
         }
@@ -226,7 +229,7 @@ impl HistoryManager {
         let cutoff = chrono::Utc::now() - chrono::Duration::days(retention_days as i64);
         let mut deleted_count = 0u32;
 
-        // Read directory
+        // Read directory (use sync fs for read_dir since tokio's is more complex)
         let entries = fs::read_dir(&media_path)
             .map_err(|e| format!("Failed to read media directory: {}", e))?;
 
@@ -248,14 +251,14 @@ impl HistoryManager {
         }
 
         // Also update history to remove entries with deleted media
-        let mut history = Self::load()?;
+        let mut history = Self::load().await?;
         history.retain(|entry| {
             // Keep entries without media or with existing media
             entry.media_path.as_ref()
                 .map(|p| std::path::Path::new(p).exists())
                 .unwrap_or(true)
         });
-        Self::save(&history)?;
+        Self::save(&history).await?;
 
         Ok(deleted_count)
     }

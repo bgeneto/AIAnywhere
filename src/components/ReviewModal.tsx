@@ -1,15 +1,30 @@
 import { useState, useRef, useEffect } from 'react';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { save } from '@tauri-apps/plugin-dialog';
-import { writeFile } from '@tauri-apps/plugin-fs';
+import { writeFile, copyFile } from '@tauri-apps/plugin-fs';
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { convertFileSrc } from '@tauri-apps/api/core';
+import { open } from '@tauri-apps/plugin-shell';
+import { downloadDir } from '@tauri-apps/api/path';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n/index';
 import { ToastType } from '../types';
+
+// Utility function for chunked base64 encoding to avoid stack overflow
+function uint8ArrayToBase64(bytes: Uint8Array | number[]): string {
+  const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const CHUNK_SIZE = 8192;
+  let result = '';
+  for (let i = 0; i < arr.length; i += CHUNK_SIZE) {
+    const chunk = arr.slice(i, i + CHUNK_SIZE);
+    result += String.fromCharCode.apply(null, Array.from(chunk));
+  }
+  return btoa(result);
+}
 
 interface ReviewModalProps {
   onShowToast: (type: ToastType, title: string, message?: string) => void;
@@ -204,25 +219,47 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
   };
 
   const handleSaveAudio = async () => {
-    if (!result.audioData) return;
+    // Support both audioFilePath (new) and audioData (legacy fallback)
+    if (!result.audioFilePath && !result.audioData) return;
     
     try {
       const extension = result.audioFormat || 'mp3';
+      const defaultDir = await downloadDir();
       const savePath = await save({
         filters: [{
           name: 'Audio Files',
           extensions: [extension],
         }],
-        defaultPath: `generated-audio.${extension}`,
+        defaultPath: `${defaultDir}/generated-audio.${extension}`,
       });
       
       if (savePath) {
-        const uint8Array = new Uint8Array(result.audioData);
-        await writeFile(savePath, uint8Array);
+        if (result.audioFilePath) {
+          // Copy from saved file to user-selected location
+          console.log('[SaveAudio] Copying from:', result.audioFilePath, 'to:', savePath);
+          await copyFile(result.audioFilePath, savePath);
+        } else if (result.audioData) {
+          // Legacy: write from memory (shouldn't happen with new flow)
+          console.log('[SaveAudio] Writing from memory, size:', result.audioData.length);
+          const uint8Array = new Uint8Array(result.audioData);
+          await writeFile(savePath, uint8Array);
+        }
+        
         onShowToast('success', 'Saved', 'Audio saved successfully');
+        
+        // Open the containing folder
+        const folderPath = savePath.substring(0, Math.max(savePath.lastIndexOf('\\'), savePath.lastIndexOf('/')));
+        if (folderPath) {
+          try {
+            await open(folderPath);
+          } catch (e) {
+            console.warn('Failed to open folder:', e);
+          }
+        }
       }
     } catch (error) {
-      onShowToast('error', 'Error', 'Failed to save audio');
+      console.error('[SaveAudio] Error:', error);
+      onShowToast('error', 'Error', `Failed to save audio: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -290,11 +327,18 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                   </p>
                 </div>
               </div>
-              {result.audioData && (
+              {/* Audio player - use file path or fallback to base64 data */}
+              {result.audioFilePath ? (
                 <audio
                   controls
                   className="w-full"
-                  src={`data:audio/${result.audioFormat || 'mp3'};base64,${btoa(String.fromCharCode(...result.audioData))}`}
+                  src={convertFileSrc(result.audioFilePath)}
+                />
+              ) : result.audioData && (
+                <audio
+                  controls
+                  className="w-full"
+                  src={`data:audio/${result.audioFormat || 'mp3'};base64,${uint8ArrayToBase64(result.audioData)}`}
                 />
               )}
             </div>

@@ -102,6 +102,7 @@ export interface LlmResponse {
   isAudio: boolean;
   audioData?: number[];
   audioFormat?: string;
+  audioFilePath?: string;
 }
 
 // ============================================================================

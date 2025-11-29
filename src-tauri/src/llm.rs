@@ -12,6 +12,7 @@ use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
 
 use crate::config::Configuration;
+use crate::history::HistoryManager;
 use crate::operations::OperationType;
 use crate::text::{extract_size_dimensions, normalize_transcription, process_llm_response};
 
@@ -38,6 +39,7 @@ pub struct LlmResponse {
     pub is_audio: bool,
     pub audio_data: Option<Vec<u8>>,
     pub audio_format: Option<String>,
+    pub audio_file_path: Option<String>,
 }
 
 impl Default for LlmResponse {
@@ -51,6 +53,7 @@ impl Default for LlmResponse {
             is_audio: false,
             audio_data: None,
             audio_format: None,
+            audio_file_path: None,
         }
     }
 }
@@ -82,13 +85,14 @@ impl LlmResponse {
         }
     }
 
-    pub fn audio(data: Vec<u8>, format: String) -> Self {
+    pub fn audio(file_path: String, format: String) -> Self {
         Self {
             success: true,
             content: Some("Audio generated successfully".to_string()),
             is_audio: true,
-            audio_data: Some(data),
+            audio_data: None, // No longer send raw bytes
             audio_format: Some(format),
+            audio_file_path: Some(file_path),
             ..Default::default()
         }
     }
@@ -762,7 +766,21 @@ impl LlmService {
                             println!("Received {} bytes of audio data", bytes.len());
                             println!("-------------------------------");
                         }
-                        LlmResponse::audio(bytes.to_vec(), format.to_string())
+                        // Save audio to media folder and return file path
+                        match HistoryManager::save_audio(&bytes, format) {
+                            Ok(file_path) => {
+                                if self.config.enable_debug_logging {
+                                    println!("Saved audio to: {}", file_path);
+                                }
+                                LlmResponse::audio(file_path, format.to_string())
+                            }
+                            Err(e) => {
+                                if self.config.enable_debug_logging {
+                                    println!("Failed to save audio: {}", e);
+                                }
+                                LlmResponse::error(format!("Failed to save audio: {}", e))
+                            }
+                        }
                     }
                     Err(e) => {
                         if self.config.enable_debug_logging {

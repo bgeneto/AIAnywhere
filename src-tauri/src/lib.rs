@@ -204,8 +204,8 @@ async fn get_operations(state: State<'_, AppState>) -> Result<Vec<Operation>, St
 #[tauri::command]
 async fn get_history(search_query: Option<String>) -> Result<Vec<HistoryEntry>, String> {
     match search_query {
-        Some(query) if !query.trim().is_empty() => HistoryManager::search(&query),
-        _ => HistoryManager::load(),
+        Some(query) if !query.trim().is_empty() => HistoryManager::search(&query).await,
+        _ => HistoryManager::load().await,
     }
 }
 
@@ -218,7 +218,10 @@ async fn save_history_entry(
     operation_options: HashMap<String, String>,
     media_path: Option<String>,
 ) -> Result<HistoryEntry, String> {
-    let config = state.config.lock().map_err(|e| e.to_string())?;
+    let history_limit = {
+        let config = state.config.lock().map_err(|e| e.to_string())?;
+        config.history_limit
+    }; // Lock is released here
     
     let entry = HistoryEntry::new(
         operation_type,
@@ -227,25 +230,28 @@ async fn save_history_entry(
         operation_options,
         media_path,
     );
-    HistoryManager::add_entry(entry.clone(), config.history_limit)?;
+    HistoryManager::add_entry(entry.clone(), history_limit).await?;
     
     Ok(entry)
 }
 
 #[tauri::command]
 async fn delete_history_entry(id: String) -> Result<(), String> {
-    HistoryManager::delete_entry(&id)
+    HistoryManager::delete_entry(&id).await
 }
 
 #[tauri::command]
 async fn clear_history() -> Result<(), String> {
-    HistoryManager::clear()
+    HistoryManager::clear().await
 }
 
 #[tauri::command]
 async fn cleanup_old_media(state: State<'_, AppState>) -> Result<u32, String> {
-    let config = state.config.lock().map_err(|e| e.to_string())?;
-    HistoryManager::cleanup_old_media(config.media_retention_days)
+    let retention_days = {
+        let config = state.config.lock().map_err(|e| e.to_string())?;
+        config.media_retention_days
+    }; // Lock is released here
+    HistoryManager::cleanup_old_media(retention_days).await
 }
 
 // ============================================================================
@@ -686,6 +692,93 @@ fn mask_api_key(key: String) -> String {
 // File Download Commands
 // ============================================================================
 
+/// Download an image from URL and save it to the media folder, returning the local path
+/// This is used for persisting generated images to history
+#[tauri::command]
+async fn save_generated_image(
+    state: State<'_, AppState>,
+    image_url: String,
+) -> Result<String, String> {
+    let debug_logging = {
+        let config = state.config.lock().map_err(|e| e.to_string())?;
+        config.enable_debug_logging
+    };
+
+    if debug_logging {
+        println!("[save_generated_image] Starting download from: {}", image_url);
+    }
+
+    // Create HTTP client
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+    // Download the image
+    let response = client
+        .get(&image_url)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to download image: {}", e))?;
+
+    let status = response.status();
+    if !status.is_success() {
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("Download failed with status {}: {}", status, error_text));
+    }
+
+    let bytes = response.bytes().await
+        .map_err(|e| format!("Failed to read image bytes: {}", e))?;
+
+    if debug_logging {
+        println!("[save_generated_image] Downloaded {} bytes", bytes.len());
+    }
+
+    if bytes.is_empty() {
+        return Err("Downloaded image is empty".to_string());
+    }
+
+    // Determine format from URL or default to png
+    let format = if image_url.contains(".jpg") || image_url.contains(".jpeg") {
+        "jpg"
+    } else if image_url.contains(".webp") {
+        "webp"
+    } else {
+        "png"
+    };
+
+    // Save to media folder
+    let saved_path = HistoryManager::save_image(&bytes, format)?;
+
+    if debug_logging {
+        println!("[save_generated_image] Saved to: {}", saved_path);
+    }
+
+    Ok(saved_path)
+}
+
+/// Clear all media files in the media folder
+#[tauri::command]
+async fn clear_all_media() -> Result<u32, String> {
+    let media_path = HistoryManager::get_media_path();
+    let mut deleted_count = 0u32;
+
+    // Read directory
+    let entries = std::fs::read_dir(&media_path)
+        .map_err(|e| format!("Failed to read media directory: {}", e))?;
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_file() {
+            if std::fs::remove_file(&path).is_ok() {
+                deleted_count += 1;
+            }
+        }
+    }
+
+    Ok(deleted_count)
+}
+
 /// Download an image from a URL and save it to a local file
 /// This bypasses CORS restrictions by using the backend HTTP client
 #[tauri::command]
@@ -908,6 +1001,7 @@ pub fn run() {
             delete_history_entry,
             clear_history,
             cleanup_old_media,
+            clear_all_media,
             // Custom Tasks
             get_custom_tasks,
             get_custom_task,
@@ -938,12 +1032,35 @@ pub fn run() {
             mask_api_key,
             // File Downloads
             download_and_save_image,
+            save_generated_image,
             // Image to Clipboard
             copy_image_to_clipboard_command,
         ])
         .setup(|app| {
             // Create system tray
             create_tray(app.handle())?;
+
+            // Get retention days from config and spawn async cleanup task
+            let state = app.state::<AppState>();
+            let retention_days = {
+                let config = state.config.lock().map_err(|e| e.to_string())?;
+                config.media_retention_days
+            };
+            
+            // Spawn async task to cleanup old media files on startup
+            if retention_days > 0 {
+                tokio::spawn(async move {
+                    match HistoryManager::cleanup_old_media(retention_days).await {
+                        Ok(deleted) if deleted > 0 => {
+                            println!("[startup] Cleaned up {} old media files (retention: {} days)", deleted, retention_days);
+                        }
+                        Err(e) => {
+                            eprintln!("[startup] Failed to cleanup old media: {}", e);
+                        }
+                        _ => {} // No files deleted
+                    }
+                });
+            }
 
             Ok(())
         })

@@ -220,7 +220,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     operationType: string,
     promptText: string,
     responseText: string | undefined,
-    options: Record<string, string>
+    options: Record<string, string>,
+    mediaPath?: string
   ) => {
     try {
       await invoke('save_history_entry', {
@@ -228,7 +229,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         promptText,
         responseText: responseText || null,
         operationOptions: options,
-        mediaPath: null, // Media saved separately if needed
+        mediaPath: mediaPath || null,
       });
     } catch (error) {
       console.error('Failed to save to history:', error);
@@ -253,16 +254,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setResult(response);
 
       if (response.success) {
-        // Save to history
+        let mediaPath: string | undefined;
+
+        // For image responses, save to media folder
+        if (response.isImage && response.imageUrl) {
+          try {
+            mediaPath = await invoke<string>('save_generated_image', { imageUrl: response.imageUrl });
+          } catch (e) {
+            console.error('Failed to save generated image:', e);
+          }
+        }
+
+        // For audio responses, the audio file path IS the media path
+        if (response.isAudio && response.audioFilePath) {
+          mediaPath = response.audioFilePath;
+        }
+
+        // Save to history with media path if available
         await saveToHistory(
           selectedOperation.type,
           promptText,
           response.content,
-          operationOptions
+          operationOptions,
+          mediaPath
         );
 
-        // Open review modal only if in review mode
-        if (config?.pasteBehavior === 'reviewMode') {
+        // For TTS responses, always show review modal for Save As dialog
+        // regardless of paste behavior setting
+        if (response.isAudio) {
+          setActiveModal('review');
+        } else if (config?.pasteBehavior === 'reviewMode') {
+          // Open review modal only if in review mode (for non-audio)
           setActiveModal('review');
         }
       }
@@ -304,16 +326,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsStreaming(false);
 
       if (response.success) {
-        // Save to history
+        let mediaPath: string | undefined;
+
+        // For image responses, save to media folder
+        if (response.isImage && response.imageUrl) {
+          try {
+            mediaPath = await invoke<string>('save_generated_image', { imageUrl: response.imageUrl });
+          } catch (e) {
+            console.error('Failed to save generated image:', e);
+          }
+        }
+
+        // For audio responses, the audio file path IS the media path
+        if (response.isAudio && response.audioFilePath) {
+          mediaPath = response.audioFilePath;
+        }
+
+        // Save to history with media path if available
         await saveToHistory(
           selectedOperation.type,
           promptText,
           response.content,
-          operationOptions
+          operationOptions,
+          mediaPath
         );
 
-        // Open review modal only if in review mode
-        if (config?.pasteBehavior === 'reviewMode') {
+        // For TTS responses, always show review modal for Save As dialog
+        // regardless of paste behavior setting
+        if (response.isAudio) {
+          setActiveModal('review');
+        } else if (config?.pasteBehavior === 'reviewMode') {
+          // Open review modal only if in review mode (for non-audio)
           setActiveModal('review');
         }
       }
