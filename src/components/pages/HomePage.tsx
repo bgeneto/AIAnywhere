@@ -67,14 +67,14 @@ export function HomePage({ onShowToast }: HomePageProps) {
 
   const handleOperationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const operationType = e.target.value;
-    
+
     // First check default operations
     const operation = operations.find(op => op.type === operationType);
     if (operation) {
       setSelectedOperation(operation);
       return;
     }
-    
+
     // Then check custom tasks (use id as type for custom tasks)
     const customTask = customTasks.find(task => task.id === operationType);
     if (customTask) {
@@ -174,7 +174,7 @@ export function HomePage({ onShowToast }: HomePageProps) {
                     {op.name}
                   </option>
                 ))}
-                
+
                 {/* Custom Tasks (if any exist) */}
                 {customTasks.length > 0 && (
                   <>
@@ -188,9 +188,6 @@ export function HomePage({ onShowToast }: HomePageProps) {
                   </>
                 )}
               </select>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                ▼
-              </span>
             </div>
             {selectedOperation && (
               <p className="text-xs text-slate-500 dark:text-slate-400 italic">
@@ -230,7 +227,7 @@ export function HomePage({ onShowToast }: HomePageProps) {
                         📋 Sync
                       </button>
                     )}
-                      <button
+                    <button
                       onClick={handleClear}
                       className="btn-secondary"
                     >

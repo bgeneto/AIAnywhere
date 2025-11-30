@@ -3,6 +3,9 @@ import { useApp } from '../../context/AppContext';
 import { useI18n } from '../../i18n/index';
 import { useHotkeyCapture } from '../../hooks/useHotkeyCapture';
 import { ToastType, SaveConfigRequest, PasteBehavior } from '../../types';
+import { 
+  FormField, FormInput, FormSelect, SettingsToggle, PageLayout 
+} from '../ui';
 
 type SettingsTab = 'api' | 'audio' | 'general';
 
@@ -188,16 +191,20 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Page Header */}
-      <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-          {t.settings.title}
-        </h2>
-      </div>
-
+    <PageLayout
+      title={t.settings.title}
+      footer={
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="btn-primary"
+        >
+          {isSaving ? '⏳' : '💾'} {t.settings.save}
+        </button>
+      }
+    >
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+      <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 -mx-6 mb-6 px-6">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -214,80 +221,64 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
         ))}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-2xl space-y-6">
-          {/* API Settings Tab */}
-          {activeTab === 'api' && (
-            <>
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  {t.settings.api.configuration}
-                </h3>
+      <div className="space-y-6">
+        {/* API Settings Tab */}
+        {activeTab === 'api' && (
+          <>
+            <div className="space-y-4">
+              <h3 className="section-title">
+                {t.settings.api.configuration}
+              </h3>
 
-                {/* Endpoint */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {t.settings.api.endpoint}
-                  </label>
-                  <input
-                    type="url"
-                    value={apiBaseUrl}
-                    onChange={(e) => setApiBaseUrl(e.target.value)}
-                    placeholder={t.settings.api.endpointPlaceholder}
-                    className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                               bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                               focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              {/* Endpoint */}
+              <FormField label={t.settings.api.endpoint}>
+                <FormInput
+                  type="url"
+                  value={apiBaseUrl}
+                  onChange={(e) => setApiBaseUrl(e.target.value)}
+                  placeholder={t.settings.api.endpointPlaceholder}
+                />
+              </FormField>
+
+              {/* API Key */}
+              <FormField label={t.settings.api.apiKey} helpText={t.settings.api.apiKeyHelp}>
+                <div className="relative">
+                  <FormInput
+                    type={showApiKey ? 'text' : 'password'}
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder={config?.apiKeySet ? '••••••••••••••••' : t.settings.api.apiKeyPlaceholder}
+                    className="pr-20"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowApiKey(!showApiKey)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs font-medium
+                               text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white
+                               bg-slate-100 dark:bg-slate-700 rounded transition-colors"
+                  >
+                    {showApiKey ? t.settings.api.hide : t.settings.api.show}
+                  </button>
                 </div>
+              </FormField>
 
-                {/* API Key */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {t.settings.api.apiKey}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showApiKey ? 'text' : 'password'}
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder={config?.apiKeySet ? '••••••••••••••••' : t.settings.api.apiKeyPlaceholder}
-                      className="w-full px-4 py-2.5 pr-20 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                                 bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                                 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs font-medium
-                                 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white
-                                 bg-slate-100 dark:bg-slate-700 rounded transition-colors"
-                    >
-                      {showApiKey ? t.settings.api.hide : t.settings.api.show}
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {t.settings.api.apiKeyHelp}
-                  </p>
-                </div>
-
-                {/* Test Connection */}
-                <button
-                  onClick={handleTestConnection}
-                  disabled={isTesting || !apiBaseUrl}
-                  className="btn-outline disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isTesting ? '⏳' : '🔌'} {t.settings.api.testConnection}
-                </button>
-              </div>
-            </>
+              {/* Test Connection */}
+              <button
+                onClick={handleTestConnection}
+                disabled={isTesting || !apiBaseUrl}
+                className="btn-outline disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isTesting ? '⏳' : '🔌'} {t.settings.api.testConnection}
+              </button>
+            </div>
+          </>
           )}
 
           {/* Models Settings Tab */}
           {activeTab === 'audio' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                <h3 className="section-title">
                   {t.settings.models.title}
                 </h3>
                 <button
@@ -300,94 +291,58 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
               </div>
 
               {/* Text Model */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t.settings.api.textModel}
-                </label>
-                <select
+              <FormField label={t.settings.api.textModel}>
+                <FormSelect
                   value={llmModel}
                   onChange={(e) => setLlmModel(e.target.value)}
-                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select a model</option>
-                  {models.map((model) => (
-                    <option key={model} value={model}>{model}</option>
-                  ))}
-                </select>
-              </div>
+                  options={models.map(m => ({ value: m, label: m }))}
+                  placeholder="Select a model"
+                />
+              </FormField>
 
               {/* Image Model */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t.settings.api.imageModel}
-                </label>
-                <select
+              <FormField label={t.settings.api.imageModel}>
+                <FormSelect
                   value={imageModel}
                   onChange={(e) => setImageModel(e.target.value)}
-                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select a model</option>
-                  {imageModels.map((model) => (
-                    <option key={model} value={model}>{model}</option>
-                  ))}
-                </select>
-              </div>
+                  options={imageModels.map(m => ({ value: m, label: m }))}
+                  placeholder="Select a model"
+                />
+              </FormField>
 
               {/* Audio Model (STT) */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t.settings.api.audioModel}
-                </label>
-                <select
+              <FormField label={t.settings.api.audioModel}>
+                <FormSelect
                   value={audioModel}
                   onChange={(e) => setAudioModel(e.target.value)}
-                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select a model</option>
-                  {audioModels.filter((m) => !m.toLowerCase().includes('tts')).map((model) => (
-                    <option key={model} value={model}>{model}</option>
-                  ))}
-                </select>
-              </div>
+                  options={audioModels.filter((m) => !m.toLowerCase().includes('tts')).map(m => ({ value: m, label: m }))}
+                  placeholder="Select a model"
+                />
+              </FormField>
 
               {/* TTS Model */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t.settings.api.ttsModel}
-                </label>
-                <input
+              <FormField label={t.settings.api.ttsModel}>
+                <FormInput
                   type="text"
                   value={ttsModel}
                   onChange={(e) => setTtsModel(e.target.value)}
                   placeholder="e.g., tts-1"
-                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-              </div>
+              </FormField>
             </div>
           )}
 
           {/* General Settings Tab */}
           {activeTab === 'general' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              <h3 className="section-title">
                 {t.settings.general.title}
               </h3>
 
               {/* Global Hotkey */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t.settings.general.hotkey}
-                </label>
+              <FormField label={t.settings.general.hotkey} helpText={t.settings.general.hotkeyDesc}>
                 <div className="relative">
-                  <input
+                  <FormInput
                     type="text"
                     value={hotkey}
                     readOnly
@@ -396,12 +351,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                     onFocus={startHotkeyCapture}
                     onBlur={stopHotkeyCapture}
                     placeholder={t.settings.general.hotkeyPlaceholder}
-                    className={`w-full px-4 py-2.5 text-sm rounded-lg border 
-                               ${isCapturingHotkey || isValidatingHotkey
-                        ? 'border-blue-500 ring-2 ring-blue-500'
-                        : 'border-slate-300 dark:border-slate-600'} 
-                               bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                               cursor-pointer disabled:opacity-50`}
+                    className={isCapturingHotkey || isValidatingHotkey ? 'border-blue-500 ring-2 ring-blue-500' : ''}
                   />
                   {(isCapturingHotkey || isValidatingHotkey) && (
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-blue-500">
@@ -409,157 +359,92 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {t.settings.general.hotkeyDesc}
-                </p>
-              </div>
+              </FormField>
 
               {/* Paste Behavior */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t.settings.general.pasteBehavior}
-                </label>
-                <select
+              <FormField label={t.settings.general.pasteBehavior} helpText={t.settings.general.pasteBehaviorDesc}>
+                <FormSelect
                   value={pasteBehavior}
                   onChange={(e) => setPasteBehavior(e.target.value as PasteBehavior)}
-                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="autoPaste">{t.settings.general.autoPaste}</option>
-                  <option value="clipboardMode">{t.settings.general.clipboardMode}</option>
-                  <option value="reviewMode">{t.settings.general.reviewMode}</option>
-                </select>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {t.settings.general.pasteBehaviorDesc}
-                </p>
-              </div>
+                  options={[
+                    { value: 'autoPaste', label: t.settings.general.autoPaste },
+                    { value: 'clipboardMode', label: t.settings.general.clipboardMode },
+                    { value: 'reviewMode', label: t.settings.general.reviewMode }
+                  ]}
+                />
+              </FormField>
 
               {/* Toggle Options */}
               <div className="space-y-3 pt-4">
-                <label className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg cursor-pointer">
-                  <div>
-                    <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      {t.settings.general.disableTextSelection}
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      {t.settings.general.disableTextSelectionDesc}
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={disableTextSelection}
-                    onChange={(e) => setDisableTextSelection(e.target.checked)}
-                    className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 
-                               text-blue-600 focus:ring-blue-500"
-                  />
-                </label>
+                <SettingsToggle
+                  title={t.settings.general.disableTextSelection}
+                  description={t.settings.general.disableTextSelectionDesc}
+                  checked={disableTextSelection}
+                  onChange={setDisableTextSelection}
+                />
 
-                <label className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg cursor-pointer">
-                  <div>
-                    <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      {t.settings.general.enableDebugLogging}
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      {t.settings.general.enableDebugLoggingDesc}
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={enableDebugLogging}
-                    onChange={(e) => setEnableDebugLogging(e.target.checked)}
-                    className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 
-                               text-blue-600 focus:ring-blue-500"
-                  />
-                </label>
+                <SettingsToggle
+                  title={t.settings.general.enableDebugLogging}
+                  description={t.settings.general.enableDebugLoggingDesc}
+                  checked={enableDebugLogging}
+                  onChange={setEnableDebugLogging}
+                />
               </div>
 
               {/* Copy Delay Setting */}
-              <div className="space-y-2 pt-4">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t.settings.general.copyDelay || 'Copy Delay (ms)'}
-                </label>
-                <input
+              <FormField 
+                label={t.settings.general.copyDelay || 'Copy Delay (ms)'}
+                helpText={t.settings.general.copyDelayDesc || 'Time waited before relying on the copied content in the clipboard.'}
+              >
+                <FormInput
                   type="number"
                   min="50"
                   max="1000"
                   step="50"
                   value={copyDelayMs}
                   onChange={(e) => setCopyDelayMs(Math.max(50, Math.min(1000, parseInt(e.target.value) || 200)))}
-                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                             focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {t.settings.general.copyDelayDesc || 'Time waited before relying on the copied content in the clipboard.'}
-                </p>
-              </div>
+              </FormField>
 
               {/* History Settings Section */}
               <div className="pt-6 border-t border-slate-200 dark:border-slate-700 mt-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                <h3 className="section-title mb-4">
                   History Settings
                 </h3>
 
                 {/* History Limit */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    History Limit
-                  </label>
-                  <input
+                <FormField 
+                  label="History Limit"
+                  helpText="Maximum number of history entries to keep. Older entries will be automatically deleted."
+                >
+                  <FormInput
                     type="number"
                     min="10"
                     max="10000"
                     step="10"
                     value={historyLimit}
                     onChange={(e) => setHistoryLimit(Math.max(10, Math.min(10000, parseInt(e.target.value) || 500)))}
-                    className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                               bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                               focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Maximum number of history entries to keep. Older entries will be automatically deleted.
-                  </p>
-                </div>
+                </FormField>
 
                 {/* Media Retention Days */}
-                <div className="space-y-2 mt-4">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Media Retention (Days)
-                  </label>
-                  <input
+                <FormField 
+                  label="Media Retention (Days)"
+                  helpText="Number of days to keep generated images and audio files. Set to 0 to keep forever."
+                >
+                  <FormInput
                     type="number"
                     min="0"
                     max="365"
                     step="1"
                     value={mediaRetentionDays}
                     onChange={(e) => setMediaRetentionDays(Math.max(0, Math.min(365, parseInt(e.target.value) || 0)))}
-                    className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                               bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                               focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Number of days to keep generated images and audio files. Set to 0 to keep forever.
-                  </p>
-                </div>
+                </FormField>
               </div>
             </div>
           )}
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <div className="max-w-2xl flex items-center justify-end gap-3">
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="btn-primary"
-          >
-            {isSaving ? '⏳' : '💾'} {t.settings.save}
-          </button>
-        </div>
-      </div>
-    </div>
+    </PageLayout>
   );
 }
