@@ -1,11 +1,11 @@
 //! Custom Tasks module for AI Anywhere
 //! Manages user-created custom AI tasks with prompt templates
 
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use uuid::Uuid;
-use regex::Regex;
 
 /// Option types for custom task form controls
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -137,7 +137,7 @@ impl CustomTasksManager {
         let config_dir = dirs::config_dir()
             .unwrap_or_else(|| PathBuf::from("."))
             .join("ai-anywhere");
-        
+
         fs::create_dir_all(&config_dir).ok();
         config_dir.join("custom_tasks.json")
     }
@@ -145,34 +145,34 @@ impl CustomTasksManager {
     /// Load custom tasks from file
     pub fn load() -> Result<Vec<CustomTask>, String> {
         let tasks_path = Self::get_tasks_path();
-        
+
         if !tasks_path.exists() {
             return Ok(Vec::new());
         }
-        
+
         let content = fs::read_to_string(&tasks_path)
             .map_err(|e| format!("Failed to read custom tasks file: {}", e))?;
-        
+
         if content.trim().is_empty() {
             return Ok(Vec::new());
         }
-        
+
         let tasks: Vec<CustomTask> = serde_json::from_str(&content)
             .map_err(|e| format!("Failed to parse custom tasks file: {}", e))?;
-        
+
         Ok(tasks)
     }
 
     /// Save custom tasks to file
     pub fn save(tasks: &[CustomTask]) -> Result<(), String> {
         let tasks_path = Self::get_tasks_path();
-        
+
         let content = serde_json::to_string_pretty(tasks)
             .map_err(|e| format!("Failed to serialize custom tasks: {}", e))?;
-        
+
         fs::write(&tasks_path, content)
             .map_err(|e| format!("Failed to write custom tasks file: {}", e))?;
-        
+
         Ok(())
     }
 
@@ -180,11 +180,11 @@ impl CustomTasksManager {
     pub fn create(task: CustomTask) -> Result<CustomTask, String> {
         // Validate the task
         task.validate()?;
-        
+
         let mut tasks = Self::load()?;
         tasks.push(task.clone());
         Self::save(&tasks)?;
-        
+
         Ok(task)
     }
 
@@ -192,9 +192,9 @@ impl CustomTasksManager {
     pub fn update(id: &str, mut task: CustomTask) -> Result<CustomTask, String> {
         // Validate the task
         task.validate()?;
-        
+
         let mut tasks = Self::load()?;
-        
+
         if let Some(existing) = tasks.iter_mut().find(|t| t.id == id) {
             task.id = id.to_string();
             task.created_at = existing.created_at.clone();
@@ -210,7 +210,7 @@ impl CustomTasksManager {
     /// Delete a custom task by ID
     pub fn delete(id: &str) -> Result<(), String> {
         let mut tasks = Self::load()?;
-        
+
         if tasks.iter().any(|t| t.id == id) {
             tasks.retain(|t| t.id != id);
             Self::save(&tasks)?;
@@ -229,15 +229,14 @@ impl CustomTasksManager {
     /// Export tasks to JSON string
     pub fn export() -> Result<String, String> {
         let tasks = Self::load()?;
-        serde_json::to_string_pretty(&tasks)
-            .map_err(|e| format!("Failed to export tasks: {}", e))
+        serde_json::to_string_pretty(&tasks).map_err(|e| format!("Failed to export tasks: {}", e))
     }
 
     /// Import tasks from JSON string (merges with existing, updates by name)
     pub fn import(json: &str) -> Result<usize, String> {
         let imported: Vec<CustomTask> = serde_json::from_str(json)
             .map_err(|e| format!("Failed to parse import data: {}", e))?;
-        
+
         let mut existing = Self::load()?;
         let mut imported_count = 0;
 

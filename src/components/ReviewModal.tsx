@@ -374,7 +374,6 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                              prose-code:before:content-none prose-code:after:content-none
                              prose-code:bg-slate-200 dark:prose-code:bg-slate-700 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
                              [&_.katex-display]:my-2 [&_.katex]:text-inherit"
-                  onClick={() => setIsEditing(true)}
                   id="printable-area"
                 >
                   <ReactMarkdown

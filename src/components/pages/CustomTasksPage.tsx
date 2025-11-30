@@ -6,8 +6,8 @@ import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { useI18n } from '../../i18n/index';
 import { useApp } from '../../context/AppContext';
 import { CustomTask, CustomTaskOption } from '../../types';
-import { 
-  FormField, FormInput, Card, PageLayout, EmptyState, Badge 
+import {
+  FormField, FormInput, Card, PageLayout, EmptyState, Badge
 } from '../ui';
 
 interface CustomTasksPageProps {
@@ -25,7 +25,6 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
   const [formDescription, setFormDescription] = useState('');
   const [formSystemPrompt, setFormSystemPrompt] = useState('');
   const [formOptions, setFormOptions] = useState<CustomTaskOption[]>([]);
-  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Load tasks on mount
   useEffect(() => {
@@ -45,7 +44,6 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
       setFormSystemPrompt('');
       setFormOptions([]);
     }
-    setValidationError(null);
   }, [editingTask, isCreating]);
 
   // Create new task
@@ -64,14 +62,14 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
   const handleCancel = useCallback(() => {
     setEditingTask(null);
     setIsCreating(false);
-    setValidationError(null);
   }, []);
 
   // Add option
   const handleAddOption = useCallback(() => {
     const newOption: CustomTaskOption = {
+      key: '',
       name: '',
-      optionType: 'select',
+      type: 'select',
       required: false,
       values: [],
       defaultValue: '',
@@ -88,7 +86,14 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
   const handleUpdateOption = useCallback((index: number, updates: Partial<CustomTaskOption>) => {
     setFormOptions(prev => prev.map((opt, i) => {
       if (i !== index) return opt;
-      return { ...opt, ...updates };
+      const updated = { ...opt, ...updates };
+
+      // Auto-generate key from name if name is provided
+      if (updates.name && !updates.key) {
+        updated.key = updates.name.replace(/\s+/g, '_').toLowerCase();
+      }
+
+      return updated;
     }));
   }, []);
 
@@ -96,22 +101,22 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
   const handleSave = useCallback(async () => {
     // Validate
     if (!formName.trim()) {
-      setValidationError('Name is required');
+      showToast('error', 'Validation Error', 'Name is required');
       return;
     }
     if (!formSystemPrompt.trim()) {
-      setValidationError('System prompt is required');
+      showToast('error', 'Validation Error', 'System prompt is required');
       return;
     }
 
     // Validate option placeholders match
-    const optionNames = formOptions.map(opt => opt.name).filter(n => n);
+    const optionKeys = formOptions.map(opt => opt.key).filter(k => k);
     const placeholderRegex = /\{(\w+)\}/g;
     const placeholders = [...formSystemPrompt.matchAll(placeholderRegex)].map(m => m[1]);
-    
-    for (const optName of optionNames) {
-      if (!placeholders.includes(optName)) {
-        setValidationError(`System prompt missing placeholder for option: {${optName}}`);
+
+    for (const optKey of optionKeys) {
+      if (!placeholders.includes(optKey)) {
+        showToast('error', 'Validation Error', `System prompt missing placeholder for option: {${optKey}}`);
         return;
       }
     }
@@ -121,13 +126,18 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
         name: formName.trim(),
         description: formDescription.trim(),
         systemPrompt: formSystemPrompt,
-        options: formOptions.filter(opt => opt.name.trim()),
+        options: formOptions.filter(opt => opt.key.trim() && opt.name.trim()),
       };
 
       if (editingTask) {
-        await invoke('update_custom_task', { id: editingTask.id, task: taskData });
+        await invoke('update_custom_task', {
+          id: editingTask.id,
+          ...taskData
+        });
       } else {
-        await invoke('create_custom_task', { task: taskData });
+        await invoke('create_custom_task', {
+          ...taskData
+        });
       }
 
       await loadCustomTasks();
@@ -135,7 +145,7 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
       showToast('success', editingTask ? 'Task updated' : 'Task created');
     } catch (error) {
       console.error('Failed to save task:', error);
-      setValidationError(String(error));
+      showToast('error', 'Error', String(error));
     }
   }, [formName, formDescription, formSystemPrompt, formOptions, editingTask, loadCustomTasks, handleCancel, showToast]);
 
@@ -232,8 +242,8 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
             {t.customTasks.optionType}
           </label>
           <select
-            value={option.optionType}
-            onChange={(e) => handleUpdateOption(index, { optionType: e.target.value as 'select' | 'text' | 'number' })}
+            value={option.type}
+            onChange={(e) => handleUpdateOption(index, { type: e.target.value as 'select' | 'text' | 'number' })}
             className="form-input-sm"
           >
             <option value="select">{t.customTasks.optionTypeSelect}</option>
@@ -242,8 +252,25 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
           </select>
         </div>
 
+        {/* Key */}
+        <div className="col-span-2">
+          <label className="form-label-xs mb-1">
+            Key (for placeholders)
+          </label>
+          <input
+            type="text"
+            value={option.key}
+            onChange={(e) => handleUpdateOption(index, { key: e.target.value.replace(/\s+/g, '_').toLowerCase() })}
+            placeholder="option_key"
+            className="form-input-sm font-mono text-xs"
+          />
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Used in prompt as: {`{${option.key || 'option_key'}}`}
+          </p>
+        </div>
+
         {/* Values (for select type) */}
-        {option.optionType === 'select' && (
+        {option.type === 'select' && (
           <div className="col-span-2">
             <label className="form-label-xs mb-1">
               {t.customTasks.optionValues}
@@ -259,7 +286,7 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
         )}
 
         {/* Number options */}
-        {option.optionType === 'number' && (
+        {option.type === 'number' && (
           <>
             <div>
               <label className="form-label-xs mb-1">
@@ -291,7 +318,7 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
           <label className="form-label-xs mb-1">
             {t.customTasks.optionDefault}
           </label>
-          {option.optionType === 'select' && option.values && option.values.length > 0 ? (
+          {option.type === 'select' && option.values && option.values.length > 0 ? (
             <select
               value={option.defaultValue || ''}
               onChange={(e) => handleUpdateOption(index, { defaultValue: e.target.value })}
@@ -304,7 +331,7 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
             </select>
           ) : (
             <input
-              type={option.optionType === 'number' ? 'number' : 'text'}
+              type={option.type === 'number' ? 'number' : 'text'}
               value={option.defaultValue || ''}
               onChange={(e) => handleUpdateOption(index, { defaultValue: e.target.value })}
               className="form-input-sm"
@@ -323,12 +350,6 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
         footer={
           <>
             <button
-              onClick={handleCancel}
-              className="btn-outline"
-            >
-              {t.customTasks.cancel}
-            </button>
-            <button
               onClick={handleSave}
               className="btn-primary"
             >
@@ -337,13 +358,7 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
           </>
         }
       >
-          {/* Validation Error */}
-          {validationError && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
-              {validationError}
-            </div>
-          )}
-
+        <div className="space-y-4">
           {/* Name */}
           <FormField label={t.customTasks.name} required>
             <FormInput
@@ -398,6 +413,7 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
               )}
             </div>
           </div>
+        </div>
       </PageLayout>
     );
   }

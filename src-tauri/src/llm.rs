@@ -12,6 +12,7 @@ use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
 
 use crate::config::Configuration;
+use crate::custom_tasks::CustomTasksManager;
 use crate::history::HistoryManager;
 use crate::operations::OperationType;
 use crate::text::{extract_size_dimensions, normalize_transcription, process_llm_response};
@@ -20,7 +21,7 @@ use crate::text::{extract_size_dimensions, normalize_transcription, process_llm_
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LlmRequest {
-    pub operation_type: OperationType,
+    pub operation_type: String,
     pub prompt: String,
     pub selected_text: Option<String>,
     pub options: HashMap<String, String>,
@@ -135,22 +136,34 @@ impl LlmService {
 
     /// Process an LLM request based on operation type
     pub async fn process_request(&self, request: LlmRequest) -> LlmResponse {
-        match request.operation_type {
-            OperationType::ImageGeneration => self.process_image_generation(&request).await,
-            OperationType::SpeechToText => self.process_speech_to_text(&request).await,
-            OperationType::TextToSpeech => self.process_text_to_speech(&request).await,
-            _ => self.process_text_request(&request).await,
+        // Try to parse as built-in operation type
+        if let Ok(op_type) = serde_json::from_value::<OperationType>(json!(request.operation_type))
+        {
+            match op_type {
+                OperationType::ImageGeneration => self.process_image_generation(&request).await,
+                OperationType::SpeechToText => self.process_speech_to_text(&request).await,
+                OperationType::TextToSpeech => self.process_text_to_speech(&request).await,
+                _ => self.process_text_request(&request).await,
+            }
+        } else {
+            // Assume it's a custom task (text-based)
+            self.process_text_request(&request).await
         }
     }
 
     /// Check if an operation type supports streaming
-    pub fn supports_streaming(operation_type: &OperationType) -> bool {
-        !matches!(
-            operation_type,
-            OperationType::ImageGeneration
-                | OperationType::SpeechToText
-                | OperationType::TextToSpeech
-        )
+    pub fn supports_streaming(operation_type: &str) -> bool {
+        if let Ok(op_type) = serde_json::from_value::<OperationType>(json!(operation_type)) {
+            !matches!(
+                op_type,
+                OperationType::ImageGeneration
+                    | OperationType::SpeechToText
+                    | OperationType::TextToSpeech
+            )
+        } else {
+            // Custom tasks are text-based and support streaming
+            true
+        }
     }
 
     /// Process a streaming text request with real-time chunk emission
@@ -162,21 +175,33 @@ impl LlmService {
     ) -> LlmResponse {
         // Only text operations support streaming
         if !Self::supports_streaming(&request.operation_type) {
-            return LlmResponse::error("Streaming not supported for this operation type".to_string());
+            return LlmResponse::error(
+                "Streaming not supported for this operation type".to_string(),
+            );
         }
 
         let operations = crate::operations::get_default_operations(&self.config.system_prompts);
-        let operation = operations
-            .iter()
-            .find(|op| op.operation_type == request.operation_type);
 
-        let operation = match operation {
-            Some(op) => op,
-            None => return LlmResponse::error("Unknown operation type".to_string()),
-        };
+        // Try to find in default operations
+        let mut system_prompt = String::new();
 
-        // Build system prompt with options
-        let mut system_prompt = operation.system_prompt.clone();
+        // Check if it's a built-in operation
+        if let Ok(op_type) = serde_json::from_value::<OperationType>(json!(request.operation_type))
+        {
+            if let Some(op) = operations.iter().find(|op| op.operation_type == op_type) {
+                system_prompt = op.system_prompt.clone();
+            }
+        }
+
+        // If not found, check custom tasks
+        if system_prompt.is_empty() {
+            if let Ok(Some(task)) = CustomTasksManager::get(&request.operation_type) {
+                system_prompt = task.system_prompt.clone();
+            } else if system_prompt.is_empty() {
+                // Fallback or error if not found
+                return LlmResponse::error("Unknown operation type".to_string());
+            }
+        }
         for (key, value) in &request.options {
             system_prompt = system_prompt.replace(&format!("{{{}}}", key), value);
         }
@@ -216,7 +241,9 @@ impl LlmService {
 
         let api_key = self.config.get_api_key();
         if api_key.is_empty() {
-            return LlmResponse::error("API key is empty. Please configure your API key in settings.".to_string());
+            return LlmResponse::error(
+                "API key is empty. Please configure your API key in settings.".to_string(),
+            );
         }
 
         let response = self
@@ -262,34 +289,42 @@ impl LlmService {
                         Ok(chunk) => {
                             let chunk_str = String::from_utf8_lossy(&chunk);
                             buffer.push_str(&chunk_str);
-                            
+
                             // Process complete lines from buffer
                             while let Some(newline_pos) = buffer.find('\n') {
                                 let line = buffer[..newline_pos].trim_end_matches('\r').to_string();
                                 buffer = buffer[newline_pos + 1..].to_string();
-                                
+
                                 if line.starts_with("data: ") {
                                     let data = &line[6..];
-                                    
+
                                     if data == "[DONE]" {
                                         // Emit final done event
-                                        let _ = app.emit("llm-stream-chunk", StreamingChunk {
-                                            content: String::new(),
-                                            done: true,
-                                        });
+                                        let _ = app.emit(
+                                            "llm-stream-chunk",
+                                            StreamingChunk {
+                                                content: String::new(),
+                                                done: true,
+                                            },
+                                        );
                                         continue;
                                     }
-                                    
+
                                     // Parse JSON data
                                     if let Ok(json) = serde_json::from_str::<Value>(data) {
-                                        if let Some(content) = json["choices"][0]["delta"]["content"].as_str() {
+                                        if let Some(content) =
+                                            json["choices"][0]["delta"]["content"].as_str()
+                                        {
                                             full_content.push_str(content);
-                                            
+
                                             // Emit chunk event
-                                            let _ = app.emit("llm-stream-chunk", StreamingChunk {
-                                                content: content.to_string(),
-                                                done: false,
-                                            });
+                                            let _ = app.emit(
+                                                "llm-stream-chunk",
+                                                StreamingChunk {
+                                                    content: content.to_string(),
+                                                    done: false,
+                                                },
+                                            );
                                         }
                                     }
                                 }
@@ -325,16 +360,16 @@ impl LlmService {
     /// Build the correct API URL for the given endpoint path
     fn build_api_url(&self, endpoint: &str) -> String {
         let base = self.config.api_base_url.trim_end_matches('/');
-        
+
         // Check if the base URL already ends with /v1 or similar API version
         // If not, and it doesn't already contain the endpoint, add /v1
-        let needs_v1 = !base.ends_with("/v1") 
+        let needs_v1 = !base.ends_with("/v1")
             && !base.ends_with("/v1/")
             && !base.contains("/chat/")
             && !base.contains("/images/")
             && !base.contains("/audio/")
             && !base.contains("/models");
-        
+
         if needs_v1 {
             format!("{}/v1{}", base, endpoint)
         } else {
@@ -345,17 +380,27 @@ impl LlmService {
     /// Process text-based requests (chat completions)
     async fn process_text_request(&self, request: &LlmRequest) -> LlmResponse {
         let operations = crate::operations::get_default_operations(&self.config.system_prompts);
-        let operation = operations
-            .iter()
-            .find(|op| op.operation_type == request.operation_type);
 
-        let operation = match operation {
-            Some(op) => op,
-            None => return LlmResponse::error("Unknown operation type".to_string()),
-        };
+        let mut system_prompt = String::new();
+
+        // Check if it's a built-in operation
+        if let Ok(op_type) = serde_json::from_value::<OperationType>(json!(request.operation_type))
+        {
+            if let Some(op) = operations.iter().find(|op| op.operation_type == op_type) {
+                system_prompt = op.system_prompt.clone();
+            }
+        }
+
+        // If not found, check custom tasks
+        if system_prompt.is_empty() {
+            if let Ok(Some(task)) = CustomTasksManager::get(&request.operation_type) {
+                system_prompt = task.system_prompt.clone();
+            } else if system_prompt.is_empty() {
+                return LlmResponse::error("Unknown operation type".to_string());
+            }
+        }
 
         // Build system prompt with options
-        let mut system_prompt = operation.system_prompt.clone();
         for (key, value) in &request.options {
             system_prompt = system_prompt.replace(&format!("{{{}}}", key), value);
         }
@@ -389,8 +434,14 @@ impl LlmService {
             println!("Config API Base URL: {}", self.config.api_base_url);
             println!("Final URL: POST {}", url);
             println!("Model: {}", self.config.llm_model);
-            println!("API Key (first 8 chars): {}...", 
-                self.config.get_api_key().chars().take(8).collect::<String>());
+            println!(
+                "API Key (first 8 chars): {}...",
+                self.config
+                    .get_api_key()
+                    .chars()
+                    .take(8)
+                    .collect::<String>()
+            );
             println!(
                 "Body: {}",
                 serde_json::to_string_pretty(&body).unwrap_or_default()
@@ -400,7 +451,9 @@ impl LlmService {
 
         let api_key = self.config.get_api_key();
         if api_key.is_empty() {
-            return LlmResponse::error("API key is empty. Please configure your API key in settings.".to_string());
+            return LlmResponse::error(
+                "API key is empty. Please configure your API key in settings.".to_string(),
+            );
         }
 
         let response = self
@@ -832,7 +885,10 @@ impl LlmService {
                 println!("Error: {}", error_text);
                 println!("-----------------------------");
             }
-            return Err(format!("Failed to fetch models ({}): {}", status, error_text));
+            return Err(format!(
+                "Failed to fetch models ({}): {}",
+                status, error_text
+            ));
         }
 
         response

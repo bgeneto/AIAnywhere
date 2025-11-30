@@ -289,7 +289,7 @@ export const translations: Record<Language, Translations> = {
 
     operations: {
       customTask: 'Custom Task',
-      customTaskDesc: 'Flexible AI help for any task or question',
+      customTaskDesc: 'Flexible AI help for any task or question. The prompt is all yours...',
       emailReply: 'Email Reply',
       emailReplyDesc: 'Generate professional email replies',
       imageGeneration: 'Image Generation',
@@ -325,7 +325,7 @@ export const translations: Record<Language, Translations> = {
         apiKeyPlaceholder: 'Enter your API key',
         show: 'Show',
         hide: 'Hide',
-        apiKeyHelp: 'Your API key is stored locally and never sent to external servers except for API calls',
+        apiKeyHelp: 'Your API key is encrypted and stored locally and never sent to external servers except for API calls',
         textModel: 'Text Model',
         imageModel: 'Image Model',
         audioModel: 'Speech-to-Text Model',
@@ -534,7 +534,7 @@ export const translations: Record<Language, Translations> = {
 
     operations: {
       customTask: 'Tarefa Personalizada',
-      customTaskDesc: 'Ajuda flexível de IA para qualquer tarefa ou pergunta',
+      customTaskDesc: 'Ajuda personalizada de IA para qualquer tarefa ou pergunta. O prompt é todo seu...',
       emailReply: 'Resposta de E-mail',
       emailReplyDesc: 'Gere respostas profissionais de e-mail',
       imageGeneration: 'Geração de Imagem',
@@ -570,7 +570,7 @@ export const translations: Record<Language, Translations> = {
         apiKeyPlaceholder: 'Digite sua chave de API',
         show: 'Mostrar',
         hide: 'Ocultar',
-        apiKeyHelp: 'Sua chave de API é armazenada localmente e nunca enviada para servidores externos, exceto para chamadas de API',
+        apiKeyHelp: 'Sua chave de API é encriptada e armazenada localmente, nunca é enviada para servidores externos, exceto para chamadas de API',
         textModel: 'Modelo de Texto',
         imageModel: 'Modelo de Imagem',
         audioModel: 'Modelo de Fala para Texto',

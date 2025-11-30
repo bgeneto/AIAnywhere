@@ -115,23 +115,23 @@ export interface AppState {
   // Configuration
   config: Configuration | null;
   configLoading: boolean;
-  
+
   // Operations
   operations: Operation[];
   selectedOperation: Operation | null;
   operationOptions: Record<string, string>;
-  
+
   // Prompt
   promptText: string;
   selectedText: string;
   audioFilePath: string;
-  
+
   // Processing
   isProcessing: boolean;
-  
+
   // Result
   result: LlmResponse | null;
-  
+
   // UI State
   activeModal: ModalType;
 }
@@ -205,8 +205,9 @@ export interface HistoryEntry {
 // ============================================================================
 
 export interface CustomTaskOption {
+  key: string;
   name: string;
-  optionType: 'select' | 'text' | 'number';
+  type: 'select' | 'text' | 'number';
   required: boolean;
   values?: string[];
   defaultValue?: string;
