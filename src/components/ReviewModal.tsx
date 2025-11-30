@@ -12,6 +12,7 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkMath from 'remark-math';
+import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
@@ -377,7 +378,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                   id="printable-area"
                 >
                   <ReactMarkdown
-                    remarkPlugins={[remarkMath, remarkBreaks]}
+                    remarkPlugins={[remarkMath, remarkGfm, remarkBreaks]}
                     rehypePlugins={[rehypeKatex]}
                     components={{
                       code({ className, children, ...props }) {
