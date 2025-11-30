@@ -85,9 +85,9 @@ export function HomePage({ onShowToast }: HomePageProps) {
         description: customTask.description,
         systemPrompt: customTask.systemPrompt,
         options: customTask.options.map(opt => ({
-          key: opt.name, // Use name as key for custom tasks
+          key: opt.key, // Use key as key for custom tasks
           name: opt.name,
-          type: opt.optionType as 'select' | 'text' | 'number',
+          type: opt.type as 'select' | 'text' | 'number',
           values: opt.values || [],
           defaultValue: opt.defaultValue || '',
           required: opt.required,
