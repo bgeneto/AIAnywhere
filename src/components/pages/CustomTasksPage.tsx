@@ -7,7 +7,7 @@ import { useI18n } from '../../i18n/index';
 import { useApp } from '../../context/AppContext';
 import { CustomTask, CustomTaskOption } from '../../types';
 import { 
-  FormField, FormInput, FormSelect, Card, PageLayout, EmptyState, Badge 
+  FormField, FormInput, Card, PageLayout, EmptyState, Badge 
 } from '../ui';
 
 interface CustomTasksPageProps {
@@ -198,9 +198,9 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
 
   // Render option editor
   const renderOptionEditor = (option: CustomTaskOption, index: number) => (
-    <div key={index} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+    <div key={index} className="settings-row border border-slate-200 dark:border-slate-700">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+        <span className="form-label">
           Option {index + 1}
         </span>
         <button
@@ -214,7 +214,7 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
       <div className="grid grid-cols-2 gap-3">
         {/* Name */}
         <div>
-          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="form-label-xs mb-1">
             {t.customTasks.optionName}
           </label>
           <input
@@ -222,19 +222,19 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
             value={option.name}
             onChange={(e) => handleUpdateOption(index, { name: e.target.value.replace(/\s/g, '_').toLowerCase() })}
             placeholder={t.customTasks.optionNamePlaceholder}
-            className="w-full px-3 py-2 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="form-input-sm"
           />
         </div>
 
         {/* Type */}
         <div>
-          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="form-label-xs mb-1">
             {t.customTasks.optionType}
           </label>
           <select
             value={option.optionType}
             onChange={(e) => handleUpdateOption(index, { optionType: e.target.value as 'select' | 'text' | 'number' })}
-            className="w-full px-3 py-2 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="form-input-sm"
           >
             <option value="select">{t.customTasks.optionTypeSelect}</option>
             <option value="text">{t.customTasks.optionTypeText}</option>
@@ -245,7 +245,7 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
         {/* Values (for select type) */}
         {option.optionType === 'select' && (
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+            <label className="form-label-xs mb-1">
               {t.customTasks.optionValues}
             </label>
             <input
@@ -253,7 +253,7 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
               value={option.values?.join(', ') || ''}
               onChange={(e) => handleUpdateOption(index, { values: e.target.value.split(',').map(v => v.trim()).filter(v => v) })}
               placeholder={t.customTasks.optionValuesPlaceholder}
-              className="w-full px-3 py-2 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-input-sm"
             />
           </div>
         )}
@@ -262,25 +262,25 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
         {option.optionType === 'number' && (
           <>
             <div>
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+              <label className="form-label-xs mb-1">
                 {t.customTasks.optionMin}
               </label>
               <input
                 type="number"
                 value={option.min ?? ''}
                 onChange={(e) => handleUpdateOption(index, { min: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full px-3 py-2 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="form-input-sm"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+              <label className="form-label-xs mb-1">
                 {t.customTasks.optionMax}
               </label>
               <input
                 type="number"
                 value={option.max ?? ''}
                 onChange={(e) => handleUpdateOption(index, { max: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full px-3 py-2 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="form-input-sm"
               />
             </div>
           </>
@@ -288,14 +288,14 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
 
         {/* Default Value */}
         <div className="col-span-2">
-          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+          <label className="form-label-xs mb-1">
             {t.customTasks.optionDefault}
           </label>
           {option.optionType === 'select' && option.values && option.values.length > 0 ? (
             <select
               value={option.defaultValue || ''}
               onChange={(e) => handleUpdateOption(index, { defaultValue: e.target.value })}
-              className="w-full px-3 py-2 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-input-sm"
             >
               <option value="">Select default...</option>
               {option.values.map(v => (
@@ -307,7 +307,7 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
               type={option.optionType === 'number' ? 'number' : 'text'}
               value={option.defaultValue || ''}
               onChange={(e) => handleUpdateOption(index, { defaultValue: e.target.value })}
-              className="w-full px-3 py-2 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-input-sm"
             />
           )}
         </div>
@@ -371,14 +371,14 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
               onChange={(e) => setFormSystemPrompt(e.target.value)}
               placeholder={t.customTasks.systemPromptPlaceholder}
               rows={6}
-              className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+              className="form-input font-mono"
             />
           </FormField>
 
           {/* Options */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="form-label">
                 {t.customTasks.options}
               </label>
               <button

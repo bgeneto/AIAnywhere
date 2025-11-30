@@ -1,0 +1,9 @@
+interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    size?: number;
+}
+
+const FormInput: React.FC<FormInputProps> = ({ size, ...props }) => {
+    return <input {...props} />;
+};
+
+export default FormInput;

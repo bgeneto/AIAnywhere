@@ -69,28 +69,28 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
     try {
       const textToPaste = isEditing ? editedContent : (result.content || '');
       await writeText(textToPaste);
-      
+
       // Close the modal first
       closeModal();
       clearResult();
-      
+
       // Hide the window to allow focus to return to original app
       const appWindow = getCurrentWindow();
       await appWindow.hide();
-      
+
       // Small delay to allow window to hide
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       // Restore focus to the previously active window (Windows-specific)
       // On macOS/Linux, focus should return automatically when our window hides
       await invoke('restore_foreground_window');
-      
+
       // Another small delay to ensure focus is restored (configurable via copyDelayMs)
       await new Promise(resolve => setTimeout(resolve, config?.copyDelayMs || 200));
-      
+
       // Simulate paste (Ctrl+V / Cmd+V)
       await invoke('simulate_paste');
-      
+
       onShowToast('success', t.review.pasted, t.review.pasted);
     } catch (error) {
       onShowToast('error', t.toast.error, 'Failed to paste content');
@@ -103,10 +103,10 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
       onShowToast('error', 'Error', 'No image URL available');
       return;
     }
-    
+
     console.log('[SaveImage] Starting save process...');
     console.log('[SaveImage] Image URL:', result.imageUrl);
-    
+
     try {
       // Show save dialog
       console.log('[SaveImage] Opening save dialog...');
@@ -117,20 +117,20 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
         }],
         defaultPath: 'generated-image.png',
       });
-      
+
       console.log('[SaveImage] Save path selected:', savePath);
-      
+
       if (!savePath) {
         console.log('[SaveImage] User cancelled save dialog');
         return;
       }
-      
+
       // Try to download and save via backend command (bypasses CORS)
       console.log('[SaveImage] Attempting to download image via backend...');
       try {
-        await invoke('download_and_save_image', { 
-          imageUrl: result.imageUrl, 
-          savePath: savePath 
+        await invoke('download_and_save_image', {
+          imageUrl: result.imageUrl,
+          savePath: savePath
         });
         console.log('[SaveImage] Backend download successful!');
         onShowToast('success', 'Saved', 'Image saved successfully');
@@ -138,34 +138,34 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
       } catch (backendError) {
         console.warn('[SaveImage] Backend download failed, trying frontend fetch...', backendError);
       }
-      
+
       // Fallback: Try frontend fetch (may fail due to CORS)
       console.log('[SaveImage] Attempting frontend fetch...');
       console.log('[SaveImage] Fetching from URL:', result.imageUrl);
-      
+
       const response = await fetch(result.imageUrl);
       console.log('[SaveImage] Fetch response status:', response.status);
       console.log('[SaveImage] Fetch response ok:', response.ok);
       console.log('[SaveImage] Fetch response headers:', Object.fromEntries(response.headers.entries()));
-      
+
       if (!response.ok) {
         throw new Error(`Fetch failed with status ${response.status}: ${response.statusText}`);
       }
-      
+
       const arrayBuffer = await response.arrayBuffer();
       console.log('[SaveImage] ArrayBuffer size:', arrayBuffer.byteLength);
-      
+
       if (arrayBuffer.byteLength === 0) {
         throw new Error('Downloaded image is empty (0 bytes)');
       }
-      
+
       const uint8Array = new Uint8Array(arrayBuffer);
       console.log('[SaveImage] Uint8Array length:', uint8Array.length);
-      
+
       console.log('[SaveImage] Writing file to:', savePath);
       await writeFile(savePath, uint8Array);
       console.log('[SaveImage] File written successfully!');
-      
+
       onShowToast('success', 'Saved', 'Image saved successfully');
     } catch (error) {
       console.error('[SaveImage] Error details:', {
@@ -180,7 +180,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
 
   const handleCopyImage = async () => {
     if (!result.imageUrl) return;
-    
+
     try {
       await invoke('copy_image_to_clipboard_command', { imageUrl: result.imageUrl });
       onShowToast('success', t.review.copied, t.review.copied);
@@ -191,31 +191,31 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
 
   const handlePasteImage = async () => {
     if (!result.imageUrl) return;
-    
+
     try {
       // First copy the image to clipboard
       await invoke('copy_image_to_clipboard_command', { imageUrl: result.imageUrl });
-      
+
       // Close the modal first
       closeModal();
       clearResult();
-      
+
       // Hide the window to allow focus to return to original app
       const appWindow = getCurrentWindow();
       await appWindow.hide();
-      
+
       // Small delay to allow window to hide
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       // Restore focus to the previously active window
       await invoke('restore_foreground_window');
-      
+
       // Another small delay to ensure focus is restored
       await new Promise(resolve => setTimeout(resolve, config?.copyDelayMs || 200));
-      
+
       // Simulate paste (Ctrl+V / Cmd+V)
       await invoke('simulate_paste');
-      
+
       onShowToast('success', t.review.pasted, t.review.pasted);
     } catch (error) {
       onShowToast('error', t.toast.error, `Failed to paste image: ${error instanceof Error ? error.message : String(error)}`);
@@ -225,7 +225,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
   const handleSaveAudio = async () => {
     // Support both audioFilePath (new) and audioData (legacy fallback)
     if (!result.audioFilePath && !result.audioData) return;
-    
+
     try {
       const extension = result.audioFormat || 'mp3';
       const defaultDir = await downloadDir();
@@ -236,7 +236,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
         }],
         defaultPath: `${defaultDir}/generated-audio.${extension}`,
       });
-      
+
       if (savePath) {
         if (result.audioFilePath) {
           // Copy from saved file to user-selected location
@@ -248,9 +248,9 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
           const uint8Array = new Uint8Array(result.audioData);
           await writeFile(savePath, uint8Array);
         }
-        
+
         onShowToast('success', 'Saved', 'Audio saved successfully');
-        
+
         // Open the containing folder
         const folderPath = savePath.substring(0, Math.max(savePath.lastIndexOf('\\'), savePath.lastIndexOf('/')));
         if (folderPath) {
@@ -271,7 +271,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-2xl min-w-[400px] min-h-[300px] max-h-[99vh] max-w-[90vw] flex flex-col animate-in fade-in zoom-in-95 duration-200 resize overflow-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-3">
@@ -359,7 +359,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                              resize-none transition-colors duration-200"
                 />
               ) : (
-                <div 
+                <div
                   className="w-full min-h-[300px] px-4 py-3 text-sm rounded-lg border border-slate-200 dark:border-slate-700 
                              bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white
                              overflow-y-auto prose prose-sm dark:prose-invert max-w-none
@@ -430,7 +430,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                 >
                   📋 {t.review.copy}
                 </button>
-                
+
                 {config?.pasteBehavior !== 'clipboardMode' && (
                   <button
                     onClick={handlePasteImage}
@@ -439,7 +439,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                     📋 {t.review.paste}
                   </button>
                 )}
-                
+
                 <button
                   onClick={handleSaveImage}
                   className="btn-outline"

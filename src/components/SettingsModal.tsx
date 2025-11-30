@@ -195,7 +195,7 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
             
             {/* Hotkey */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="form-label">
                 Global Hotkey
               </label>
               <input
@@ -219,15 +219,13 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
 
             {/* Paste Behavior */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="form-label">
                 Paste Behavior
               </label>
               <select
                 value={pasteBehavior}
                 onChange={(e) => setPasteBehavior(e.target.value as PasteBehavior)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                           bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="form-input-sm"
               >
                 <option value="autoPaste">Auto Paste</option>
                 <option value="clipboardMode">Clipboard Mode</option>
@@ -244,7 +242,7 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
             
             {/* API Base URL */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="form-label">
                 API Base URL
               </label>
               <input
@@ -252,15 +250,13 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
                 value={apiBaseUrl}
                 onChange={(e) => setApiBaseUrl(e.target.value)}
                 placeholder="https://api.openai.com/v1"
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                           bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="form-input-sm"
               />
             </div>
 
             {/* API Key */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="form-label">
                 API Key {config?.apiKeySet && <span className="text-green-500">(Set)</span>}
               </label>
               <input
@@ -268,9 +264,7 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder={config?.apiKeySet ? '••••••••••••' : 'Enter your API key'}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                           bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="form-input-sm"
               />
             </div>
 
@@ -307,15 +301,13 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
             
             {/* Text Model */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="form-label">
                 Text Model <span className="text-red-500">*</span>
               </label>
               <select
                 value={llmModel}
                 onChange={(e) => setLlmModel(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                           bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="form-input-sm"
               >
                 <option value="">Select a model...</option>
                 {models.map((m) => (
@@ -326,15 +318,13 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
 
             {/* Image Model */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="form-label">
                 Image Model
               </label>
               <select
                 value={imageModel}
                 onChange={(e) => setImageModel(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                           bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="form-input-sm"
               >
                 <option value="">Select a model...</option>
                 {imageModels.map((m) => (
@@ -345,15 +335,13 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
 
             {/* Audio Model */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="form-label">
                 Audio Model (STT)
               </label>
               <select
                 value={audioModel}
                 onChange={(e) => setAudioModel(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                           bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="form-input-sm"
               >
                 <option value="">Select a model...</option>
                 {audioModels.map((m) => (
@@ -379,10 +367,10 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
                              text-blue-600 focus:ring-blue-500"
                 />
                 <div>
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <span className="form-label">
                     Disable Text Selection
                   </span>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="help-text">
                     Faster window opening, no auto text capture
                   </p>
                 </div>
@@ -397,10 +385,10 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
                              text-blue-600 focus:ring-blue-500"
                 />
                 <div>
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <span className="form-label">
                     Enable Debug Logging
                   </span>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="help-text">
                     Log API requests for troubleshooting
                   </p>
                 </div>

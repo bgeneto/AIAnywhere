@@ -155,14 +155,14 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
       {/* Header */}
       <div className="p-6 border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 className="page-title flex items-center gap-2">
             <span>📜</span>
             {t.history.title}
           </h1>
           {history.length > 0 && (
             <button
               onClick={handleClearAll}
-              className="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              className="btn-text-danger"
             >
               {t.history.clearAll}
             </button>
@@ -177,7 +177,7 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
             value={searchQuery}
             onChange={handleSearchChange}
             placeholder={t.history.searchPlaceholder}
-            className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+            className="form-input pl-10"
           />
         </div>
       </div>
@@ -198,7 +198,7 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
             {history.map(entry => (
               <div
                 key={entry.id}
-                className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                className="card-elevated overflow-hidden"
               >
                 {/* Entry Header */}
                 <div
@@ -229,7 +229,7 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
                     <div className="flex-1 min-w-0">
                       {/* Task Type Badge */}
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded">
+                        <span className="badge-primary">
                           {entry.operationType}
                         </span>
                         <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -345,7 +345,7 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
                           {Object.entries(entry.operationOptions).map(([key, value]) => (
                             <span
                               key={key}
-                              className="px-2 py-1 text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded"
+                              className="badge-neutral"
                             >
                               {key}: {String(value)}
                             </span>
@@ -363,7 +363,7 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
                             e.stopPropagation();
                             handleSaveMedia(entry.mediaPath!, entry.operationType);
                           }}
-                          className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2"
+                          className="btn-text flex items-center gap-2"
                         >
                           💾 Save As
                         </button>
@@ -373,7 +373,7 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
                           e.stopPropagation();
                           handleDelete(entry.id);
                         }}
-                        className="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        className="btn-text-danger"
                       >
                         {t.history.delete}
                       </button>
@@ -382,7 +382,7 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
                           e.stopPropagation();
                           handleRerun(entry);
                         }}
-                        className="px-4 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors"
+                        className="btn-primary"
                       >
                         {t.history.rerun}
                       </button>

@@ -76,7 +76,7 @@ export function AudioUpload({ onError }: AudioUploadProps) {
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+      <label className="form-label">
         Audio File
       </label>
       

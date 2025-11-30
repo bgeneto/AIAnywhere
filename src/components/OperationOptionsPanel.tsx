@@ -17,7 +17,7 @@ export function OperationOptionsPanel() {
           <div key={option.key} className="space-y-1">
             <label 
               htmlFor={option.key}
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+              className="form-label"
             >
               {option.name}
               {option.required && <span className="text-red-500 ml-1">*</span>}
@@ -26,10 +26,7 @@ export function OperationOptionsPanel() {
               id={option.key}
               value={value}
               onChange={(e) => setOperationOption(option.key, e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                         bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                         focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                         transition-colors duration-200"
+              className="form-input-sm"
             >
               {option.values.map((v) => (
                 <option key={v} value={v}>
@@ -45,7 +42,7 @@ export function OperationOptionsPanel() {
           <div key={option.key} className="space-y-1">
             <label 
               htmlFor={option.key}
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+              className="form-label"
             >
               {option.name}
               {option.required && <span className="text-red-500 ml-1">*</span>}
@@ -56,11 +53,7 @@ export function OperationOptionsPanel() {
               value={value}
               onChange={(e) => setOperationOption(option.key, e.target.value)}
               placeholder={option.defaultValue}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                         bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                         placeholder-slate-400 dark:placeholder-slate-500
-                         focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                         transition-colors duration-200"
+              className="form-input-sm"
             />
           </div>
         );
@@ -70,7 +63,7 @@ export function OperationOptionsPanel() {
           <div key={option.key} className="space-y-1">
             <label 
               htmlFor={option.key}
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+              className="form-label"
             >
               {option.name}
               {option.required && <span className="text-red-500 ml-1">*</span>}
@@ -81,11 +74,7 @@ export function OperationOptionsPanel() {
               value={value}
               onChange={(e) => setOperationOption(option.key, e.target.value)}
               placeholder={option.defaultValue}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                         bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                         placeholder-slate-400 dark:placeholder-slate-500
-                         focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                         transition-colors duration-200"
+              className="form-input-sm"
             />
           </div>
         );

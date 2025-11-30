@@ -17,7 +17,7 @@ export function AboutPage() {
         <div className="flex flex-col h-full">
             {/* Page Header */}
             <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                <h2 className="page-title">
                     {t.about.title}
                 </h2>
             </div>
@@ -37,7 +37,7 @@ export function AboutPage() {
                                 {t.appName}
                             </h1>
                             <p className="text-slate-500 dark:text-slate-400">
-                                {t.about.version} 1.0.0
+                                {t.about.version} 1.1.0
                             </p>
                         </div>
                     </div>
@@ -51,14 +51,14 @@ export function AboutPage() {
 
                     {/* Features */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                        <h3 className="section-title">
                             {t.about.features}
                         </h3>
                         <ul className="space-y-2">
                             {t.about.featureList.map((feature, index) => (
                                 <li
                                     key={index}
-                                    className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg"
+                                    className="settings-row flex items-start gap-3"
                                 >
                                     <span className="text-green-500">✓</span>
                                     <span className="text-sm text-slate-700 dark:text-slate-300">
@@ -71,13 +71,13 @@ export function AboutPage() {
 
                     {/* Credits */}
                     <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                        <h3 className="section-title">
                             {t.about.credits}
                         </h3>
 
                         <div className="space-y-3">
-                            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                                <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            <div className="settings-row">
+                                <div className="form-label">
                                     {t.about.developers}
                                 </div>
                                 <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -85,8 +85,8 @@ export function AboutPage() {
                                 </div>
                             </div>
 
-                            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                                <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            <div className="settings-row">
+                                <div className="form-label">
                                     {t.about.institution}
                                 </div>
                                 <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -98,7 +98,7 @@ export function AboutPage() {
 
                     {/* Repository */}
                     <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                        <h3 className="section-title">
                             {t.about.repository}
                         </h3>
 
@@ -121,15 +121,14 @@ export function AboutPage() {
 
                     {/* Tech Stack */}
                     <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                        <h3 className="section-title">
                             Built With
                         </h3>
                         <div className="flex flex-wrap gap-2">
                             {['Tauri 2.0', 'Rust', 'React', 'TypeScript', 'Tailwind CSS'].map((tech) => (
                                 <span
                                     key={tech}
-                                    className="px-3 py-1.5 text-sm bg-blue-100 dark:bg-blue-900/30 
-                             text-blue-700 dark:text-blue-300 rounded-full"
+                                    className="badge-primary px-3 py-1.5 rounded-full"
                                 >
                                     {tech}
                                 </span>

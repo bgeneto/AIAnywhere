@@ -22,8 +22,7 @@ export function AboutModal() {
                     </h2>
                     <button
                         onClick={closeModal}
-                        className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 
-                       hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                        className="btn-ghost"
                     >
                         ✕
                     </button>
@@ -34,12 +33,12 @@ export function AboutModal() {
                     {/* App Info */}
                     <div className="text-center">
                         <div className="text-6xl mb-4">🤖</div>
-                        <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+                        <h3 className="page-title">
                             AI Anywhere
                         </h3>
                         <div className="flex items-center justify-center gap-2 mt-2">
                             <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-medium rounded-full border border-slate-200 dark:border-slate-700">
-                                v1.0.0
+                                v1.1.0
                             </span>
                             <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-medium rounded-full border border-blue-100 dark:border-blue-800">
                                 Cross-Platform
@@ -85,16 +84,16 @@ export function AboutModal() {
                             Released under the <span className="font-semibold text-slate-700 dark:text-slate-300">MIT License</span>
                         </div>
                         <div className="flex justify-center gap-2 flex-wrap">
-                            <span className="px-2 py-1 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded text-xs font-mono border border-slate-100 dark:border-slate-700">
+                            <span className="badge-mono">
                                 Tauri 2.0
                             </span>
-                            <span className="px-2 py-1 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded text-xs font-mono border border-slate-100 dark:border-slate-700">
+                            <span className="badge-mono">
                                 React
                             </span>
-                            <span className="px-2 py-1 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded text-xs font-mono border border-slate-100 dark:border-slate-700">
+                            <span className="badge-mono">
                                 Rust
                             </span>
-                            <span className="px-2 py-1 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded text-xs font-mono border border-slate-100 dark:border-slate-700">
+                            <span className="badge-mono">
                                 Tailwind v4
                             </span>
                         </div>

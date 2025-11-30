@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface SettingsToggleProps {
   title: string;
   description?: string;

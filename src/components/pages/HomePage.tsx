@@ -142,7 +142,7 @@ export function HomePage({ onShowToast }: HomePageProps) {
     <div className="flex flex-col h-full">
       {/* Page Header */}
       <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="page-title">
           {t.home.title}
         </h2>
       </div>
@@ -154,7 +154,7 @@ export function HomePage({ onShowToast }: HomePageProps) {
           <div className="space-y-2 flex-shrink-0">
             <label
               htmlFor="operation"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+              className="form-label"
             >
               {t.home.taskSelection}
             </label>
@@ -190,7 +190,7 @@ export function HomePage({ onShowToast }: HomePageProps) {
               </select>
             </div>
             {selectedOperation && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 italic">
+              <p className="help-text italic">
                 {selectedOperation.description}
               </p>
             )}
@@ -213,7 +213,7 @@ export function HomePage({ onShowToast }: HomePageProps) {
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="prompt"
-                    className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                    className="form-label"
                   >
                     {t.home.promptContent}
                   </label>
@@ -255,7 +255,7 @@ export function HomePage({ onShowToast }: HomePageProps) {
               {(isStreaming || streamingContent) && (
                 <div className="flex flex-col gap-2 flex-shrink-0">
                   <div className="flex items-center gap-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <label className="form-label">
                       {t.home.generating || 'Generating...'}
                     </label>
                     {isStreaming && (

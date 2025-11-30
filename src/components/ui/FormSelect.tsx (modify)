@@ -1,0 +1,13 @@
+interface FormSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+    size?: number;
+} 
+
+const FormSelect: React.FC<FormSelectProps> = ({ size, ...props }) => {
+    return (
+        <select {...props} style={{ fontSize: size }}>
+            {props.children}
+        </select>
+    );
+};
+
+export default FormSelect;
