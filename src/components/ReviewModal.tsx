@@ -276,10 +276,10 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
   const characterCount = (isEditing ? editedContent : (result.content || '')).length;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-[60%] max-w-[90%] min-w-[400px] min-h-[300px] max-h-[99vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 resize overflow-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 print-modal-overlay">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-[60%] max-w-[90%] min-w-[400px] min-h-[300px] max-h-[99vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 resize overflow-auto print-modal-container">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 no-print">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
               <span className="text-green-600 dark:text-green-400">✓</span>
@@ -302,7 +302,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 print-modal-content">
           {result.isImage && result.imageUrl ? (
             <div className="space-y-4">
               {imageLoading && (
@@ -405,7 +405,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                   </ReactMarkdown>
                 </div>
               )}
-              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 no-print">
                 <span>{characterCount} characters</span>
                 <button
                   onClick={() => setIsEditing(!isEditing)}
@@ -419,7 +419,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between p-4 border-t border-slate-200 dark:border-slate-700 no-print">
           <button
             onClick={handleBack}
             className="btn-outline"

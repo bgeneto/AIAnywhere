@@ -108,10 +108,10 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
       const isImage = mediaPath.match(/\.(png|jpg|jpeg|webp|gif)$/i);
       const isAudio = mediaPath.match(/\.(mp3|wav|ogg|m4a|flac|webm)$/i);
       const extension = mediaPath.split('.').pop() || 'bin';
-      
+
       const defaultPath = await downloadDir();
       const fileName = isImage ? `image.${extension}` : isAudio ? `audio.${extension}` : `file.${extension}`;
-      
+
       const savePath = await save({
         filters: [{
           name: isImage ? 'Images' : isAudio ? 'Audio Files' : 'Files',
@@ -177,7 +177,7 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
             value={searchQuery}
             onChange={handleSearchChange}
             placeholder={t.history.searchPlaceholder}
-            className="form-input pl-10"
+            className="form-input !pl-12"
           />
         </div>
       </div>
