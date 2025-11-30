@@ -22,28 +22,64 @@ interface HistoryPageProps {
 
 export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
   const { t } = useI18n();
-  const { loadHistoryEntry } = useApp();
+  const { loadHistoryEntry, customTasks, operations } = useApp();
   const [history, setHistory] = useState<HistoryEntryResponse[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Helper to get display name for operation type
+  const getOperationName = useCallback((type: string) => {
+    // Check custom tasks first (since type is ID)
+    const customTask = customTasks.find(t => t.id === type);
+    if (customTask) return customTask.name;
+
+    // Check default operations
+    const operation = operations.find(op => op.type === type);
+    if (operation) return operation.name;
+
+    return type;
+  }, [customTasks, operations]);
+
   // Load history on mount
   const loadHistory = useCallback(async () => {
     try {
       setLoading(true);
-      const entries = await invoke<HistoryEntryResponse[]>('get_history', { searchQuery: searchQuery || null });
+      // Always fetch all history, we'll filter on client side
+      const entries = await invoke<HistoryEntryResponse[]>('get_history', { searchQuery: null });
       setHistory(entries);
     } catch (error) {
       console.error('Failed to load history:', error);
     } finally {
       setLoading(false);
     }
-  }, [searchQuery]);
+  }, []);
 
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
+
+  // Filter history based on search query
+  const filteredHistory = React.useMemo(() => {
+    if (!searchQuery.trim()) return history;
+
+    // Normalize query: trim and replace multiple spaces with single space
+    const query = searchQuery.trim().replace(/\s+/g, ' ').toLowerCase();
+
+    return history.filter(entry => {
+      // Search in prompt
+      if (entry.promptText.toLowerCase().includes(query)) return true;
+
+      // Search in response
+      if (entry.responseText && entry.responseText.toLowerCase().includes(query)) return true;
+
+      // Search in task type name
+      const taskName = getOperationName(entry.operationType);
+      if (taskName.toLowerCase().includes(query)) return true;
+
+      return false;
+    });
+  }, [history, searchQuery, getOperationName]);
 
   // Handle search with debounce
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,14 +224,14 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
           <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400">
             {t.common.loading}
           </div>
-        ) : history.length === 0 ? (
+        ) : filteredHistory.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-500 dark:text-slate-400">
             <span className="text-4xl mb-4">📭</span>
             <p>{searchQuery ? t.history.noResults : t.history.noHistory}</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {history.map(entry => (
+            {filteredHistory.map(entry => (
               <div
                 key={entry.id}
                 className="card-elevated overflow-hidden"
@@ -230,7 +266,7 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
                       {/* Task Type Badge */}
                       <div className="flex items-center gap-2 mb-2">
                         <span className="badge-primary">
-                          {entry.operationType}
+                          {getOperationName(entry.operationType)}
                         </span>
                         <span className="text-xs text-slate-500 dark:text-slate-400">
                           {formatDate(entry.createdAt)}

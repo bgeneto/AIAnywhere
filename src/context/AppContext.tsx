@@ -405,12 +405,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load history entry (for re-running from history)
   const loadHistoryEntry = useCallback((entry: HistoryEntry) => {
     // Find the operation by type
-    const operation = operations.find(op => op.type === entry.operationType);
+    let operation = operations.find(op => op.type === entry.operationType);
+
+    // If not found in default operations, check custom tasks
+    if (!operation) {
+      const customTask = customTasks.find(t => t.id === entry.operationType);
+      if (customTask) {
+        operation = {
+          type: customTask.id as any,
+          name: customTask.name,
+          description: customTask.description,
+          systemPrompt: customTask.systemPrompt,
+          options: customTask.options.map(opt => ({
+            key: opt.key,
+            name: opt.name,
+            type: opt.type,
+            values: opt.values || [],
+            defaultValue: opt.defaultValue || '',
+            required: opt.required,
+          })),
+        };
+      }
+    }
+
     if (operation) {
       setSelectedOperationState(operation);
       setOperationOptions(entry.operationOptions || {});
     }
-    
+
     // For STT entries, the promptText contains the audio file path
     if (entry.operationType === 'speechToText') {
       setAudioFilePath(entry.promptText);
@@ -420,7 +442,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAudioFilePath(''); // Clear audio file path for non-STT
     }
     setPromptLoadedFromHistory(true); // Flag to prevent clipboard sync from overwriting
-  }, [operations]);
+  }, [operations, customTasks]);
 
   // Clear promptLoadedFromHistory flag (call after clipboard sync is skipped)
   const clearPromptLoadedFromHistory = useCallback(() => {
