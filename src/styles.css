@@ -45,10 +45,14 @@ html {
 
 /* Ghostwriter cursor blink animation */
 @keyframes cursor-blink {
-  0%, 50% {
+
+  0%,
+  50% {
     opacity: 1;
   }
-  51%, 100% {
+
+  51%,
+  100% {
     opacity: 0;
   }
 }
@@ -81,37 +85,22 @@ textarea {
 
 /* Primary button - dark slate, for main actions like Send, Save */
 .btn-primary {
-  @apply flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white
-         bg-slate-700 hover:bg-slate-800 disabled:bg-slate-500
-         rounded-lg transition-colors duration-200 shadow-sm
-         focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2
-         dark:focus:ring-offset-slate-900;
+  @apply flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-slate-700 hover:bg-slate-800 disabled:bg-slate-500 rounded-lg transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2 dark:focus:ring-offset-slate-900;
 }
 
 /* Secondary button - lighter background, for secondary actions like Sync, Clear */
 .btn-secondary {
-  @apply flex items-center gap-1 px-3 py-1.5 text-xs font-medium
-         text-slate-700 dark:text-slate-300 
-         hover:text-white dark:hover:text-white
-         bg-slate-200 dark:bg-slate-700 hover:bg-slate-600 dark:hover:bg-slate-600
-         rounded-lg transition-colors;
+  @apply flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-white dark:hover:text-white bg-slate-200 dark:bg-slate-700 hover:bg-slate-600 dark:hover:bg-slate-600 rounded-lg transition-colors;
 }
 
 /* Outline button - bordered, for actions like Copy, Back */
 .btn-outline {
-  @apply flex items-center gap-2 px-4 py-2 text-sm font-medium 
-         text-slate-700 dark:text-slate-300
-         border border-slate-300 dark:border-slate-600 
-         bg-white dark:bg-slate-800
-         hover:bg-slate-100 dark:hover:bg-slate-700 
-         rounded-lg transition-colors;
+  @apply flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors;
 }
 
 /* Ghost button - minimal, for close buttons and toggles */
 .btn-ghost {
-  @apply p-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 
-         hover:bg-slate-200 dark:hover:bg-slate-700 
-         rounded-lg transition-colors;
+  @apply p-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors;
 }
 
 /* Text button variants - for secondary actions, links */
@@ -120,18 +109,15 @@ textarea {
 }
 
 .btn-text-neutral {
-  @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors text-slate-700 dark:text-slate-300 
-         hover:bg-slate-100 dark:hover:bg-slate-800;
+  @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800;
 }
 
 .btn-text-danger {
-  @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors text-red-600 dark:text-red-400 
-         hover:bg-red-50 dark:hover:bg-red-900/20;
+  @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20;
 }
 
 .btn-text-primary {
-  @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors text-blue-600 dark:text-blue-400 
-         hover:bg-blue-50 dark:hover:bg-blue-900/20;
+  @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20;
 }
 
 /* ============================================
@@ -139,23 +125,11 @@ textarea {
    ============================================ */
 
 .form-input {
-  @apply w-full px-4 py-2.5 text-sm rounded-lg border 
-         border-slate-300 dark:border-slate-600 
-         bg-white dark:bg-slate-800 
-         text-slate-900 dark:text-white
-         placeholder-slate-400 dark:placeholder-slate-500
-         focus:ring-2 focus:ring-blue-500 focus:border-transparent
-         transition-colors;
+  @apply w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors;
 }
 
 .form-input-sm {
-  @apply w-full px-3 py-2 text-sm rounded-lg border 
-         border-slate-300 dark:border-slate-600 
-         bg-white dark:bg-slate-800 
-         text-slate-900 dark:text-white
-         placeholder-slate-400 dark:placeholder-slate-500
-         focus:ring-2 focus:ring-blue-500 focus:border-transparent
-         transition-colors;
+  @apply w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors;
 }
 
 .form-label {
@@ -191,8 +165,7 @@ textarea {
 }
 
 .page-footer {
-  @apply p-6 border-t border-slate-200 dark:border-slate-800 
-         bg-white dark:bg-slate-900;
+  @apply p-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900;
 }
 
 /* ============================================
@@ -200,14 +173,11 @@ textarea {
    ============================================ */
 
 .card {
-  @apply bg-white dark:bg-slate-800 rounded-lg border 
-         border-slate-200 dark:border-slate-700;
+  @apply bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700;
 }
 
 .card-elevated {
-  @apply bg-white dark:bg-slate-800 rounded-lg border 
-         border-slate-200 dark:border-slate-700
-         shadow-sm hover:shadow-md transition-shadow;
+  @apply bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow;
 }
 
 .settings-row {
@@ -223,8 +193,7 @@ textarea {
 }
 
 .modal-container {
-  @apply bg-white dark:bg-slate-900 rounded-xl shadow-2xl 
-         opacity-1 scale-100 duration-200;
+  @apply bg-white dark:bg-slate-900 rounded-xl shadow-2xl opacity-1 scale-100 duration-200;
 }
 
 /* ============================================
@@ -236,28 +205,165 @@ textarea {
 }
 
 .badge-neutral {
-  @apply px-2 py-1 text-xs font-medium rounded
-         bg-slate-100 dark:bg-slate-700 
-         text-slate-600 dark:text-slate-300;
+  @apply px-2 py-1 text-xs font-medium rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300;
 }
 
 .badge-primary {
-  @apply px-2 py-1 text-xs font-medium rounded
-         bg-blue-100 dark:bg-blue-900/40 
-         text-blue-700 dark:text-blue-300;
+  @apply px-2 py-1 text-xs font-medium rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300;
 }
 
 .badge-success {
-  @apply px-2 py-1 text-xs font-medium rounded
-         bg-green-100 dark:bg-green-900/40 
-         text-green-700 dark:text-green-300;
+  @apply px-2 py-1 text-xs font-medium rounded bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300;
 }
 
 .badge-mono {
-  @apply px-2 py-1 text-xs font-mono rounded border
-         bg-slate-50 dark:bg-slate-800 
-         text-slate-500 dark:text-slate-400 
-         border-slate-100 dark:border-slate-700;
+  @apply px-2 py-1 text-xs font-mono rounded border bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-100 dark:border-slate-700;
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR STYLES
+   ============================================ */
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #94a3b8;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #475569;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent;
+}
+
+.btn-text-danger {
+  @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20;
+}
+
+.btn-text-primary {
+  @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20;
+}
+
+/* ============================================
+   FORM UTILITY CLASSES
+   ============================================ */
+
+.form-input {
+  @apply w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors;
+}
+
+.form-input-sm {
+  @apply w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-slate-700 dark:text-slate-300;
+}
+
+.form-label-xs {
+  @apply block text-xs font-medium text-slate-600 dark:text-slate-400;
+}
+
+/* ============================================
+   TYPOGRAPHY UTILITY CLASSES
+   ============================================ */
+
+.page-title {
+  @apply text-2xl font-bold text-slate-900 dark:text-white;
+}
+
+.section-title {
+  @apply text-lg font-semibold text-slate-900 dark:text-white;
+}
+
+.help-text {
+  @apply text-xs text-slate-500 dark:text-slate-400;
+}
+
+/* ============================================
+   LAYOUT UTILITY CLASSES
+   ============================================ */
+
+.page-header {
+  @apply p-6 border-b border-slate-200 dark:border-slate-800;
+}
+
+.page-footer {
+  @apply p-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900;
+}
+
+/* ============================================
+   CARD/CONTAINER UTILITY CLASSES
+   ============================================ */
+
+.card {
+  @apply bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700;
+}
+
+.card-elevated {
+  @apply bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow;
+}
+
+.settings-row {
+  @apply p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg;
+}
+
+/* ============================================
+   MODAL UTILITY CLASSES
+   ============================================ */
+
+.modal-overlay {
+  @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4;
+}
+
+.modal-container {
+  @apply bg-white dark:bg-slate-900 rounded-xl shadow-2xl opacity-1 scale-100 duration-200;
+}
+
+/* ============================================
+   BADGE UTILITY CLASSES
+   ============================================ */
+
+.badge {
+  @apply px-2 py-1 text-xs font-medium rounded;
+}
+
+.badge-neutral {
+  @apply px-2 py-1 text-xs font-medium rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300;
+}
+
+.badge-primary {
+  @apply px-2 py-1 text-xs font-medium rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300;
+}
+
+.badge-success {
+  @apply px-2 py-1 text-xs font-medium rounded bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300;
+}
+
+.badge-mono {
+  @apply px-2 py-1 text-xs font-mono rounded border bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-100 dark:border-slate-700;
 }
 
 /* ============================================
@@ -321,4 +427,51 @@ select {
 /* Dark mode select arrow */
 .dark select {
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+
+  /* Hide everything by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only the printable area and its children */
+  #printable-area,
+  #printable-area * {
+    visibility: visible;
+  }
+
+  /* Position the printable area to take up the full page */
+  #printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background-color: white !important;
+    color: black !important;
+    overflow: visible !important;
+  }
+
+  /* Ensure code blocks look good in print */
+  #printable-area pre,
+  #printable-area code {
+    background-color: #f1f5f9 !important;
+    /* slate-100 */
+    color: black !important;
+    border: 1px solid #e2e8f0;
+    white-space: pre-wrap;
+    /* Allow code wrapping in print */
+  }
+
+  /* Hide scrollbars */
+  ::-webkit-scrollbar {
+    display: none;
+  }
 }

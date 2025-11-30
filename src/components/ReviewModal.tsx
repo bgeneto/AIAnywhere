@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { save } from '@tauri-apps/plugin-dialog';
@@ -149,7 +150,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
       console.log('[SaveImage] Fetch response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
-        throw new Error(`Fetch failed with status ${response.status}: ${response.statusText}`);
+        throw new Error(`Fetch failed with status ${response.status}: ${response.statusText} `);
       }
 
       const arrayBuffer = await response.arrayBuffer();
@@ -174,7 +175,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
         stack: error instanceof Error ? error.stack : undefined,
         error: error
       });
-      onShowToast('error', 'Error', `Failed to save image: ${error instanceof Error ? error.message : String(error)}`);
+      onShowToast('error', 'Error', `Failed to save image: ${error instanceof Error ? error.message : String(error)} `);
     }
   };
 
@@ -185,7 +186,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
       await invoke('copy_image_to_clipboard_command', { imageUrl: result.imageUrl });
       onShowToast('success', t.review.copied, t.review.copied);
     } catch (error) {
-      onShowToast('error', t.toast.error, `Failed to copy image: ${error instanceof Error ? error.message : String(error)}`);
+      onShowToast('error', t.toast.error, `Failed to copy image: ${error instanceof Error ? error.message : String(error)} `);
     }
   };
 
@@ -218,7 +219,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
 
       onShowToast('success', t.review.pasted, t.review.pasted);
     } catch (error) {
-      onShowToast('error', t.toast.error, `Failed to paste image: ${error instanceof Error ? error.message : String(error)}`);
+      onShowToast('error', t.toast.error, `Failed to paste image: ${error instanceof Error ? error.message : String(error)} `);
     }
   };
 
@@ -265,6 +266,10 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
       console.error('[SaveAudio] Error:', error);
       onShowToast('error', 'Error', `Failed to save audio: ${error instanceof Error ? error.message : String(error)}`);
     }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const characterCount = (isEditing ? editedContent : (result.content || '')).length;
@@ -369,6 +374,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                              prose-code:bg-slate-200 dark:prose-code:bg-slate-700 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
                              [&_.katex-display]:my-2 [&_.katex]:text-inherit"
                   onClick={() => setIsEditing(true)}
+                  id="printable-area"
                 >
                   <ReactMarkdown
                     remarkPlugins={[remarkMath, remarkBreaks]}
@@ -458,6 +464,8 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
               </button>
             )}
 
+
+
             {!result.isImage && !result.isAudio && (
               <>
                 <button
@@ -470,11 +478,18 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
                 {config?.pasteBehavior !== 'clipboardMode' && (
                   <button
                     onClick={handlePaste}
-                    className="btn-primary"
+                    className="btn-outline"
                   >
                     📋 {t.review.paste}
                   </button>
                 )}
+
+                <button
+                  onClick={handlePrint}
+                  className="btn-outline"
+                >
+                  🖨️ PDF
+                </button>
               </>
             )}
           </div>
@@ -483,3 +498,4 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
     </div>
   );
 }
+
