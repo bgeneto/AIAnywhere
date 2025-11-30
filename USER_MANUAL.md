@@ -12,9 +12,9 @@ Welcome to **AI Anywhere**, your universal AI assistant designed to integrate se
 
 The Home screen is your main command center.
 
-*   **Task Selection**: Choose from predefined tasks (e.g., "Email Reply", "Translate") or your own **Custom Tasks**.
+*   **Task Selection**: Choose from predefined tasks (e.g., "Email Reply", "Translate") or your own **My Tasks**.
 *   **Prompt Input**: Type your request in the text box.
-*   **Sync Clipboard**: Click **Sync** to instantly paste your current clipboard content into the prompt.
+*   **Clipboard**: The clipboard content is automatically pasted in the Prompt Content area, if not click **Sync** to instantly paste your current clipboard content into the prompt.
 *   **Send**: Click **Send** (or press `Ctrl+Enter`) to process your request.
 
 ## 📜 History
@@ -26,7 +26,7 @@ View and manage your past interactions.
 *   **Rerun**: Click the **Rerun** button on any entry to load it back into the Home screen.
 *   **Manage**: Expand entries to see full details, delete individual items, or **Clear All** history.
 
-## ✨ Custom Tasks
+## ✨ My Tasks
 
 Tailor AI Anywhere to your specific needs.
 

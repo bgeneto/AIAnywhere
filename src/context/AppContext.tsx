@@ -159,10 +159,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const tasks = await invoke<CustomTask[]>('get_custom_tasks');
       setCustomTasks(tasks);
 
-      // Select first operation by default
+      // Select first operation by default or restore from localStorage
       if (ops.length > 0 && !selectedOperation) {
-        setSelectedOperationState(ops[0]);
-        initializeOptions(ops[0]);
+        const lastOpId = localStorage.getItem('lastSelectedOperationId');
+        let initialOp = ops[0];
+
+        if (lastOpId) {
+          // Check default operations
+          const defaultOp = ops.find(op => op.type === lastOpId);
+          if (defaultOp) {
+            initialOp = defaultOp;
+          } else {
+            // Check custom tasks
+            const customTask = tasks.find(t => t.id === lastOpId);
+            if (customTask) {
+              initialOp = {
+                type: customTask.id as any,
+                name: customTask.name,
+                description: customTask.description,
+                systemPrompt: customTask.systemPrompt,
+                options: customTask.options.map(opt => ({
+                  key: opt.key,
+                  name: opt.name,
+                  type: opt.type,
+                  values: opt.values || [],
+                  defaultValue: opt.defaultValue || '',
+                  required: opt.required,
+                })),
+              };
+            }
+          }
+        }
+
+        setSelectedOperationState(initialOp);
+        initializeOptions(initialOp);
       }
     } catch (error) {
       console.error('Failed to load configuration:', error);
@@ -201,6 +231,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSelectedOperationState(op);
     if (op) {
       initializeOptions(op);
+      // Persist selection
+      localStorage.setItem('lastSelectedOperationId', op.type);
     } else {
       setOperationOptions({});
     }
