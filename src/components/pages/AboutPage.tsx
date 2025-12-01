@@ -113,7 +113,7 @@ export function AboutPage() {
                             </svg>
                             <div className="text-left">
                                 <div className="font-medium">{t.about.viewOnGithub}</div>
-                                <div className="text-sm text-slate-400">github.com/bgeneto/AIAnywhere</div>
+                                <div className="text-sm text-slate-400">https://github.com/bgeneto/AIAnywhere</div>
                             </div>
                             <span className="ml-auto">→</span>
                         </button>
