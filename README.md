@@ -114,6 +114,41 @@ npm run build
 npm run tauri build
 ```
 
+
+### Linux Requirements
+
+To run AI Anywhere on Linux, you need to install a few system dependencies.
+
+**Debian/Ubuntu:**
+```bash
+sudo apt update
+sudo apt install libwebkit2gtk-4.0-dev \
+    build-essential \
+    curl \
+    wget \
+    file \
+    libssl-dev \
+    libgtk-3-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev \
+    libxdo-dev
+```
+
+**Fedora/RedHat:**
+```bash
+sudo dnf install webkit2gtk3-devel \
+    openssl-devel \
+    curl \
+    wget \
+    file \
+    libappindicator-gtk3-devel \
+    librsvg2-devel \
+    libxdo-devel
+```
+
+**Note on Wayland:**
+If you are using Wayland, ensure you have a compatible portal implementation installed (e.g., `xdg-desktop-portal-gnome`, `xdg-desktop-portal-kde`, or `xdg-desktop-portal-hyprland`) for global shortcuts to work.
+
 ## 🚀 Quick Start
 
 ### First Time Setup

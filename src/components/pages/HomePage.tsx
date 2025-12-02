@@ -1,10 +1,11 @@
-import { useEffect, useRef, KeyboardEvent, useCallback } from 'react';
+import { useEffect, useRef, KeyboardEvent, useCallback, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useI18n } from '../../i18n/index';
 import { useClipboardSync } from '../../hooks/useClipboardSync';
 import { OperationOptionsPanel } from '../OperationOptionsPanel';
 import { AudioUpload } from '../AudioUpload';
 import { ToastType } from '../../types';
+import { SearchableSelect, Option } from '../ui/SearchableSelect';
 
 interface HomePageProps {
   onShowToast: (type: ToastType, title: string, message?: string) => void;
@@ -65,9 +66,7 @@ export function HomePage({ onShowToast }: HomePageProps) {
     }
   }, [streamingContent]);
 
-  const handleOperationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const operationType = e.target.value;
-
+  const handleOperationSelect = (operationType: string) => {
     // First check default operations
     const operation = operations.find(op => op.type === operationType);
     if (operation) {
@@ -95,6 +94,30 @@ export function HomePage({ onShowToast }: HomePageProps) {
       });
     }
   };
+
+  const selectOptions = useMemo(() => {
+    const opts: Option[] = [];
+
+    // Default operations
+    operations.forEach(op => {
+      opts.push({
+        value: op.type,
+        label: op.name,
+        group: 'Default Tasks'
+      });
+    });
+
+    // Custom tasks
+    customTasks.forEach(task => {
+      opts.push({
+        value: task.id,
+        label: task.name,
+        group: t.home.customTasks || 'My Tasks'
+      });
+    });
+
+    return opts;
+  }, [operations, customTasks, t.home.customTasks]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     // Ctrl/Cmd + Enter to send
@@ -159,35 +182,12 @@ export function HomePage({ onShowToast }: HomePageProps) {
               {t.home.taskSelection}
             </label>
             <div className="relative">
-              <select
-                id="operation"
+              <SearchableSelect
                 value={selectedOperation?.type || ''}
-                onChange={handleOperationChange}
-                className="w-full px-4 py-3 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
-                           bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                           transition-colors duration-200 appearance-none cursor-pointer"
-              >
-                {/* Default Operations */}
-                {operations.map((op) => (
-                  <option key={op.type} value={op.type}>
-                    {op.name}
-                  </option>
-                ))}
-
-                {/* Custom Tasks (if any exist) */}
-                {customTasks.length > 0 && (
-                  <>
-                    <option disabled>──────────────</option>
-                    <option disabled>{t.home.customTasks || '📁 My Tasks'}</option>
-                    {customTasks.map((task) => (
-                      <option key={task.id} value={task.id}>
-                        ⭐ {task.name}
-                      </option>
-                    ))}
-                  </>
-                )}
-              </select>
+                onChange={handleOperationSelect}
+                options={selectOptions}
+                placeholder={t.home.taskSelection}
+              />
             </div>
             {selectedOperation && (
               <p className="help-text italic">
