@@ -250,6 +250,9 @@ export function HomePage({ onShowToast }: HomePageProps) {
                              ${(isStreaming || streamingContent) ? 'h-24' : 'flex-1 min-h-[100px]'}`}
                 />
               </div>
+              <p className="help-text italic">
+                {t.home.promptHint}
+              </p>
 
               {/* Streaming Preview */}
               {(isStreaming || streamingContent) && (

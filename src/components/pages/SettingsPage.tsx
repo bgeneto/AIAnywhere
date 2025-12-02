@@ -31,8 +31,8 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   const [disableTextSelection, setDisableTextSelection] = useState(false);
   const [enableDebugLogging, setEnableDebugLogging] = useState(false);
   const [copyDelayMs, setCopyDelayMs] = useState(200);
-  const [historyLimit, setHistoryLimit] = useState(500);
-  const [mediaRetentionDays, setMediaRetentionDays] = useState(0);
+  const [historyLimit, setHistoryLimit] = useState(200);
+  const [mediaRetentionDays, setMediaRetentionDays] = useState(30);
 
   // Model lists
   const [models, setModels] = useState<string[]>([]);
@@ -78,8 +78,8 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
       setModels(config.models);
       setImageModels(config.imageModels);
       setAudioModels(config.audioModels);
-      setHistoryLimit(config.historyLimit ?? 500);
-      setMediaRetentionDays(config.mediaRetentionDays ?? 0);
+      setHistoryLimit(config.historyLimit ?? 200);
+      setMediaRetentionDays(config.mediaRetentionDays ?? 30);
     }
   }, [config]);
 
@@ -423,7 +423,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                   max="10000"
                   step="10"
                   value={historyLimit}
-                  onChange={(e) => setHistoryLimit(Math.max(10, Math.min(500, parseInt(e.target.value) || 100)))}
+                  onChange={(e) => setHistoryLimit(Math.max(10, Math.min(500, parseInt(e.target.value) || 200)))}
                 />
               </FormField>
 

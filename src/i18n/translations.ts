@@ -33,6 +33,7 @@ export interface Translations {
     customTasks: string;
     generating: string;
     waitingForResponse: string;
+    promptHint: string;
   };
 
   // Operations
@@ -285,6 +286,7 @@ export const translations: Record<Language, Translations> = {
       customTasks: 'My Tasks',
       generating: 'Generating...',
       waitingForResponse: 'Waiting for response...',
+      promptHint: '💡 Tip: Use Ctrl+Enter to send the prompt.',
     },
 
     operations: {
@@ -530,6 +532,7 @@ export const translations: Record<Language, Translations> = {
       customTasks: 'Minhas Tarefas',
       generating: 'Gerando...',
       waitingForResponse: 'Aguardando resposta...',
+      promptHint: '💡 Dica: Use Ctrl+Enter para enviar o prompt.',
     },
 
     operations: {
