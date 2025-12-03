@@ -810,6 +810,34 @@ A: None. AI Anywhere has zero telemetry. No data is sent anywhere except to your
 - [Together AI](https://together.ai) - Open-source models
 - [Azure OpenAI](https://azure.microsoft.com/openai) - Enterprise
 
+## 🔧 Troubleshooting (Linux)
+
+### Installation Issues with RPM or DEB Files
+
+If you encounter problems installing AI Anywhere using the RPM or DEB package files, you may need to install some required system dependencies first.
+
+**For Fedora/RedHat (RPM):**
+```bash
+sudo dnf install libayatana-appindicator3 libxdo webkit2gtk4.1
+```
+
+**For Debian/Ubuntu (DEB):**
+```bash
+sudo apt install libayatana-appindicator3-1 libayatana-indicator3-7 libxdo3 libwebkit2gtk-4.1-0
+```
+
+After installing these dependencies, retry the application installation.
+
+### Application Won't Start on Wayland with NVIDIA GPU
+
+If you're using the Wayland display server with an NVIDIA GPU and the application fails to launch, try setting the following environment variable before starting AI Anywhere:
+
+```bash
+WEBKIT_DISABLE_DMABUF_RENDERER=1 ai-anywhere
+```
+
+This disables the DMABUF renderer which can cause compatibility issues with certain NVIDIA/Wayland configurations. This is a known workaround for rendering issues on some systems.
+
 ## 📄 License
 
 **AI Anywhere** is released under the **MIT License**.

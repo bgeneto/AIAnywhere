@@ -423,7 +423,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                   max="10000"
                   step="10"
                   value={historyLimit}
-                  onChange={(e) => setHistoryLimit(Math.max(10, Math.min(500, parseInt(e.target.value) || 200)))}
+                  onChange={(e) => setHistoryLimit(Math.max(10, Math.min(10000, parseInt(e.target.value) || 200)))}
                 />
               </FormField>
 
