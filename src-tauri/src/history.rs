@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use uuid::Uuid;
 use tokio::fs as async_fs;
+use uuid::Uuid;
 
 /// A single history entry - matches TypeScript HistoryEntry/HistoryEntryResponse
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,19 +43,19 @@ impl HistoryEntry {
     /// Check if this entry matches a search query (searches prompt and response text)
     pub fn matches_search(&self, query: &str) -> bool {
         let query_lower = query.to_lowercase();
-        
+
         // Search in prompt
         if self.prompt_text.to_lowercase().contains(&query_lower) {
             return true;
         }
-        
+
         // Search in response text
         if let Some(ref text) = self.response_text {
             if text.to_lowercase().contains(&query_lower) {
                 return true;
             }
         }
-        
+
         false
     }
 }
@@ -64,94 +64,109 @@ impl HistoryEntry {
 pub struct HistoryManager;
 
 impl HistoryManager {
+    /// Get the app data directory path (cross-platform)
+    /// - Windows: C:\Users\<user>\AppData\Roaming\ai-anywhere
+    /// - macOS: ~/Library/Application Support/ai-anywhere
+    /// - Linux: ~/.local/share/ai-anywhere
+    fn get_app_data_dir() -> PathBuf {
+        dirs::data_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("ai-anywhere")
+    }
+
     /// Get the history file path
     pub fn get_history_path() -> PathBuf {
-        let config_dir = dirs::config_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join("ai-anywhere");
-        
-        fs::create_dir_all(&config_dir).ok();
-        config_dir.join("history.json")
+        let data_dir = Self::get_app_data_dir();
+
+        if let Err(e) = fs::create_dir_all(&data_dir) {
+            eprintln!(
+                "[HistoryManager] Failed to create data directory {:?}: {}",
+                data_dir, e
+            );
+        }
+        data_dir.join("history.json")
     }
 
     /// Get the media folder path
     pub fn get_media_path() -> PathBuf {
-        let config_dir = dirs::config_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join("ai-anywhere")
-            .join("media");
-        
-        fs::create_dir_all(&config_dir).ok();
-        config_dir
+        let media_dir = Self::get_app_data_dir().join("media");
+
+        if let Err(e) = fs::create_dir_all(&media_dir) {
+            eprintln!(
+                "[HistoryManager] Failed to create media directory {:?}: {}",
+                media_dir, e
+            );
+        }
+        media_dir
     }
 
     /// Load history from file (async version)
     pub async fn load() -> Result<Vec<HistoryEntry>, String> {
         let history_path = Self::get_history_path();
-        
+
         if !history_path.exists() {
             return Ok(Vec::new());
         }
-        
+
         let content = async_fs::read_to_string(&history_path)
             .await
             .map_err(|e| format!("Failed to read history file: {}", e))?;
-        
+
         if content.trim().is_empty() {
             return Ok(Vec::new());
         }
-        
+
         let history: Vec<HistoryEntry> = serde_json::from_str(&content)
             .map_err(|e| format!("Failed to parse history file: {}", e))?;
-        
+
         Ok(history)
     }
 
     /// Save history to file (async version)
     pub async fn save(history: &[HistoryEntry]) -> Result<(), String> {
         let history_path = Self::get_history_path();
-        
+
         let content = serde_json::to_string_pretty(history)
             .map_err(|e| format!("Failed to serialize history: {}", e))?;
-        
+
         async_fs::write(&history_path, content)
             .await
             .map_err(|e| format!("Failed to write history file: {}", e))?;
-        
+
         Ok(())
     }
 
     /// Add a new entry to history (respects limit) - async version
     pub async fn add_entry(entry: HistoryEntry, limit: usize) -> Result<(), String> {
         let mut history = Self::load().await?;
-        
+
         // Add new entry at the beginning
         history.insert(0, entry);
-        
+
         // Enforce limit (remove oldest entries)
         if limit > 0 && history.len() > limit {
             // Get entries to remove (will also delete their media files)
             let entries_to_remove: Vec<HistoryEntry> = history.drain(limit..).collect();
-            
+
             // Delete associated media files
             for entry in entries_to_remove {
                 Self::delete_entry_media(&entry);
             }
         }
-        
+
         Self::save(&history).await
     }
 
     /// Delete a specific entry by ID - async version
     pub async fn delete_entry(id: &str) -> Result<(), String> {
         let mut history = Self::load().await?;
-        
+
         // Find and remove the entry
         if let Some(pos) = history.iter().position(|e| e.id == id) {
             let entry = history.remove(pos);
             Self::delete_entry_media(&entry);
         }
-        
+
         Self::save(&history).await
     }
 
@@ -165,12 +180,12 @@ impl HistoryManager {
     /// Clear all history - async version
     pub async fn clear() -> Result<(), String> {
         let history = Self::load().await?;
-        
+
         // Delete all media files
         for entry in &history {
             Self::delete_entry_media(entry);
         }
-        
+
         // Save empty history
         Self::save(&Vec::new()).await
     }
@@ -178,16 +193,16 @@ impl HistoryManager {
     /// Search history entries - async version
     pub async fn search(query: &str) -> Result<Vec<HistoryEntry>, String> {
         let history = Self::load().await?;
-        
+
         if query.trim().is_empty() {
             return Ok(history);
         }
-        
+
         let filtered: Vec<HistoryEntry> = history
             .into_iter()
             .filter(|e| e.matches_search(query))
             .collect();
-        
+
         Ok(filtered)
     }
 
@@ -195,13 +210,32 @@ impl HistoryManager {
     #[allow(dead_code)]
     pub fn save_image(data: &[u8], format: &str) -> Result<String, String> {
         let media_path = Self::get_media_path();
+        println!("[HistoryManager] Media path for image: {:?}", media_path);
+
         let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
-        let filename = format!("img_{}_{}.{}", timestamp, Uuid::new_v4().to_string()[..8].to_string(), format);
+        let filename = format!(
+            "img_{}_{}.{}",
+            timestamp,
+            Uuid::new_v4().to_string()[..8].to_string(),
+            format
+        );
         let file_path = media_path.join(&filename);
-        
-        fs::write(&file_path, data)
-            .map_err(|e| format!("Failed to save image: {}", e))?;
-        
+
+        println!(
+            "[HistoryManager] Saving image ({} bytes) to: {:?}",
+            data.len(),
+            file_path
+        );
+
+        fs::write(&file_path, data).map_err(|e| {
+            eprintln!(
+                "[HistoryManager] Failed to save image to {:?}: {}",
+                file_path, e
+            );
+            format!("Failed to save image: {}", e)
+        })?;
+
+        println!("[HistoryManager] Image saved successfully");
         Ok(file_path.to_string_lossy().to_string())
     }
 
@@ -209,13 +243,32 @@ impl HistoryManager {
     #[allow(dead_code)]
     pub fn save_audio(data: &[u8], format: &str) -> Result<String, String> {
         let media_path = Self::get_media_path();
+        println!("[HistoryManager] Media path for audio: {:?}", media_path);
+
         let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
-        let filename = format!("audio_{}_{}.{}", timestamp, Uuid::new_v4().to_string()[..8].to_string(), format);
+        let filename = format!(
+            "audio_{}_{}.{}",
+            timestamp,
+            Uuid::new_v4().to_string()[..8].to_string(),
+            format
+        );
         let file_path = media_path.join(&filename);
-        
-        fs::write(&file_path, data)
-            .map_err(|e| format!("Failed to save audio: {}", e))?;
-        
+
+        println!(
+            "[HistoryManager] Saving audio ({} bytes) to: {:?}",
+            data.len(),
+            file_path
+        );
+
+        fs::write(&file_path, data).map_err(|e| {
+            eprintln!(
+                "[HistoryManager] Failed to save audio to {:?}: {}",
+                file_path, e
+            );
+            format!("Failed to save audio: {}", e)
+        })?;
+
+        println!("[HistoryManager] Audio saved successfully");
         Ok(file_path.to_string_lossy().to_string())
     }
 
@@ -254,7 +307,9 @@ impl HistoryManager {
         let mut history = Self::load().await?;
         history.retain(|entry| {
             // Keep entries without media or with existing media
-            entry.media_path.as_ref()
+            entry
+                .media_path
+                .as_ref()
                 .map(|p| std::path::Path::new(p).exists())
                 .unwrap_or(true)
         });

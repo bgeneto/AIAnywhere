@@ -132,14 +132,24 @@ impl CustomTask {
 pub struct CustomTasksManager;
 
 impl CustomTasksManager {
+    /// Get the app data directory path (cross-platform)
+    /// - Windows: C:\Users\<user>\AppData\Roaming\ai-anywhere
+    /// - macOS: ~/Library/Application Support/ai-anywhere
+    /// - Linux: ~/.local/share/ai-anywhere
+    fn get_app_data_dir() -> PathBuf {
+        dirs::data_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("ai-anywhere")
+    }
+
     /// Get the custom tasks file path
     pub fn get_tasks_path() -> PathBuf {
-        let config_dir = dirs::config_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join("ai-anywhere");
+        let data_dir = Self::get_app_data_dir();
 
-        fs::create_dir_all(&config_dir).ok();
-        config_dir.join("custom_tasks.json")
+        if let Err(e) = fs::create_dir_all(&data_dir) {
+            eprintln!("[CustomTasksManager] Failed to create data directory {:?}: {}", data_dir, e);
+        }
+        data_dir.join("custom_tasks.json")
     }
 
     /// Load custom tasks from file

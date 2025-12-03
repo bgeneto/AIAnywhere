@@ -142,14 +142,24 @@ impl Default for Configuration {
 }
 
 impl Configuration {
+    /// Get the app data directory path (cross-platform)
+    /// - Windows: C:\Users\<user>\AppData\Roaming\ai-anywhere
+    /// - macOS: ~/Library/Application Support/ai-anywhere
+    /// - Linux: ~/.local/share/ai-anywhere
+    fn get_app_data_dir() -> PathBuf {
+        dirs::data_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("ai-anywhere")
+    }
+
     /// Get the configuration file path
     pub fn get_config_path() -> PathBuf {
-        let config_dir = dirs::config_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join("ai-anywhere");
+        let data_dir = Self::get_app_data_dir();
         
-        fs::create_dir_all(&config_dir).ok();
-        config_dir.join("config.json")
+        if let Err(e) = fs::create_dir_all(&data_dir) {
+            eprintln!("[Configuration] Failed to create data directory {:?}: {}", data_dir, e);
+        }
+        data_dir.join("config.json")
     }
     
     /// Load configuration from file

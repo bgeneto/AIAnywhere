@@ -5,6 +5,11 @@
   "windows": [
     "main"
   ],
+  "platforms": [
+    "linux",
+    "windows",
+    "macOS"
+  ],
   "permissions": [
     "core:default",
     "core:window:allow-show",
@@ -14,6 +19,7 @@
     "core:window:allow-minimize",
     "core:window:allow-is-visible",
     "core:window:allow-is-minimized",
+    "core:path:default",
     "opener:default",
     "dialog:default",
     "dialog:allow-save",
@@ -22,12 +28,27 @@
     "clipboard-manager:allow-write-text",
     "clipboard-manager:allow-write-image",
     "fs:default",
+    "fs:allow-exists",
+    "fs:allow-create",
     "fs:allow-write",
     "fs:allow-read",
     "fs:allow-copy-file",
+    "fs:allow-remove",
+    "fs:allow-read-dir",
+    "fs:allow-mkdir",
+    "fs:allow-appdata-read-recursive",
+    "fs:allow-appdata-write-recursive",
+    "fs:allow-download-read-recursive",
+    "fs:allow-download-write-recursive",
     {
       "identifier": "fs:allow-write-text-file",
       "allow": [
+        {
+          "path": "$APPDATA/**"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        },
         {
           "path": "**"
         }
@@ -37,6 +58,12 @@
       "identifier": "fs:allow-write-file",
       "allow": [
         {
+          "path": "$APPDATA/**"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        },
+        {
           "path": "**"
         }
       ]
@@ -45,6 +72,12 @@
       "identifier": "fs:allow-read-file",
       "allow": [
         {
+          "path": "$APPDATA/**"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        },
+        {
           "path": "**"
         }
       ]
@@ -52,6 +85,12 @@
     {
       "identifier": "fs:allow-copy-file",
       "allow": [
+        {
+          "path": "$APPDATA/**"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        },
         {
           "path": "**"
         }
