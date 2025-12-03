@@ -914,6 +914,51 @@ async fn download_and_save_image(
     Ok(())
 }
 
+/// Copy an audio file from one location to another
+/// This bypasses Tauri fs plugin restrictions by using direct std::fs::copy
+/// Used for saving TTS-generated audio files to user-selected locations
+#[tauri::command]
+async fn copy_audio_file(
+    state: State<'_, AppState>,
+    source_path: String,
+    dest_path: String,
+) -> Result<(), String> {
+    let debug_logging = {
+        let config = state.config.lock().map_err(|e| e.to_string())?;
+        config.enable_debug_logging
+    };
+
+    if debug_logging {
+        println!("[copy_audio_file] Copying audio file...");
+        println!("[copy_audio_file] Source: {}", source_path);
+        println!("[copy_audio_file] Destination: {}", dest_path);
+    }
+
+    // Verify source file exists
+    if !std::path::Path::new(&source_path).exists() {
+        let err = format!("Source file does not exist: {}", source_path);
+        if debug_logging {
+            println!("[copy_audio_file] Error: {}", err);
+        }
+        return Err(err);
+    }
+
+    // Copy the file
+    std::fs::copy(&source_path, &dest_path).map_err(|e| {
+        let err = format!("Failed to copy audio file: {} (from {} to {})", e, source_path, dest_path);
+        if debug_logging {
+            println!("[copy_audio_file] Error: {}", err);
+        }
+        err
+    })?;
+
+    if debug_logging {
+        println!("[copy_audio_file] Successfully copied audio file!");
+    }
+
+    Ok(())
+}
+
 /// Copy an image from URL to clipboard (exposed as Tauri command)
 /// This is used by the frontend to copy images to clipboard
 #[tauri::command]
@@ -1072,6 +1117,8 @@ pub fn run() {
             // File Downloads
             download_and_save_image,
             save_generated_image,
+            // Audio file operations
+            copy_audio_file,
             // Image to Clipboard
             copy_image_to_clipboard_command,
         ])

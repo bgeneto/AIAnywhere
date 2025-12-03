@@ -241,12 +241,20 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
 
       if (savePath) {
         if (result.audioFilePath) {
-          // Copy from saved file to user-selected location
-          console.log('[SaveAudio] Copying from:', result.audioFilePath, 'to:', savePath);
-          await copyFile(result.audioFilePath, savePath);
+          // Copy from saved file to user-selected location via backend command
+          // This bypasses Tauri fs plugin restrictions on Linux
+          if (config?.enableDebugLogging) {
+            console.log('[SaveAudio] Copying from:', result.audioFilePath, 'to:', savePath);
+          }
+          await invoke('copy_audio_file', {
+            sourcePath: result.audioFilePath,
+            destPath: savePath
+          });
         } else if (result.audioData) {
           // Legacy: write from memory (shouldn't happen with new flow)
-          console.log('[SaveAudio] Writing from memory, size:', result.audioData.length);
+          if (config?.enableDebugLogging) {
+            console.log('[SaveAudio] Writing from memory, size:', result.audioData.length);
+          }
           const uint8Array = new Uint8Array(result.audioData);
           await writeFile(savePath, uint8Array);
         }
