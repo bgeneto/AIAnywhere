@@ -413,7 +413,7 @@ export const translations: Record<Language, Translations> = {
       pasted: 'Pasted to application',
       saved: 'Saved successfully',
       imageGenerated: 'Image Generated',
-      saveImage: 'Save Image',
+      saveImage: 'Save',
     },
 
     audio: {
@@ -659,7 +659,7 @@ export const translations: Record<Language, Translations> = {
       pasted: 'Colado na aplicação',
       saved: 'Salvo com sucesso',
       imageGenerated: 'Imagem Gerada',
-      saveImage: 'Salvar Imagem',
+      saveImage: 'Salvar',
     },
 
     audio: {
