@@ -31,6 +31,7 @@ export interface Translations {
     processing: string;
     enterPrompt: string;
     customTasks: string;
+    defaultTasks: string;
     generating: string;
     waitingForResponse: string;
     promptHint: string;
@@ -58,6 +59,91 @@ export interface Translations {
     whatsAppResponseDesc: string;
     unicodeSymbols: string;
     unicodeSymbolsDesc: string;
+  };
+
+  // Operation Options (for dynamic form fields)
+  operationOptions: {
+    // Option labels
+    tone: string;
+    length: string;
+    language: string;
+    languageOptional: string;
+    imageSize: string;
+    quality: string;
+    style: string;
+    writingTone: string;
+    summaryLength: string;
+    format: string;
+    outputFormat: string;
+    voice: string;
+    speed: string;
+    model: string;
+    targetLanguage: string;
+    responseTone: string;
+    responseLength: string;
+    // Tone values
+    tones: {
+      professional: string;
+      friendly: string;
+      formal: string;
+      urgent: string;
+      apologetic: string;
+      enthusiastic: string;
+      academic: string;
+      casual: string;
+      creative: string;
+      informal: string;
+      supportive: string;
+      humorous: string;
+    };
+    // Length values
+    lengths: {
+      brief: string;
+      standard: string;
+      detailed: string;
+      medium: string;
+      short: string;
+      long: string;
+    };
+    // Format values
+    formats: {
+      paragraph: string;
+      bulletPoints: string;
+      executiveSummary: string;
+      keyTakeaways: string;
+    };
+    // Quality values
+    qualities: {
+      standard: string;
+      hd: string;
+    };
+    // Style values
+    styles: {
+      vivid: string;
+      natural: string;
+    };
+    // Language names
+    languages: {
+      auto: string;
+      arabic: string;
+      bengali: string;
+      chinese: string;
+      english: string;
+      french: string;
+      german: string;
+      hindi: string;
+      italian: string;
+      japanese: string;
+      korean: string;
+      portuguese: string;
+      punjabi: string;
+      russian: string;
+      spanish: string;
+      polish: string;
+      turkish: string;
+      czech: string;
+      dutch: string;
+    };
   };
 
   // Settings
@@ -121,6 +207,8 @@ export interface Translations {
       hotkey: string;
       hotkeyDesc: string;
       hotkeyPlaceholder: string;
+      hotkeyValidating: string;
+      hotkeyPressKeys: string;
       pasteBehavior: string;
       pasteBehaviorDesc: string;
       autoPaste: string;
@@ -132,6 +220,15 @@ export interface Translations {
       enableDebugLoggingDesc: string;
       copyDelay: string;
       copyDelayDesc: string;
+    };
+
+    // History Settings
+    history: {
+      title: string;
+      historyLimit: string;
+      historyLimitDesc: string;
+      mediaRetention: string;
+      mediaRetentionDesc: string;
     };
   };
 
@@ -147,6 +244,7 @@ export interface Translations {
     institution: string;
     repository: string;
     viewOnGithub: string;
+    builtWith?: string;
   };
 
   // Review Modal
@@ -183,6 +281,13 @@ export interface Translations {
     configSaveFailed: string;
     connectionSuccess: string;
     connectionFailed: string;
+    modelsLoaded: string;
+    modelsLoadedCount: string;
+    validationError: string;
+    llmModelRequired: string;
+    settingsSaved: string;
+    blockedHotkey: string;
+    hotkeyUnavailable: string;
   };
 
   // Common
@@ -193,6 +298,7 @@ export interface Translations {
     yes: string;
     no: string;
     required: string;
+    selectModel: string;
   };
 
   // History
@@ -284,6 +390,7 @@ export const translations: Record<Language, Translations> = {
       processing: 'Processing...',
       enterPrompt: 'Enter your prompt here... (Ctrl+Enter to send)',
       customTasks: 'My Tasks',
+      defaultTasks: 'Default Tasks',
       generating: 'Generating...',
       waitingForResponse: 'Waiting for response...',
       promptHint: '💡 Tip: Use Ctrl+Enter to send the prompt.',
@@ -310,6 +417,90 @@ export const translations: Record<Language, Translations> = {
       whatsAppResponseDesc: 'Generate casual message replies',
       unicodeSymbols: 'Unicode Symbols',
       unicodeSymbolsDesc: 'Find Unicode symbols and emojis',
+    },
+
+    operationOptions: {
+      // Option labels
+      tone: 'Tone',
+      length: 'Length',
+      language: 'Language',
+      languageOptional: 'Language (optional)',
+      imageSize: 'Image Size',
+      quality: 'Quality',
+      style: 'Style',
+      writingTone: 'Writing Tone',
+      summaryLength: 'Summary Length',
+      format: 'Format',
+      outputFormat: 'Output Format',
+      voice: 'Voice',
+      speed: 'Speed',
+      model: 'Model',
+      targetLanguage: 'Target Language',
+      responseTone: 'Response Tone',
+      responseLength: 'Response Length',
+      // Tone values
+      tones: {
+        professional: 'Professional',
+        friendly: 'Friendly',
+        formal: 'Formal',
+        urgent: 'Urgent',
+        apologetic: 'Apologetic',
+        enthusiastic: 'Enthusiastic',
+        academic: 'Academic',
+        casual: 'Casual',
+        creative: 'Creative',
+        informal: 'Informal',
+        supportive: 'Supportive',
+        humorous: 'Humorous',
+      },
+      // Length values
+      lengths: {
+        brief: 'Brief',
+        standard: 'Standard',
+        detailed: 'Detailed',
+        medium: 'Medium',
+        short: 'Short',
+        long: 'Long',
+      },
+      // Format values
+      formats: {
+        paragraph: 'Paragraph',
+        bulletPoints: 'Bullet Points',
+        executiveSummary: 'Executive Summary',
+        keyTakeaways: 'Key Takeaways',
+      },
+      // Quality values
+      qualities: {
+        standard: 'Standard',
+        hd: 'HD',
+      },
+      // Style values
+      styles: {
+        vivid: 'Vivid',
+        natural: 'Natural',
+      },
+      // Language names
+      languages: {
+        auto: 'Auto-detect',
+        arabic: 'Arabic',
+        bengali: 'Bengali',
+        chinese: 'Chinese',
+        english: 'English',
+        french: 'French',
+        german: 'German',
+        hindi: 'Hindi',
+        italian: 'Italian',
+        japanese: 'Japanese',
+        korean: 'Korean',
+        portuguese: 'Portuguese',
+        punjabi: 'Punjabi',
+        russian: 'Russian',
+        spanish: 'Spanish',
+        polish: 'Polish',
+        turkish: 'Turkish',
+        czech: 'Czech',
+        dutch: 'Dutch',
+      },
     },
 
     settings: {
@@ -367,6 +558,8 @@ export const translations: Record<Language, Translations> = {
         hotkey: 'Global Hotkey',
         hotkeyDesc: 'Click and press key combination',
         hotkeyPlaceholder: 'Ctrl+Space',
+        hotkeyValidating: 'Validating...',
+        hotkeyPressKeys: 'Press keys...',
         pasteBehavior: 'Paste Behavior',
         pasteBehaviorDesc: 'How to handle AI responses',
         autoPaste: 'Auto Paste (Paste directly)',
@@ -378,6 +571,14 @@ export const translations: Record<Language, Translations> = {
         enableDebugLoggingDesc: 'Logs API requests/responses to help diagnose custom endpoint compatibility issues',
         copyDelay: 'Clipboard Delay (ms)',
         copyDelayDesc: 'Time waited before relying on the copied content in the clipboard.',
+      },
+
+      history: {
+        title: 'History Settings',
+        historyLimit: 'History Limit',
+        historyLimitDesc: 'Maximum number of history entries to keep. Older entries will be automatically deleted.',
+        mediaRetention: 'Media Retention (Days)',
+        mediaRetentionDesc: 'Number of days to keep generated images and audio files. Set to 0 to keep forever.',
       },
     },
 
@@ -400,6 +601,7 @@ export const translations: Record<Language, Translations> = {
       institution: 'LABiA-FUP/UnB',
       repository: 'Repository',
       viewOnGithub: 'View on GitHub',
+      builtWith: 'Built With',
     },
 
     review: {
@@ -433,6 +635,13 @@ export const translations: Record<Language, Translations> = {
       configSaveFailed: 'Failed to save configuration',
       connectionSuccess: 'API connection successful',
       connectionFailed: 'API connection failed',
+      modelsLoaded: 'Models Loaded',
+      modelsLoadedCount: 'Found {count} models',
+      validationError: 'Validation Error',
+      llmModelRequired: 'LLM Model is required',
+      settingsSaved: 'Settings saved successfully',
+      blockedHotkey: 'Blocked Hotkey',
+      hotkeyUnavailable: 'Hotkey Unavailable',
     },
 
     common: {
@@ -442,6 +651,7 @@ export const translations: Record<Language, Translations> = {
       yes: 'Yes',
       no: 'No',
       required: 'Required',
+      selectModel: 'Select a model',
     },
 
     history: {
@@ -513,8 +723,8 @@ export const translations: Record<Language, Translations> = {
       history: 'Histórico',
       customTasks: 'Minhas Tarefas',
       settings: 'Configurações',
-      apiSettings: 'Configurações de API',
-      appSettings: 'Configurações do Aplicativo',
+      apiSettings: 'API',
+      appSettings: 'Configurações',
       languageSettings: 'Configurações de Idioma',
       audioSettings: 'Configurações de Áudio',
       about: 'Sobre',
@@ -530,6 +740,7 @@ export const translations: Record<Language, Translations> = {
       processing: 'Processando...',
       enterPrompt: 'Digite seu prompt aqui... (Ctrl+Enter para enviar)',
       customTasks: 'Minhas Tarefas',
+      defaultTasks: 'Tarefas Padrão',
       generating: 'Gerando...',
       waitingForResponse: 'Aguardando resposta...',
       promptHint: '💡 Dica: Use Ctrl+Enter para enviar o prompt.',
@@ -556,6 +767,90 @@ export const translations: Record<Language, Translations> = {
       whatsAppResponseDesc: 'Gere respostas casuais para mensagens',
       unicodeSymbols: 'Símbolos Unicode',
       unicodeSymbolsDesc: 'Encontre símbolos Unicode e emojis',
+    },
+
+    operationOptions: {
+      // Option labels
+      tone: 'Tom',
+      length: 'Tamanho',
+      language: 'Idioma',
+      languageOptional: 'Idioma (opcional)',
+      imageSize: 'Tamanho da Imagem',
+      quality: 'Qualidade',
+      style: 'Estilo',
+      writingTone: 'Tom da Escrita',
+      summaryLength: 'Tamanho do Resumo',
+      format: 'Formato',
+      outputFormat: 'Formato de Saída',
+      voice: 'Voz',
+      speed: 'Velocidade',
+      model: 'Modelo',
+      targetLanguage: 'Idioma de Destino',
+      responseTone: 'Tom da Resposta',
+      responseLength: 'Tamanho da Resposta',
+      // Tone values
+      tones: {
+        professional: 'Profissional',
+        friendly: 'Amigável',
+        formal: 'Formal',
+        urgent: 'Urgente',
+        apologetic: 'Elogioso',
+        enthusiastic: 'Entusiástico',
+        academic: 'Acadêmico',
+        casual: 'Casual',
+        creative: 'Criativo',
+        informal: 'Informal',
+        supportive: 'Solidário',
+        humorous: 'Humorístico',
+      },
+      // Length values
+      lengths: {
+        brief: 'Breve',
+        standard: 'Padrão',
+        detailed: 'Detalhado',
+        medium: 'Médio',
+        short: 'Curto',
+        long: 'Longo',
+      },
+      // Format values
+      formats: {
+        paragraph: 'Parágrafo',
+        bulletPoints: 'Tópicos',
+        executiveSummary: 'Resumo Executivo',
+        keyTakeaways: 'Pontos Principais',
+      },
+      // Quality values
+      qualities: {
+        standard: 'Padrão',
+        hd: 'HD',
+      },
+      // Style values
+      styles: {
+        vivid: 'Vívido',
+        natural: 'Natural',
+      },
+      // Language names
+      languages: {
+        auto: 'Detectar automaticamente',
+        arabic: 'Árabe',
+        bengali: 'Bengali',
+        chinese: 'Chinês',
+        english: 'Inglês',
+        french: 'Francês',
+        german: 'Alemão',
+        hindi: 'Hindi',
+        italian: 'Italiano',
+        japanese: 'Japonês',
+        korean: 'Coreano',
+        portuguese: 'Português',
+        punjabi: 'Punjabi',
+        russian: 'Russo',
+        spanish: 'Espanhol',
+        polish: 'Polonês',
+        turkish: 'Turco',
+        czech: 'Tcheco',
+        dutch: 'Holandês',
+      },
     },
 
     settings: {
@@ -613,6 +908,8 @@ export const translations: Record<Language, Translations> = {
         hotkey: 'Atalho Global',
         hotkeyDesc: 'Clique e pressione a combinação de teclas',
         hotkeyPlaceholder: 'Ctrl+Space',
+        hotkeyValidating: 'Validando...',
+        hotkeyPressKeys: 'Pressione as teclas...',
         pasteBehavior: 'Comportamento de Colagem',
         pasteBehaviorDesc: 'Como lidar com respostas da IA',
         autoPaste: 'Colar Automaticamente (Cola diretamente)',
@@ -624,6 +921,14 @@ export const translations: Record<Language, Translations> = {
         enableDebugLoggingDesc: 'Registra requisições/respostas de API para ajudar a diagnosticar problemas de compatibilidade de endpoints personalizados',
         copyDelay: 'Atraso de Clipboard (ms)',
         copyDelayDesc: 'Tempo se espera antes de contar com o conteúdo copiado para a área de transferência.',
+      },
+
+      history: {
+        title: 'Configurações de Histórico',
+        historyLimit: 'Limite de Histórico',
+        historyLimitDesc: 'Número máximo de entradas no histórico. Entradas antigas serão excluídas automaticamente.',
+        mediaRetention: 'Retenção de Mídia (Dias)',
+        mediaRetentionDesc: 'Número de dias para manter imagens e arquivos de áudio gerados. Defina como 0 para manter para sempre.',
       },
     },
 
@@ -646,6 +951,7 @@ export const translations: Record<Language, Translations> = {
       institution: 'LABiA-FUP/UnB',
       repository: 'Repositório',
       viewOnGithub: 'Ver no GitHub',
+      builtWith: 'Construído Com',
     },
 
     review: {
@@ -679,6 +985,13 @@ export const translations: Record<Language, Translations> = {
       configSaveFailed: 'Falha ao salvar configuração',
       connectionSuccess: 'Conexão com API bem-sucedida',
       connectionFailed: 'Falha na conexão com API',
+      modelsLoaded: 'Modelos Carregados',
+      modelsLoadedCount: 'Encontrados {count} modelos',
+      validationError: 'Erro de Validação',
+      llmModelRequired: 'Modelo LLM é obrigatório',
+      settingsSaved: 'Configurações salvas com sucesso',
+      blockedHotkey: 'Atalho Bloqueado',
+      hotkeyUnavailable: 'Atalho Indisponível',
     },
 
     common: {
@@ -688,6 +1001,7 @@ export const translations: Record<Language, Translations> = {
       yes: 'Sim',
       no: 'Não',
       required: 'Obrigatório',
+      selectModel: 'Selecione um modelo',
     },
 
     history: {

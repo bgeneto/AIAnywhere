@@ -92,7 +92,7 @@ pub struct Configuration {
     pub history_limit: usize,
     
     /// Number of days to keep media files (0 = never delete)
-    #[serde(default)]
+    #[serde(default = "default_media_retention_days")]
     pub media_retention_days: u32,
 }
 
@@ -113,7 +113,11 @@ fn default_copy_delay_ms() -> u64 {
 }
 
 fn default_history_limit() -> usize {
-    500
+    100
+}
+
+fn default_media_retention_days() -> u32 {
+    30
 }
 
 impl Default for Configuration {
@@ -136,7 +140,7 @@ impl Default for Configuration {
             image_models: Vec::new(),
             audio_models: Vec::new(),
             history_limit: default_history_limit(),
-            media_retention_days: 0,
+            media_retention_days: default_media_retention_days(),
         }
     }
 }

@@ -31,7 +31,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   const [disableTextSelection, setDisableTextSelection] = useState(false);
   const [enableDebugLogging, setEnableDebugLogging] = useState(false);
   const [copyDelayMs, setCopyDelayMs] = useState(200);
-  const [historyLimit, setHistoryLimit] = useState(200);
+  const [historyLimit, setHistoryLimit] = useState(100);
   const [mediaRetentionDays, setMediaRetentionDays] = useState(30);
 
   // Model lists
@@ -44,6 +44,18 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
 
+  // Check if configuration is complete
+  const isConfigComplete = (): boolean => {
+    return Boolean(apiBaseUrl && llmModel && models.length > 0);
+  };
+
+  const getMissingConfigMessage = (): string | null => {
+    if (!apiBaseUrl) return t.toast.validationError + ': ' + (t.settings.api.endpoint || 'API endpoint is required');
+    if (models.length === 0) return t.toast.validationError + ': ' + 'No models available. Test connection to fetch models.';
+    if (!llmModel) return t.toast.validationError + ': ' + (t.toast.llmModelRequired || 'Please select a text model');
+    return null;
+  };
+
   // Hotkey capture hook
   const {
     isCapturing: isCapturingHotkey,
@@ -54,10 +66,10 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   } = useHotkeyCapture({
     onHotkeyCapture: setHotkey,
     onBlockedHotkey: (_hotkey, reason) => {
-      onShowToast('warning', 'Blocked Hotkey', reason);
+      onShowToast('warning', t.toast.blockedHotkey, reason);
     },
     onUnavailableHotkey: (_hotkey, reason) => {
-      onShowToast('error', 'Hotkey Unavailable', reason);
+      onShowToast('error', t.toast.hotkeyUnavailable, reason);
     },
     currentHotkey: config?.hotkey,
   });
@@ -78,7 +90,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
       setModels(config.models);
       setImageModels(config.imageModels);
       setAudioModels(config.audioModels);
-      setHistoryLimit(config.historyLimit ?? 200);
+      setHistoryLimit(config.historyLimit ?? 100);
       setMediaRetentionDays(config.mediaRetentionDays ?? 30);
     }
   }, [config]);
@@ -91,7 +103,14 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
 
   const handleHotkeyKeyDown = hotkeyKeyDownHandler;
 
-  const handleFetchModels = async () => {
+  const handleFetchModels = async (showToast = true): Promise<{
+    textModels: string[];
+    imgModels: string[];
+    audModels: string[];
+    selectedLlm: string;
+    selectedImage: string;
+    selectedAudio: string;
+  }> => {
     setIsFetchingModels(true);
     try {
       const allModels = await fetchModelsWithEndpoint(apiBaseUrl, apiKey || undefined);
@@ -127,19 +146,30 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
       setAudioModels(audModels);
 
       // Auto-select first model if current selection is empty or not in the new list
+      let selectedLlm = llmModel;
+      let selectedImage = imageModel;
+      let selectedAudio = audioModel;
+
       if (textModels.length > 0 && (!llmModel || !textModels.includes(llmModel))) {
-        setLlmModel(textModels[0]);
+        selectedLlm = textModels[0];
+        setLlmModel(selectedLlm);
       }
       if (imgModels.length > 0 && (!imageModel || !imgModels.includes(imageModel))) {
-        setImageModel(imgModels[0]);
+        selectedImage = imgModels[0];
+        setImageModel(selectedImage);
       }
       if (audModels.length > 0 && (!audioModel || !audModels.includes(audioModel))) {
-        setAudioModel(audModels[0]);
+        selectedAudio = audModels[0];
+        setAudioModel(selectedAudio);
       }
 
-      onShowToast('success', 'Models Loaded', `Found ${allModels.length} models`);
+      if (showToast) {
+        onShowToast('success', t.toast.modelsLoaded, t.toast.modelsLoadedCount.replace('{count}', String(allModels.length)));
+      }
+      return { textModels, imgModels, audModels, selectedLlm, selectedImage, selectedAudio };
     } catch (error) {
       onShowToast('error', t.toast.error, String(error));
+      throw error;
     } finally {
       setIsFetchingModels(false);
     }
@@ -151,7 +181,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
       await testConnectionWithEndpoint(apiBaseUrl, apiKey || undefined);
       onShowToast('success', t.settings.api.testSuccess);
       // Auto-refresh models after successful connection test
-      await handleFetchModels();
+      await handleFetchModels(true);
     } catch (error) {
       onShowToast('error', t.settings.api.testFailed, String(error));
     } finally {
@@ -159,24 +189,92 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
     }
   };
 
+  // Track if API credentials changed from saved config
+  const hasApiCredentialsChanged = (): boolean => {
+    if (!config) return true;
+    const endpointChanged = apiBaseUrl !== config.apiBaseUrl;
+    const keyChanged = apiKey !== '' && apiKey !== undefined; // New key entered
+    return endpointChanged || keyChanged;
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Step 1: Validate and fetch models if:
+      // - No models loaded yet, OR
+      // - No LLM model selected, OR  
+      // - API credentials have changed (need to re-validate)
+      let currentLlmModel = llmModel;
+      let currentModels = models;
+      let currentImageModels = imageModels;
+      let currentAudioModels = audioModels;
+      let currentImageModel = imageModel;
+      let currentAudioModel = audioModel;
+
+      const needsValidation = apiBaseUrl && (
+        models.length === 0 ||
+        !llmModel ||
+        hasApiCredentialsChanged()
+      );
+
+      if (needsValidation) {
+        try {
+          // Test connection first
+          await testConnectionWithEndpoint(apiBaseUrl, apiKey || undefined);
+          // Fetch models (auto-selects if needed)
+          const result = await handleFetchModels(false);
+          currentModels = result.textModels;
+          currentImageModels = result.imgModels;
+          currentAudioModels = result.audModels;
+          currentLlmModel = result.selectedLlm;
+          currentImageModel = result.selectedImage;
+          currentAudioModel = result.selectedAudio;
+        } catch {
+          // Connection or fetch failed - show error and stop
+          onShowToast('error', t.settings.api.testFailed, 'Please verify your API endpoint and credentials.');
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      // Step 2: Validate configuration
+      if (!apiBaseUrl) {
+        onShowToast('warning', t.toast.validationError, 'API endpoint is required');
+        setActiveTab('api');
+        setIsSaving(false);
+        return;
+      }
+
+      if (currentModels.length === 0) {
+        onShowToast('warning', t.toast.validationError, 'No models available. Please test connection to fetch models.');
+        setActiveTab('api');
+        setIsSaving(false);
+        return;
+      }
+
+      if (!currentLlmModel) {
+        onShowToast('warning', t.toast.validationError, t.toast.llmModelRequired);
+        setActiveTab('audio'); // Models tab
+        setIsSaving(false);
+        return;
+      }
+
+      // Step 3: All validations passed - save configuration
       const request: SaveConfigRequest = {
         hotkey,
         apiBaseUrl,
         apiKey: apiKey || undefined,
-        llmModel,
-        imageModel,
-        audioModel,
+        llmModel: currentLlmModel,
+        imageModel: currentImageModel,
+        audioModel: currentAudioModel,
         ttsModel,
         pasteBehavior,
         disableTextSelection,
         enableDebugLogging,
         copyDelayMs,
-        models,
-        imageModels,
-        audioModels,
+        models: currentModels,
+        imageModels: currentImageModels,
+        audioModels: currentAudioModels,
         historyLimit,
         mediaRetentionDays,
       };
@@ -194,13 +292,20 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
     <PageLayout
       title={t.settings.title}
       footer={
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="btn-primary"
-        >
-          {isSaving ? '⏳' : '💾'} {t.settings.save}
-        </button>
+        <div className="flex items-center gap-4">
+          {!isConfigComplete() && (
+            <span className="text-sm text-amber-600 dark:text-amber-400">
+              ⚠️ {getMissingConfigMessage()}
+            </span>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={isSaving || isFetchingModels}
+            className="btn-primary"
+          >
+            {isSaving || isFetchingModels ? '⏳' : '💾'} {t.settings.save}
+          </button>
+        </div>
       }
     >
       {/* Tabs */}
@@ -282,7 +387,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                 {t.settings.models.title}
               </h3>
               <button
-                onClick={handleFetchModels}
+                onClick={() => handleFetchModels(true)}
                 disabled={isFetchingModels}
                 className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -296,7 +401,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                 value={llmModel}
                 onChange={(e) => setLlmModel(e.target.value)}
                 options={models.map(m => ({ value: m, label: m }))}
-                placeholder="Select a model"
+                placeholder={t.common.selectModel}
               />
             </FormField>
 
@@ -306,7 +411,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                 value={imageModel}
                 onChange={(e) => setImageModel(e.target.value)}
                 options={imageModels.map(m => ({ value: m, label: m }))}
-                placeholder="Select a model"
+                placeholder={t.common.selectModel}
               />
             </FormField>
 
@@ -316,7 +421,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                 value={audioModel}
                 onChange={(e) => setAudioModel(e.target.value)}
                 options={audioModels.filter((m) => !m.toLowerCase().includes('tts')).map(m => ({ value: m, label: m }))}
-                placeholder="Select a model"
+                placeholder={t.common.selectModel}
               />
             </FormField>
 
@@ -355,7 +460,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                 />
                 {(isCapturingHotkey || isValidatingHotkey) && (
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-blue-500">
-                    {isValidatingHotkey ? 'Validating...' : 'Press keys...'}
+                    {isValidatingHotkey ? t.settings.general.hotkeyValidating : t.settings.general.hotkeyPressKeys}
                   </span>
                 )}
               </div>
@@ -409,13 +514,13 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
             {/* History Settings Section */}
             <div className="pt-6 border-t border-slate-200 dark:border-slate-700 mt-6">
               <h3 className="section-title mb-4">
-                History Settings
+                {t.settings.history.title}
               </h3>
 
               {/* History Limit */}
               <FormField
-                label="History Limit"
-                helpText="Maximum number of history entries to keep. Older entries will be automatically deleted."
+                label={t.settings.history.historyLimit}
+                helpText={t.settings.history.historyLimitDesc}
               >
                 <FormInput
                   type="number"
@@ -423,14 +528,14 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
                   max="10000"
                   step="10"
                   value={historyLimit}
-                  onChange={(e) => setHistoryLimit(Math.max(10, Math.min(10000, parseInt(e.target.value) || 200)))}
+                  onChange={(e) => setHistoryLimit(Math.max(10, Math.min(10000, parseInt(e.target.value) || 100)))}
                 />
               </FormField>
 
               {/* Media Retention Days */}
               <FormField
-                label="Media Retention (Days)"
-                helpText="Number of days to keep generated images and audio files. Set to 0 to keep forever."
+                label={t.settings.history.mediaRetention}
+                helpText={t.settings.history.mediaRetentionDesc}
               >
                 <FormInput
                   type="number"

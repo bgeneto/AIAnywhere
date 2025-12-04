@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { useI18n } from '../i18n';
 import { useHotkeyCapture } from '../hooks/useHotkeyCapture';
 import { SaveConfigRequest, PasteBehavior, ToastType } from '../types';
 
@@ -8,14 +9,15 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ onShowToast }: SettingsModalProps) {
-  const { 
-    config, 
-    closeModal, 
-    saveConfig, 
-    fetchModels, 
+  const {
+    config,
+    closeModal,
+    saveConfig,
+    fetchModels,
     testConnection,
-    loadConfig 
+    loadConfig
   } = useApp();
+  const { t } = useI18n();
 
   // Form state
   const [hotkey, setHotkey] = useState('');
@@ -29,8 +31,8 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
   const [disableTextSelection, setDisableTextSelection] = useState(false);
   const [enableDebugLogging, setEnableDebugLogging] = useState(false);
   const [copyDelayMs, setCopyDelayMs] = useState(200);
-  const [historyLimit, setHistoryLimit] = useState(500);
-  const [mediaRetentionDays, setMediaRetentionDays] = useState(0);
+  const [historyLimit, setHistoryLimit] = useState(100);
+  const [mediaRetentionDays, setMediaRetentionDays] = useState(30);
 
   // Model lists
   const [models, setModels] = useState<string[]>([]);
@@ -52,10 +54,10 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
   } = useHotkeyCapture({
     onHotkeyCapture: setHotkey,
     onBlockedHotkey: (_hotkey, reason) => {
-      onShowToast('warning', 'Blocked Hotkey', reason);
+      onShowToast('warning', t.toast.blockedHotkey, reason);
     },
     onUnavailableHotkey: (_hotkey, reason) => {
-      onShowToast('error', 'Hotkey Unavailable', reason);
+      onShowToast('error', t.toast.hotkeyUnavailable, reason);
     },
     currentHotkey: config?.hotkey,
   });
@@ -76,8 +78,8 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
       setModels(config.models);
       setImageModels(config.imageModels);
       setAudioModels(config.audioModels);
-      setHistoryLimit(config.historyLimit ?? 500);
-      setMediaRetentionDays(config.mediaRetentionDays ?? 0);
+      setHistoryLimit(config.historyLimit ?? 100);
+      setMediaRetentionDays(config.mediaRetentionDays ?? 30);
     }
   }, [config]);
 
@@ -85,33 +87,33 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
     setIsFetchingModels(true);
     try {
       const allModels = await fetchModels();
-      
+
       // Categorize models
-      const textModels = allModels.filter(m => 
-        !m.includes('dall-e') && 
-        !m.includes('whisper') && 
+      const textModels = allModels.filter(m =>
+        !m.includes('dall-e') &&
+        !m.includes('whisper') &&
         !m.includes('tts') &&
         !m.includes('embedding')
       );
-      const imgModels = allModels.filter(m => 
-        m.includes('dall-e') || 
-        m.includes('flux') || 
+      const imgModels = allModels.filter(m =>
+        m.includes('dall-e') ||
+        m.includes('flux') ||
         m.includes('image') ||
         m.includes('FLUX')
       );
-      const audModels = allModels.filter(m => 
-        m.includes('whisper') || 
+      const audModels = allModels.filter(m =>
+        m.includes('whisper') ||
         m.includes('tts') ||
         m.includes('audio')
       );
-      
+
       setModels(textModels);
       setImageModels(imgModels);
       setAudioModels(audModels);
-      
-      onShowToast('success', 'Models Loaded', `Found ${allModels.length} models`);
+
+      onShowToast('success', t.toast.modelsLoaded, t.toast.modelsLoadedCount.replace('{count}', String(allModels.length)));
     } catch (error) {
-      onShowToast('error', 'Error', String(error));
+      onShowToast('error', t.toast.error, String(error));
     } finally {
       setIsFetchingModels(false);
     }
@@ -121,9 +123,9 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
     setIsTesting(true);
     try {
       await testConnection();
-      onShowToast('success', 'Connected', 'API connection successful');
+      onShowToast('success', t.settings.api.testSuccess, t.toast.connectionSuccess);
     } catch (error) {
-      onShowToast('error', 'Connection Failed', String(error));
+      onShowToast('error', t.settings.api.testFailed, String(error));
     } finally {
       setIsTesting(false);
     }
@@ -132,7 +134,7 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
   const handleSave = async () => {
     // Validation
     if (!llmModel) {
-      onShowToast('error', 'Validation Error', 'LLM Model is required');
+      onShowToast('error', t.toast.validationError, t.toast.llmModelRequired);
       return;
     }
 
@@ -156,14 +158,14 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
         historyLimit,
         mediaRetentionDays,
       };
-      
+
       await saveConfig(request);
       await loadConfig();
-      
-      onShowToast('success', 'Saved', 'Settings saved successfully');
+
+      onShowToast('success', t.toast.success, t.toast.settingsSaved);
       closeModal();
     } catch (error) {
-      onShowToast('error', 'Error', String(error));
+      onShowToast('error', t.toast.error, String(error));
     } finally {
       setIsSaving(false);
     }
@@ -175,7 +177,7 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            ⚙️ Settings
+            ⚙️ {t.settings.title}
           </h2>
           <button
             onClick={closeModal}
@@ -190,13 +192,13 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
           {/* General Settings */}
           <section className="space-y-4">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              General
+              {t.settings.general.title}
             </h3>
-            
+
             {/* Hotkey */}
             <div className="space-y-1">
               <label className="form-label">
-                Global Hotkey
+                {t.settings.general.hotkey}
               </label>
               <input
                 type="text"
@@ -206,12 +208,12 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
                 onFocus={startHotkeyCapture}
                 onBlur={stopHotkeyCapture}
                 onKeyDown={handleHotkeyKeyDown}
-                placeholder={isValidatingHotkey ? 'Validating...' : (isCapturingHotkey ? 'Press key combination...' : 'Click to capture')}
+                placeholder={isValidatingHotkey ? t.settings.general.hotkeyValidating : (isCapturingHotkey ? t.settings.general.hotkeyPressKeys : t.settings.general.hotkeyPlaceholder)}
                 className={`w-full px-3 py-2 text-sm rounded-lg border 
                            ${isCapturingHotkey || isValidatingHotkey
-                             ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' 
-                             : 'border-slate-300 dark:border-slate-600'
-                           }
+                    ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800'
+                    : 'border-slate-300 dark:border-slate-600'
+                  }
                            bg-white dark:bg-slate-800 text-slate-900 dark:text-white
                            cursor-pointer transition-all duration-200 disabled:opacity-50`}
               />
@@ -220,16 +222,16 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
             {/* Paste Behavior */}
             <div className="space-y-1">
               <label className="form-label">
-                Paste Behavior
+                {t.settings.general.pasteBehavior}
               </label>
               <select
                 value={pasteBehavior}
                 onChange={(e) => setPasteBehavior(e.target.value as PasteBehavior)}
                 className="form-input-sm"
               >
-                <option value="autoPaste">Auto Paste</option>
-                <option value="clipboardMode">Clipboard Mode</option>
-                <option value="reviewMode">Review Mode</option>
+                <option value="autoPaste">{t.settings.general.autoPaste}</option>
+                <option value="clipboardMode">{t.settings.general.clipboardMode}</option>
+                <option value="reviewMode">{t.settings.general.reviewMode}</option>
               </select>
             </div>
           </section>
@@ -237,19 +239,19 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
           {/* API Settings */}
           <section className="space-y-4">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              API Configuration
+              {t.settings.api.configuration}
             </h3>
-            
+
             {/* API Base URL */}
             <div className="space-y-1">
               <label className="form-label">
-                API Base URL
+                {t.settings.api.endpoint}
               </label>
               <input
                 type="url"
                 value={apiBaseUrl}
                 onChange={(e) => setApiBaseUrl(e.target.value)}
-                placeholder="https://api.openai.com/v1"
+                placeholder={t.settings.api.endpointPlaceholder}
                 className="form-input-sm"
               />
             </div>
@@ -257,13 +259,13 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
             {/* API Key */}
             <div className="space-y-1">
               <label className="form-label">
-                API Key {config?.apiKeySet && <span className="text-green-500">(Set)</span>}
+                {t.settings.api.apiKey} {config?.apiKeySet && <span className="text-green-500">({t.common.confirm})</span>}
               </label>
               <input
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder={config?.apiKeySet ? '••••••••••••' : 'Enter your API key'}
+                placeholder={config?.apiKeySet ? '••••••••••••' : t.settings.api.apiKeyPlaceholder}
                 className="form-input-sm"
               />
             </div>
@@ -278,7 +280,7 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
                            hover:bg-slate-100 dark:hover:bg-slate-800 
                            disabled:opacity-50 transition-colors"
               >
-                {isTesting ? '⏳ Testing...' : '📡 Test Connection'}
+                {isTesting ? `⏳ ${t.common.loading}` : `📡 ${t.settings.api.testConnection}`}
               </button>
               <button
                 onClick={handleFetchModels}
@@ -288,7 +290,7 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
                            hover:bg-slate-100 dark:hover:bg-slate-800 
                            disabled:opacity-50 transition-colors"
               >
-                {isFetchingModels ? '⏳ Loading...' : '🔄 Get Models'}
+                {isFetchingModels ? `⏳ ${t.common.loading}` : `🔄 ${t.settings.api.refreshModels}`}
               </button>
             </div>
           </section>
@@ -296,13 +298,13 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
           {/* Model Selection */}
           <section className="space-y-4">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              Models
+              {t.settings.models.title}
             </h3>
-            
+
             {/* Text Model */}
             <div className="space-y-1">
               <label className="form-label">
-                Text Model <span className="text-red-500">*</span>
+                {t.settings.api.textModel} <span className="text-red-500">*</span>
               </label>
               <select
                 value={llmModel}
@@ -319,7 +321,7 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
             {/* Image Model */}
             <div className="space-y-1">
               <label className="form-label">
-                Image Model
+                {t.settings.api.imageModel}
               </label>
               <select
                 value={imageModel}
@@ -336,7 +338,7 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
             {/* Audio Model */}
             <div className="space-y-1">
               <label className="form-label">
-                Audio Model (STT)
+                {t.settings.api.audioModel}
               </label>
               <select
                 value={audioModel}
@@ -354,9 +356,9 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
           {/* Performance Settings */}
           <section className="space-y-4">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              Performance
+              {t.settings.general.title}
             </h3>
-            
+
             <div className="space-y-3">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
@@ -368,10 +370,10 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
                 />
                 <div>
                   <span className="form-label">
-                    Disable Text Selection
+                    {t.settings.general.disableTextSelection}
                   </span>
                   <p className="help-text">
-                    Faster window opening, no auto text capture
+                    {t.settings.general.disableTextSelectionDesc}
                   </p>
                 </div>
               </label>
@@ -386,10 +388,10 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
                 />
                 <div>
                   <span className="form-label">
-                    Enable Debug Logging
+                    {t.settings.general.enableDebugLogging}
                   </span>
                   <p className="help-text">
-                    Log API requests for troubleshooting
+                    {t.settings.general.enableDebugLoggingDesc}
                   </p>
                 </div>
               </label>
@@ -403,14 +405,14 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
             onClick={closeModal}
             className="btn-outline"
           >
-            Cancel
+            {t.settings.cancel}
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
             className="btn-primary"
           >
-            {isSaving ? '⏳ Saving...' : '✓ Save'}
+            {isSaving ? `⏳ ${t.common.loading}` : `✓ ${t.settings.save}`}
           </button>
         </div>
       </div>

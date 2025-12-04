@@ -95,6 +95,30 @@ export function HomePage({ onShowToast }: HomePageProps) {
     }
   };
 
+  // Map operation type to translation key
+  const getOperationLabel = (op: { type: string; name: string }): string => {
+    const typeToKey: Record<string, keyof typeof t.operations> = {
+      'generalChat': 'customTask',
+      'emailReply': 'emailReply',
+      'imageGeneration': 'imageGeneration',
+      'speechToText': 'speechToText',
+      'textToSpeech': 'textToSpeech',
+      'textRewrite': 'textRewrite',
+      'textTranslation': 'textTranslation',
+      'textSummarization': 'textSummarization',
+      'whatsAppResponse': 'whatsAppResponse',
+      'unicodeSymbols': 'unicodeSymbols',
+    };
+    
+    const key = typeToKey[op.type];
+    if (key && t.operations[key]) {
+      // Get the emoji from the original name (first character or two if emoji)
+      const emoji = op.name.match(/^[\p{Emoji}\u200d]+/u)?.[0] || '';
+      return emoji ? `${emoji} ${t.operations[key]}` : t.operations[key];
+    }
+    return op.name;
+  };
+
   const selectOptions = useMemo(() => {
     const opts: Option[] = [];
 
@@ -102,8 +126,8 @@ export function HomePage({ onShowToast }: HomePageProps) {
     operations.forEach(op => {
       opts.push({
         value: op.type,
-        label: op.name,
-        group: 'Default Tasks'
+        label: getOperationLabel(op),
+        group: t.home.defaultTasks || 'Default Tasks'
       });
     });
 
@@ -117,7 +141,7 @@ export function HomePage({ onShowToast }: HomePageProps) {
     });
 
     return opts;
-  }, [operations, customTasks, t.home.customTasks]);
+  }, [operations, customTasks, t.home.customTasks, t.home.defaultTasks, t.operations]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     // Ctrl/Cmd + Enter to send

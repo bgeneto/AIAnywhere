@@ -122,7 +122,7 @@ export function AboutPage() {
                     {/* Tech Stack */}
                     <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
                         <h3 className="section-title">
-                            Built With
+                            {t.about.builtWith}
                         </h3>
                         <div className="flex flex-wrap gap-2">
                             {['Tauri 2.0', 'Rust', 'React', 'TypeScript', 'Tailwind CSS'].map((tech) => (

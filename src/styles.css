@@ -181,7 +181,7 @@ textarea {
 }
 
 .settings-row {
-  @apply p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg;
+  @apply p-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg;
 }
 
 /* ============================================
