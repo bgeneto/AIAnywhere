@@ -39,6 +39,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   const [models, setModels] = useState<string[]>([]);
   const [imageModels, setImageModels] = useState<string[]>([]);
   const [audioModels, setAudioModels] = useState<string[]>([]);
+  const [ttsModels, setTtsModels] = useState<string[]>([]);
 
   // UI state
   const [isTesting, setIsTesting] = useState(false);
@@ -91,6 +92,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
       setModels(config.models);
       setImageModels(config.imageModels);
       setAudioModels(config.audioModels);
+      setTtsModels(config.ttsModels || []);
       setHistoryLimit(config.historyLimit ?? 100);
       setMediaRetentionDays(config.mediaRetentionDays ?? 30);
     }
@@ -105,69 +107,70 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   const handleHotkeyKeyDown = hotkeyKeyDownHandler;
 
   const handleFetchModels = async (showToast = true): Promise<{
-    textModels: string[];
-    imgModels: string[];
-    audModels: string[];
+    allModels: string[];
     selectedLlm: string;
     selectedImage: string;
     selectedAudio: string;
+    selectedTts: string;
   }> => {
     setIsFetchingModels(true);
     try {
       const allModels = await fetchModelsWithEndpoint(apiBaseUrl, apiKey || undefined);
 
-      // Filter models more accurately - exclude image/audio/embedding models from text models
-      const textModels = allModels.filter((m: string) => {
-        const lower = m.toLowerCase();
-        return !lower.includes('dall-e') &&
-          !lower.includes('whisper') &&
-          !lower.includes('tts') &&
-          !lower.includes('embedding') &&
-          !lower.includes('flux') &&
-          !lower.includes('image') &&
-          !lower.includes('stable-diffusion') &&
-          !lower.includes('audio');
-      });
-      const imgModels = allModels.filter((m: string) => {
-        const lower = m.toLowerCase();
-        return lower.includes('dall-e') ||
-          lower.includes('flux') ||
-          lower.includes('image') ||
-          lower.includes('stable-diffusion');
-      });
-      const audModels = allModels.filter((m: string) => {
-        const lower = m.toLowerCase();
-        return lower.includes('whisper') ||
-          lower.includes('tts') ||
-          lower.includes('audio');
-      });
+      // Helper function to find first matching model for pre-selection
+      const findFirstMatch = (
+        modelList: string[],
+        patterns: string[]
+      ): string | undefined => {
+        for (const model of modelList) {
+          const lower = model.toLowerCase();
+          if (patterns.some(pattern => lower.includes(pattern))) {
+            return model;
+          }
+        }
+        return undefined;
+      };
 
-      setModels(textModels);
-      setImageModels(imgModels);
-      setAudioModels(audModels);
+      // All model lists now show all available models
+      setModels(allModels);
+      setImageModels(allModels);
+      setAudioModels(allModels);
+      setTtsModels(allModels);
 
-      // Auto-select first model if current selection is empty or not in the new list
+      // Pre-select models using pattern matching (only if current selection is empty or not in the list)
       let selectedLlm = llmModel;
       let selectedImage = imageModel;
       let selectedAudio = audioModel;
+      let selectedTts = ttsModel;
 
-      if (textModels.length > 0 && (!llmModel || !textModels.includes(llmModel))) {
-        selectedLlm = textModels[0];
+      // Pre-select text model (prioritize "free" models)
+      if (allModels.length > 0 && (!llmModel || !allModels.includes(llmModel))) {
+        selectedLlm = findFirstMatch(allModels, ['free']) || allModels[0];
         setLlmModel(selectedLlm);
       }
-      if (imgModels.length > 0 && (!imageModel || !imgModels.includes(imageModel))) {
-        selectedImage = imgModels[0];
+
+      // Pre-select image model
+      if (allModels.length > 0 && (!imageModel || !allModels.includes(imageModel))) {
+        selectedImage = findFirstMatch(allModels, ['dall-e', 'flux', 'image', 'stable-diffusion']) || '';
         setImageModel(selectedImage);
       }
-      if (audModels.length > 0 && (!audioModel || !audModels.includes(audioModel))) {
-        selectedAudio = audModels[0];
+
+      // Pre-select audio/STT model
+      if (allModels.length > 0 && (!audioModel || !allModels.includes(audioModel))) {
+        selectedAudio = findFirstMatch(allModels, ['whisper', 'audio']) || '';
         setAudioModel(selectedAudio);
+      }
+
+      // Pre-select TTS model
+      if (allModels.length > 0 && (!ttsModel || !allModels.includes(ttsModel))) {
+        selectedTts = findFirstMatch(allModels, ['tts']) || '';
+        setTtsModel(selectedTts);
       }
 
       if (showToast) {
         onShowToast('success', t.toast.modelsLoaded, t.toast.modelsLoadedCount.replace('{count}', String(allModels.length)));
       }
-      return { textModels, imgModels, audModels, selectedLlm, selectedImage, selectedAudio };
+      return { allModels, selectedLlm, selectedImage, selectedAudio, selectedTts };
     } catch (error) {
       const { title, message } = parseApiError(String(error), t);
       onShowToast('error', title, message);
@@ -209,10 +212,9 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
       // - API credentials have changed (need to re-validate)
       let currentLlmModel = llmModel;
       let currentModels = models;
-      let currentImageModels = imageModels;
-      let currentAudioModels = audioModels;
       let currentImageModel = imageModel;
       let currentAudioModel = audioModel;
+      let currentTtsModel = ttsModel;
 
       const needsValidation = apiBaseUrl && (
         models.length === 0 ||
@@ -226,12 +228,11 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
           await testConnectionWithEndpoint(apiBaseUrl, apiKey || undefined);
           // Fetch models (auto-selects if needed)
           const result = await handleFetchModels(false);
-          currentModels = result.textModels;
-          currentImageModels = result.imgModels;
-          currentAudioModels = result.audModels;
+          currentModels = result.allModels;
           currentLlmModel = result.selectedLlm;
           currentImageModel = result.selectedImage;
           currentAudioModel = result.selectedAudio;
+          currentTtsModel = result.selectedTts;
         } catch {
           // Connection or fetch failed - show error and stop
           onShowToast('error', t.settings.api.testFailed, t.toast.verifyCredentials);
@@ -255,6 +256,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
         return;
       }
 
+      // Only text model is required
       if (!currentLlmModel) {
         onShowToast('warning', t.toast.validationError, t.toast.llmModelRequired);
         setActiveTab('audio'); // Models tab
@@ -263,6 +265,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
       }
 
       // Step 3: All validations passed - save configuration
+      // All model types share the same list of available models
       const request: SaveConfigRequest = {
         hotkey,
         apiBaseUrl,
@@ -270,14 +273,15 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
         llmModel: currentLlmModel,
         imageModel: currentImageModel,
         audioModel: currentAudioModel,
-        ttsModel,
+        ttsModel: currentTtsModel,
         pasteBehavior,
         disableTextSelection,
         enableDebugLogging,
         copyDelayMs,
         models: currentModels,
-        imageModels: currentImageModels,
-        audioModels: currentAudioModels,
+        imageModels: currentModels,
+        audioModels: currentModels,
+        ttsModels: currentModels,
         historyLimit,
         mediaRetentionDays,
       };
@@ -423,18 +427,18 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
               <FormSelect
                 value={audioModel}
                 onChange={(e) => setAudioModel(e.target.value)}
-                options={audioModels.filter((m) => !m.toLowerCase().includes('tts')).map(m => ({ value: m, label: m }))}
+                options={audioModels.map(m => ({ value: m, label: m }))}
                 placeholder={t.common.selectModel}
               />
             </FormField>
 
             {/* TTS Model */}
             <FormField label={t.settings.api.ttsModel}>
-              <FormInput
-                type="text"
+              <FormSelect
                 value={ttsModel}
                 onChange={(e) => setTtsModel(e.target.value)}
-                placeholder="e.g., tts-1"
+                options={ttsModels.map(m => ({ value: m, label: m }))}
+                placeholder={t.common.selectModel}
               />
             </FormField>
           </div>

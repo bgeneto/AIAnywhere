@@ -81,6 +81,10 @@ pub struct Configuration {
     #[serde(default)]
     pub audio_models: Vec<String>,
 
+    /// Cached list of available TTS models
+    #[serde(default)]
+    pub tts_models: Vec<String>,
+
     /// Maximum number of history entries to keep (0 = unlimited)
     #[serde(default = "default_history_limit")]
     pub history_limit: usize,
@@ -132,6 +136,7 @@ impl Default for Configuration {
             models: Vec::new(),
             image_models: Vec::new(),
             audio_models: Vec::new(),
+            tts_models: Vec::new(),
             history_limit: default_history_limit(),
             media_retention_days: default_media_retention_days(),
         }
@@ -235,6 +240,7 @@ pub struct ConfigurationDto {
     pub models: Vec<String>,
     pub image_models: Vec<String>,
     pub audio_models: Vec<String>,
+    pub tts_models: Vec<String>,
     pub history_limit: usize,
     pub media_retention_days: u32,
 }
@@ -256,6 +262,7 @@ impl From<&Configuration> for ConfigurationDto {
             models: config.models.clone(),
             image_models: config.image_models.clone(),
             audio_models: config.audio_models.clone(),
+            tts_models: config.tts_models.clone(),
             history_limit: config.history_limit,
             media_retention_days: config.media_retention_days,
         }

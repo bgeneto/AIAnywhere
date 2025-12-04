@@ -21,6 +21,7 @@ export interface Configuration {
   models: string[];
   imageModels: string[];
   audioModels: string[];
+  ttsModels: string[];
   // History settings
   historyLimit: number;
   mediaRetentionDays: number;
@@ -41,6 +42,7 @@ export interface SaveConfigRequest {
   models: string[];
   imageModels: string[];
   audioModels: string[];
+  ttsModels: string[];
   // History settings
   historyLimit: number;
   mediaRetentionDays: number;

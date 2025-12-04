@@ -553,6 +553,14 @@ impl LlmService {
 
     /// Process image generation requests
     async fn process_image_generation(&self, request: &LlmRequest) -> LlmResponse {
+        // Check if an image model is configured
+        if self.config.image_model.is_empty() {
+            return LlmResponse::error(
+                "No Image Generation model configured. Please select an Image model in Settings > Models."
+                    .to_string(),
+            );
+        }
+
         let size_string = request
             .options
             .get("size")
@@ -570,11 +578,7 @@ impl LlmService {
             .map(|s| s.as_str())
             .unwrap_or("vivid");
 
-        let model = if !self.config.image_model.is_empty() {
-            &self.config.image_model
-        } else {
-            "FLUX.1-schnell"
-        };
+        let model = &self.config.image_model;
 
         let body = json!({
             "model": model,
@@ -625,7 +629,15 @@ impl LlmService {
                         println!("Error Body: {}", error_text);
                         println!("-------------------------------");
                     }
-                    return LlmResponse::error(format!("Image Generation Error: {}", error_text));
+                    return LlmResponse::error(format!(
+                        "Image Generation Error (status {}): {}",
+                        status.as_u16(),
+                        if error_text.is_empty() {
+                            status.canonical_reason().unwrap_or("Unknown error")
+                        } else {
+                            &error_text
+                        }
+                    ));
                 }
 
                 let text = resp.text().await.unwrap_or_default();
@@ -663,11 +675,15 @@ impl LlmService {
             _ => return LlmResponse::error("Audio file not found or not specified".to_string()),
         };
 
-        let model = if !self.config.audio_model.is_empty() {
-            &self.config.audio_model
-        } else {
-            "whisper-1"
-        };
+        // Check if an audio/STT model is configured
+        if self.config.audio_model.is_empty() {
+            return LlmResponse::error(
+                "No Speech-to-Text model configured. Please select an Audio model in Settings > Models."
+                    .to_string(),
+            );
+        }
+
+        let model = &self.config.audio_model;
 
         let language = request
             .options
@@ -737,7 +753,15 @@ impl LlmService {
                         println!("Error Body: {}", error_text);
                         println!("-------------------------------");
                     }
-                    return LlmResponse::error(format!("Transcription Error: {}", error_text));
+                    return LlmResponse::error(format!(
+                        "Transcription Error (status {}): {}",
+                        status.as_u16(),
+                        if error_text.is_empty() {
+                            status.canonical_reason().unwrap_or("Unknown error")
+                        } else {
+                            &error_text
+                        }
+                    ));
                 }
 
                 let text = resp.text().await.unwrap_or_default();
@@ -779,6 +803,14 @@ impl LlmService {
             .get("model")
             .map(|s| s.as_str())
             .unwrap_or(&self.config.tts_model);
+
+        // Check if a TTS model is configured
+        if model.is_empty() {
+            return LlmResponse::error(
+                "No Text-to-Speech model configured. Please select a TTS model in Settings > Models."
+                    .to_string(),
+            );
+        }
 
         let voice = request
             .options
@@ -850,7 +882,15 @@ impl LlmService {
                         println!("Error Body: {}", error_text);
                         println!("-------------------------------");
                     }
-                    return LlmResponse::error(format!("TTS Error: {}", error_text));
+                    return LlmResponse::error(format!(
+                        "TTS Error (status {}): {}",
+                        status.as_u16(),
+                        if error_text.is_empty() {
+                            status.canonical_reason().unwrap_or("Unknown error")
+                        } else {
+                            &error_text
+                        }
+                    ));
                 }
 
                 match resp.bytes().await {

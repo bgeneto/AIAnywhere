@@ -150,6 +150,7 @@ struct SaveConfigRequest {
     models: Vec<String>,
     image_models: Vec<String>,
     audio_models: Vec<String>,
+    tts_models: Vec<String>,
     history_limit: usize,
     media_retention_days: u32,
 }
@@ -174,6 +175,7 @@ async fn save_configuration(
     config.models = request.models;
     config.image_models = request.image_models;
     config.audio_models = request.audio_models;
+    config.tts_models = request.tts_models;
     config.history_limit = request.history_limit;
     config.media_retention_days = request.media_retention_days;
 

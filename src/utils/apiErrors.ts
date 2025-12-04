@@ -24,8 +24,8 @@ export function parseApiError(error: string | undefined | null, t: Translations)
   }
 
   // Check for HTTP status codes in the error message
-  // Matches patterns like: "code":401, "code": 401, status: 401, status 401
-  const statusCodeMatch = error.match(/"code"\s*:\s*(\d{3})|status[:\s]+(\d{3})/i);
+  // Matches patterns like: "code":401, "code": 401, status: 401, status 401, (status 401)
+  const statusCodeMatch = error.match(/"code"\s*:\s*(\d{3})|status[:\s(]+(\d{3})/i);
   const statusCode = statusCodeMatch ? parseInt(statusCodeMatch[1] || statusCodeMatch[2], 10) : null;
 
   // Also check for common error patterns in the message
@@ -59,6 +59,13 @@ export function parseApiError(error: string | undefined | null, t: Translations)
       lowerError.includes('no such') ||
       lowerError.includes('does not exist')) {
     return { title: t.toast.apiNotFoundError, message: t.toast.apiNotFoundErrorDesc };
+  }
+
+  // 405 Method Not Allowed - Feature not supported by provider
+  if (statusCode === 405 || 
+      lowerError.includes('method not allowed') ||
+      lowerError.includes('not supported')) {
+    return { title: t.toast.apiMethodNotAllowedError, message: t.toast.apiMethodNotAllowedErrorDesc };
   }
 
   // 429 Rate Limit - Too many requests

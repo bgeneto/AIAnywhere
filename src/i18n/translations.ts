@@ -299,6 +299,8 @@ export interface Translations {
     apiForbiddenErrorDesc: string;
     apiNotFoundError: string;
     apiNotFoundErrorDesc: string;
+    apiMethodNotAllowedError: string;
+    apiMethodNotAllowedErrorDesc: string;
     apiRateLimitError: string;
     apiRateLimitErrorDesc: string;
     apiServerError: string;
@@ -676,6 +678,8 @@ export const translations: Record<Language, Translations> = {
       apiForbiddenErrorDesc: 'You don\'t have permission to access this resource. Check your API key permissions.',
       apiNotFoundError: 'Endpoint Not Found',
       apiNotFoundErrorDesc: 'The API endpoint was not found. Please verify the API URL in Settings.',
+      apiMethodNotAllowedError: 'Feature Not Supported',
+      apiMethodNotAllowedErrorDesc: 'This feature (e.g., TTS, STT, Image) is not supported by your current API provider. Try a different provider or endpoint.',
       apiRateLimitError: 'Rate Limit Exceeded',
       apiRateLimitErrorDesc: 'Too many requests. Please wait a moment and try again.',
       apiServerError: 'Server Error',
@@ -1043,6 +1047,8 @@ export const translations: Record<Language, Translations> = {
       apiForbiddenErrorDesc: 'Você não tem permissão para acessar este recurso. Verifique as permissões da sua chave de API.',
       apiNotFoundError: 'Endpoint Não Encontrado',
       apiNotFoundErrorDesc: 'O endpoint da API não foi encontrado. Verifique a URL da API nas Configurações.',
+      apiMethodNotAllowedError: 'Recurso Não Suportado',
+      apiMethodNotAllowedErrorDesc: 'Este recurso (ex: TTS, STT, Imagem) não é suportado pelo seu provedor de API atual. Tente um provedor ou endpoint diferente.',
       apiRateLimitError: 'Limite de Requisições Excedido',
       apiRateLimitErrorDesc: 'Muitas requisições. Aguarde um momento e tente novamente.',
       apiServerError: 'Erro do Servidor',
