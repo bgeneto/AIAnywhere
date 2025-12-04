@@ -35,6 +35,9 @@ export interface Translations {
     generating: string;
     waitingForResponse: string;
     promptHint: string;
+    tokenCount: string;
+    tokenWarning: string;
+    tokenError: string;
   };
 
   // Operations
@@ -174,6 +177,7 @@ export interface Translations {
       testSuccess: string;
       testFailed: string;
       saveApiSettings: string;
+      apiKeyRequiredForNewEndpoint: string;
     };
 
     // Language Settings
@@ -288,6 +292,21 @@ export interface Translations {
     settingsSaved: string;
     blockedHotkey: string;
     hotkeyUnavailable: string;
+    // API error messages
+    apiAuthError: string;
+    apiAuthErrorDesc: string;
+    apiForbiddenError: string;
+    apiForbiddenErrorDesc: string;
+    apiNotFoundError: string;
+    apiNotFoundErrorDesc: string;
+    apiRateLimitError: string;
+    apiRateLimitErrorDesc: string;
+    apiServerError: string;
+    apiServerErrorDesc: string;
+    apiNetworkError: string;
+    apiNetworkErrorDesc: string;
+    apiTimeoutError: string;
+    apiTimeoutErrorDesc: string;
   };
 
   // Common
@@ -394,6 +413,9 @@ export const translations: Record<Language, Translations> = {
       generating: 'Generating...',
       waitingForResponse: 'Waiting for response...',
       promptHint: '💡 Tip: Use Ctrl+Enter to send the prompt.',
+      tokenCount: '~{count} of {max} max. tokens',
+      tokenWarning: 'Approaching token limit',
+      tokenError: 'Prompt too long (~{count} tokens). Maximum: {max}',
     },
 
     operations: {
@@ -529,6 +551,7 @@ export const translations: Record<Language, Translations> = {
         testSuccess: 'Connection successful!',
         testFailed: 'Connection failed',
         saveApiSettings: 'Save API Settings',
+        apiKeyRequiredForNewEndpoint: 'Please provide an API key for the new endpoint.',
       },
 
       language: {
@@ -642,6 +665,21 @@ export const translations: Record<Language, Translations> = {
       settingsSaved: 'Settings saved successfully',
       blockedHotkey: 'Blocked Hotkey',
       hotkeyUnavailable: 'Hotkey Unavailable',
+      // API error messages
+      apiAuthError: 'Authentication Failed',
+      apiAuthErrorDesc: 'Invalid API key. Please check your credentials in Settings.',
+      apiForbiddenError: 'Access Denied',
+      apiForbiddenErrorDesc: 'You don\'t have permission to access this resource. Check your API key permissions.',
+      apiNotFoundError: 'Endpoint Not Found',
+      apiNotFoundErrorDesc: 'The API endpoint was not found. Please verify the API URL in Settings.',
+      apiRateLimitError: 'Rate Limit Exceeded',
+      apiRateLimitErrorDesc: 'Too many requests. Please wait a moment and try again.',
+      apiServerError: 'Server Error',
+      apiServerErrorDesc: 'The API server encountered an error. Please try again later.',
+      apiNetworkError: 'Network Error',
+      apiNetworkErrorDesc: 'Unable to connect to the API. Please check your internet connection.',
+      apiTimeoutError: 'Request Timeout',
+      apiTimeoutErrorDesc: 'The request took too long. Please try again.',
     },
 
     common: {
@@ -744,6 +782,9 @@ export const translations: Record<Language, Translations> = {
       generating: 'Gerando...',
       waitingForResponse: 'Aguardando resposta...',
       promptHint: '💡 Dica: Use Ctrl+Enter para enviar o prompt.',
+      tokenCount: '~{count} de {max} max. tokens',
+      tokenWarning: 'Aproximando-se do limite de tokens',
+      tokenError: 'Prompt muito longo (~{count} tokens). Máximo: {max}',
     },
 
     operations: {
@@ -879,6 +920,7 @@ export const translations: Record<Language, Translations> = {
         testSuccess: 'Conexão bem-sucedida!',
         testFailed: 'Falha na conexão',
         saveApiSettings: 'Salvar Configurações de API',
+        apiKeyRequiredForNewEndpoint: 'Por favor, forneça uma chave de API para o novo endpoint.',
       },
 
       language: {
@@ -986,6 +1028,21 @@ export const translations: Record<Language, Translations> = {
       connectionSuccess: 'Conexão com API bem-sucedida',
       connectionFailed: 'Falha na conexão com API',
       modelsLoaded: 'Modelos Carregados',
+      // API error messages
+      apiAuthError: 'Falha na Autenticação',
+      apiAuthErrorDesc: 'Chave de API inválida. Verifique suas credenciais nas Configurações.',
+      apiForbiddenError: 'Acesso Negado',
+      apiForbiddenErrorDesc: 'Você não tem permissão para acessar este recurso. Verifique as permissões da sua chave de API.',
+      apiNotFoundError: 'Endpoint Não Encontrado',
+      apiNotFoundErrorDesc: 'O endpoint da API não foi encontrado. Verifique a URL da API nas Configurações.',
+      apiRateLimitError: 'Limite de Requisições Excedido',
+      apiRateLimitErrorDesc: 'Muitas requisições. Aguarde um momento e tente novamente.',
+      apiServerError: 'Erro do Servidor',
+      apiServerErrorDesc: 'O servidor da API encontrou um erro. Tente novamente mais tarde.',
+      apiNetworkError: 'Erro de Rede',
+      apiNetworkErrorDesc: 'Não foi possível conectar à API. Verifique sua conexão com a internet.',
+      apiTimeoutError: 'Tempo Esgotado',
+      apiTimeoutErrorDesc: 'A requisição demorou muito. Tente novamente.',
       modelsLoadedCount: 'Encontrados {count} modelos',
       validationError: 'Erro de Validação',
       llmModelRequired: 'Modelo LLM é obrigatório',

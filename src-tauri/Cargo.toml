@@ -1,6 +1,6 @@
 [package]
 name = "ai-anywhere"
-version = "1.3.3"
+version = "1.3.4"
 description = "AI Anywhere - Universal AI Assistant"
 authors = ["LABiA-FUP/UnB"]
 edition = "2021"

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -17,22 +17,50 @@ interface ToastProps {
 
 const Toast: React.FC<ToastProps> = ({ toast, onClose, duration = 2500 }) => {
   const [progress, setProgress] = useState(100);
+  const [isPaused, setIsPaused] = useState(false);
+  const progressRef = useRef(progress);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Keep progressRef in sync
+  useEffect(() => {
+    progressRef.current = progress;
+  }, [progress]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (isPaused) {
+      // Clear timers when paused
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
+    // Calculate remaining time based on current progress
+    const remainingTime = (progressRef.current / 100) * duration;
+
+    timerRef.current = setTimeout(() => {
       onClose(toast.id);
-    }, duration);
+    }, remainingTime);
 
     // Update progress bar every 50ms for smooth animation
-    const progressInterval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       setProgress((prev) => Math.max(0, prev - (100 / (duration / 50))));
     }, 50);
 
     return () => {
-      clearTimeout(timer);
-      clearInterval(progressInterval);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [toast.id, onClose, duration]);
+  }, [toast.id, onClose, duration, isPaused]);
+
+  const handleMouseEnter = () => setIsPaused(true);
+  const handleMouseLeave = () => setIsPaused(false);
 
   const icons = {
     success: '✓',
@@ -72,9 +100,11 @@ const Toast: React.FC<ToastProps> = ({ toast, onClose, duration = 2500 }) => {
   return (
     <div
       className={`
-        border rounded-lg overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg
+        border rounded-lg overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg cursor-default
         ${bgColors[toast.type]}
       `}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {/* Toast content */}
       <div className="flex gap-3 items-start p-4">

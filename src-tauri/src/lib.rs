@@ -206,9 +206,8 @@ async fn update_models(
 // ============================================================================
 
 #[tauri::command]
-async fn get_operations(state: State<'_, AppState>) -> Result<Vec<Operation>, String> {
-    let config = state.config.lock().map_err(|e| e.to_string())?;
-    Ok(operations::get_default_operations(&config.system_prompts))
+async fn get_operations() -> Result<Vec<Operation>, String> {
+    Ok(operations::get_default_operations())
 }
 
 // ============================================================================

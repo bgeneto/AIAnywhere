@@ -17,6 +17,36 @@ use crate::history::HistoryManager;
 use crate::operations::OperationType;
 use crate::text::{extract_size_dimensions, normalize_transcription, process_llm_response};
 
+/// Maximum estimated tokens allowed in a prompt (security limit)
+/// This matches the frontend limit to provide defense in depth
+const MAX_ESTIMATED_TOKENS: usize = 16000;
+
+/// Token estimation correction factor (20% safety margin)
+const TOKEN_CORRECTION_FACTOR: f64 = 1.20;
+
+/// Estimates the number of tokens in a text string.
+/// Uses word count * 1.33 * 1.20 as approximation (matches frontend logic).
+fn estimate_tokens(text: &str) -> usize {
+    if text.trim().is_empty() {
+        return 0;
+    }
+    let words: usize = text.split_whitespace().count();
+    ((words as f64) * 1.33 * TOKEN_CORRECTION_FACTOR).ceil() as usize
+}
+
+/// Validates that the prompt doesn't exceed the maximum token limit.
+/// Returns an error message if validation fails.
+fn validate_prompt_length(prompt: &str) -> Result<(), String> {
+    let estimated_tokens = estimate_tokens(prompt);
+    if estimated_tokens > MAX_ESTIMATED_TOKENS {
+        return Err(format!(
+            "Prompt too long (~{} estimated tokens). Maximum allowed: {} tokens.",
+            estimated_tokens, MAX_ESTIMATED_TOKENS
+        ));
+    }
+    Ok(())
+}
+
 /// LLM Request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -136,6 +166,11 @@ impl LlmService {
 
     /// Process an LLM request based on operation type
     pub async fn process_request(&self, request: LlmRequest) -> LlmResponse {
+        // Validate prompt length (security check - defense in depth)
+        if let Err(e) = validate_prompt_length(&request.prompt) {
+            return LlmResponse::error(e);
+        }
+
         // Try to parse as built-in operation type
         if let Ok(op_type) = serde_json::from_value::<OperationType>(json!(request.operation_type))
         {
@@ -173,6 +208,11 @@ impl LlmService {
         app: &AppHandle,
         cancel_flag: Arc<AtomicBool>,
     ) -> LlmResponse {
+        // Validate prompt length (security check - defense in depth)
+        if let Err(e) = validate_prompt_length(&request.prompt) {
+            return LlmResponse::error(e);
+        }
+
         // Only text operations support streaming
         if !Self::supports_streaming(&request.operation_type) {
             return LlmResponse::error(
@@ -180,7 +220,7 @@ impl LlmService {
             );
         }
 
-        let operations = crate::operations::get_default_operations(&self.config.system_prompts);
+        let operations = crate::operations::get_default_operations();
 
         // Try to find in default operations
         let mut system_prompt = String::new();
@@ -379,7 +419,7 @@ impl LlmService {
 
     /// Process text-based requests (chat completions)
     async fn process_text_request(&self, request: &LlmRequest) -> LlmResponse {
-        let operations = crate::operations::get_default_operations(&self.config.system_prompts);
+        let operations = crate::operations::get_default_operations();
 
         let mut system_prompt = String::new();
 

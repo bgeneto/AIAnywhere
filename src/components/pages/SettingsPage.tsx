@@ -4,8 +4,9 @@ import { useI18n } from '../../i18n/index';
 import { useHotkeyCapture } from '../../hooks/useHotkeyCapture';
 import { ToastType, SaveConfigRequest, PasteBehavior } from '../../types';
 import {
-  FormField, FormInput, FormSelect, SettingsToggle, PageLayout
+  FormField, FormInput, FormSelect, SettingsToggle, PageLayout, SearchableSelect
 } from '../ui';
+import { parseApiError } from '../../utils/apiErrors';
 
 type SettingsTab = 'api' | 'audio' | 'general';
 
@@ -168,7 +169,8 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
       }
       return { textModels, imgModels, audModels, selectedLlm, selectedImage, selectedAudio };
     } catch (error) {
-      onShowToast('error', t.toast.error, String(error));
+      const { title, message } = parseApiError(String(error), t);
+      onShowToast('error', title, message);
       throw error;
     } finally {
       setIsFetchingModels(false);
@@ -183,7 +185,8 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
       // Auto-refresh models after successful connection test
       await handleFetchModels(true);
     } catch (error) {
-      onShowToast('error', t.settings.api.testFailed, String(error));
+      const { title, message } = parseApiError(String(error), t);
+      onShowToast('error', title, message);
     } finally {
       setIsTesting(false);
     }
@@ -397,9 +400,9 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
 
             {/* Text Model */}
             <FormField label={t.settings.api.textModel}>
-              <FormSelect
+              <SearchableSelect
                 value={llmModel}
-                onChange={(e) => setLlmModel(e.target.value)}
+                onChange={(value) => setLlmModel(value)}
                 options={models.map(m => ({ value: m, label: m }))}
                 placeholder={t.common.selectModel}
               />

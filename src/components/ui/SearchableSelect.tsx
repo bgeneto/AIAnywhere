@@ -162,9 +162,9 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
                         <span className="text-slate-500 dark:text-slate-400">{placeholder}</span>
                     )}
                 </span>
-                <span className="ml-2 text-slate-400 flex-shrink-0">
+                <span className="ml-2 text-slate-600 dark:text-slate-400 flex-shrink-0">
                     <svg className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
                     </svg>
                 </span>
             </button>

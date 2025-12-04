@@ -6,6 +6,28 @@ import { OperationOptionsPanel } from '../OperationOptionsPanel';
 import { AudioUpload } from '../AudioUpload';
 import { ToastType } from '../../types';
 import { SearchableSelect, Option } from '../ui/SearchableSelect';
+import { parseApiError } from '../../utils/apiErrors';
+
+// Token estimation constants
+// Most LLMs use ~1.3 tokens per word for English (inverse of ~0.75 words per token)
+// We apply a 20% correction factor (1.20) to avoid underestimating
+// Conservative limit that works with most models (GPT-4, Claude, etc.)
+const MAX_ESTIMATED_TOKENS = 16000;
+const WARNING_THRESHOLD = 12000;
+const TOKEN_CORRECTION_FACTOR = 1.20; // 20% safety margin for underestimation
+
+/**
+ * Estimates the number of tokens in a text string.
+ * Uses word count * 1.33 * 1.20 as approximation:
+ * - 1.33: based on ~0.75 words per token for English
+ * - 1.20: correction factor to avoid underestimation
+ * This is a rough estimate - actual tokenization varies by model.
+ */
+const estimateTokens = (text: string): number => {
+  if (!text.trim()) return 0;
+  const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+  return Math.ceil(words * 1.33 * TOKEN_CORRECTION_FACTOR);
+};
 
 interface HomePageProps {
   onShowToast: (type: ToastType, title: string, message?: string) => void;
@@ -30,7 +52,10 @@ export function HomePage({ onShowToast }: HomePageProps) {
     cancelRequest,
   } = useApp();
 
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+
+  // Format numbers according to current locale (e.g., 8,000 in en vs 8.000 in pt-BR)
+  const formatNumber = useCallback((num: number) => num.toLocaleString(language), [language]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const streamingRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +78,11 @@ export function HomePage({ onShowToast }: HomePageProps) {
     onlyIfEmpty: false, // Always sync to keep in sync with latest clipboard
     currentText: promptText,
   });
+
+  // Token count estimation for the prompt text
+  const tokenCount = useMemo(() => estimateTokens(promptText), [promptText]);
+  const isOverTokenLimit = tokenCount > MAX_ESTIMATED_TOKENS;
+  const isNearTokenLimit = tokenCount > WARNING_THRESHOLD;
 
   // Focus textarea on mount
   useEffect(() => {
@@ -95,6 +125,12 @@ export function HomePage({ onShowToast }: HomePageProps) {
     }
   };
 
+  // Keycap emojis for custom tasks (1-10, then fallback to ⭐)
+  const getCustomTaskEmoji = (index: number): string => {
+    const keycaps = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
+    return index < keycaps.length ? keycaps[index] : '⭐';
+  };
+
   // Map operation type to translation key
   const getOperationLabel = (op: { type: string; name: string }): string => {
     const typeToKey: Record<string, keyof typeof t.operations> = {
@@ -109,7 +145,7 @@ export function HomePage({ onShowToast }: HomePageProps) {
       'whatsAppResponse': 'whatsAppResponse',
       'unicodeSymbols': 'unicodeSymbols',
     };
-    
+
     const key = typeToKey[op.type];
     if (key && t.operations[key]) {
       // Get the emoji from the original name (first character or two if emoji)
@@ -131,11 +167,11 @@ export function HomePage({ onShowToast }: HomePageProps) {
       });
     });
 
-    // Custom tasks
-    customTasks.forEach(task => {
+    // Custom tasks with numbered keycap emojis
+    customTasks.forEach((task, index) => {
       opts.push({
         value: task.id,
-        label: task.name,
+        label: `${getCustomTaskEmoji(index)} ${task.name}`,
         group: t.home.customTasks || 'My Tasks'
       });
     });
@@ -162,10 +198,20 @@ export function HomePage({ onShowToast }: HomePageProps) {
       return;
     }
 
+    // Check token limit before sending
+    if (isOverTokenLimit && selectedOperation.type !== 'speechToText') {
+      const errorMsg = t.home.tokenError
+        .replace('{count}', formatNumber(tokenCount))
+        .replace('{max}', formatNumber(MAX_ESTIMATED_TOKENS));
+      onShowToast('error', t.toast.error, errorMsg);
+      return;
+    }
+
     const response = await processRequestStreaming();
     if (response) {
       if (!response.success) {
-        onShowToast('error', t.toast.error, response.error || 'Request failed');
+        const { title, message } = parseApiError(response.error, t);
+        onShowToast('error', title, message);
       } else if (config?.pasteBehavior === 'clipboardMode') {
         // Notify user that content was copied to clipboard
         onShowToast('success', t.toast.success, t.review.copied);
@@ -266,17 +312,42 @@ export function HomePage({ onShowToast }: HomePageProps) {
                   onChange={(e) => setPromptText(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={t.home.enterPrompt}
-                  className={`w-full px-4 py-3 text-sm rounded-lg border border-slate-300 dark:border-slate-600 
+                  className={`w-full px-4 py-3 text-sm rounded-lg border transition-colors duration-200
+                             ${isOverTokenLimit
+                      ? 'border-red-400 dark:border-red-500 focus:ring-red-500'
+                      : isNearTokenLimit
+                        ? 'border-amber-400 dark:border-amber-500 focus:ring-amber-500'
+                        : 'border-slate-300 dark:border-slate-600 focus:ring-blue-500'
+                    }
                              bg-white dark:bg-slate-800 text-slate-900 dark:text-white
                              placeholder-slate-400 dark:placeholder-slate-500
-                             focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                             resize-none transition-colors duration-200
+                             focus:ring-2 focus:border-transparent
+                             resize-none
                              ${(isStreaming || streamingContent) ? 'h-24' : 'flex-1 min-h-[100px]'}`}
                 />
+                {/* Token Counter */}
+                <div className="flex items-center justify-between">
+                  <p className="help-text italic">
+                    {t.home.promptHint}
+                  </p>
+                  <p className={`text-xs font-medium transition-colors duration-200 ${isOverTokenLimit
+                      ? 'text-red-500 dark:text-red-400'
+                      : isNearTokenLimit
+                        ? 'text-amber-500 dark:text-amber-400'
+                        : 'text-slate-400 dark:text-slate-500'
+                    }`}>
+                    {t.home.tokenCount
+                      .replace('{count}', formatNumber(tokenCount))
+                      .replace('{max}', formatNumber(MAX_ESTIMATED_TOKENS))}
+                    {isNearTokenLimit && !isOverTokenLimit && (
+                      <span className="ml-1">⚠️</span>
+                    )}
+                    {isOverTokenLimit && (
+                      <span className="ml-1">❌</span>
+                    )}
+                  </p>
+                </div>
               </div>
-              <p className="help-text italic">
-                {t.home.promptHint}
-              </p>
 
               {/* Streaming Preview */}
               {(isStreaming || streamingContent) && (

@@ -158,9 +158,10 @@ export function OperationOptionsPanel() {
       if (option.key === 'language' && option.name === 'Target Language') {
         return t.operationOptions.targetLanguage;
       }
-      const translated = (t.operationOptions as Record<string, string>)[translationKey];
-      if (translated) {
-        return translated;
+      // Safe lookup for string-only properties (skip nested objects like tones, lengths, etc.)
+      const value = t.operationOptions[translationKey as keyof typeof t.operationOptions];
+      if (typeof value === 'string') {
+        return value;
       }
     }
     return option.name;

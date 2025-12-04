@@ -2,12 +2,10 @@
 //! Handles loading, saving, and managing application settings
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
 use crate::encryption;
-use crate::operations::get_default_system_prompts;
 
 /// Paste behavior options
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -26,71 +24,67 @@ pub struct Configuration {
     /// Global hotkey string (e.g., "Ctrl+Space")
     #[serde(default = "default_hotkey")]
     pub hotkey: String,
-    
+
     /// API base URL for OpenAI-compatible endpoints
     #[serde(default = "default_api_base_url")]
     pub api_base_url: String,
-    
+
     /// Encrypted API key
     #[serde(default)]
     pub api_key: String,
-    
+
     /// Plaintext API key (not persisted, used for testing with unsaved keys)
     #[serde(skip)]
     pub plaintext_api_key: Option<String>,
-    
+
     /// Text/chat model name
     #[serde(default)]
     pub llm_model: String,
-    
+
     /// Image generation model name
     #[serde(default)]
     pub image_model: String,
-    
+
     /// Audio transcription model name
     #[serde(default)]
     pub audio_model: String,
-    
+
     /// Text-to-speech model name
     #[serde(default = "default_tts_model")]
     pub tts_model: String,
-    
+
     /// Paste behavior setting
     #[serde(default)]
     pub paste_behavior: PasteBehavior,
-    
+
     /// Disable automatic text selection capture
     #[serde(default)]
     pub disable_text_selection: bool,
-    
+
     /// Enable debug logging for API requests
     #[serde(default)]
     pub enable_debug_logging: bool,
-    
+
     /// Delay in milliseconds after simulating copy (to allow clipboard to update)
     #[serde(default = "default_copy_delay_ms")]
     pub copy_delay_ms: u64,
-    
-    /// Custom system prompts for each operation type
-    #[serde(default = "get_default_system_prompts")]
-    pub system_prompts: HashMap<String, String>,
-    
+
     /// Cached list of available text models
     #[serde(default)]
     pub models: Vec<String>,
-    
+
     /// Cached list of available image models
     #[serde(default)]
     pub image_models: Vec<String>,
-    
+
     /// Cached list of available audio models
     #[serde(default)]
     pub audio_models: Vec<String>,
-    
+
     /// Maximum number of history entries to keep (0 = unlimited)
     #[serde(default = "default_history_limit")]
     pub history_limit: usize,
-    
+
     /// Number of days to keep media files (0 = never delete)
     #[serde(default = "default_media_retention_days")]
     pub media_retention_days: u32,
@@ -135,7 +129,6 @@ impl Default for Configuration {
             disable_text_selection: false,
             enable_debug_logging: false,
             copy_delay_ms: default_copy_delay_ms(),
-            system_prompts: get_default_system_prompts(),
             models: Vec::new(),
             image_models: Vec::new(),
             audio_models: Vec::new(),
@@ -159,51 +152,48 @@ impl Configuration {
     /// Get the configuration file path
     pub fn get_config_path() -> PathBuf {
         let data_dir = Self::get_app_data_dir();
-        
+
         if let Err(e) = fs::create_dir_all(&data_dir) {
-            eprintln!("[Configuration] Failed to create data directory {:?}: {}", data_dir, e);
+            eprintln!(
+                "[Configuration] Failed to create data directory {:?}: {}",
+                data_dir, e
+            );
         }
         data_dir.join("config.json")
     }
-    
+
     /// Load configuration from file
     pub fn load() -> Result<Self, String> {
         let config_path = Self::get_config_path();
-        
+
         if !config_path.exists() {
             let default_config = Configuration::default();
             default_config.save()?;
             return Ok(default_config);
         }
-        
+
         let content = fs::read_to_string(&config_path)
             .map_err(|e| format!("Failed to read config file: {}", e))?;
-        
-        let mut config: Configuration = serde_json::from_str(&content)
+
+        let config: Configuration = serde_json::from_str(&content)
             .map_err(|e| format!("Failed to parse config file: {}", e))?;
-        
-        // Ensure system prompts have all default keys
-        let defaults = get_default_system_prompts();
-        for (key, value) in defaults {
-            config.system_prompts.entry(key).or_insert(value);
-        }
-        
+
         Ok(config)
     }
-    
+
     /// Save configuration to file
     pub fn save(&self) -> Result<(), String> {
         let config_path = Self::get_config_path();
-        
+
         let content = serde_json::to_string_pretty(self)
             .map_err(|e| format!("Failed to serialize config: {}", e))?;
-        
+
         fs::write(&config_path, content)
             .map_err(|e| format!("Failed to write config file: {}", e))?;
-        
+
         Ok(())
     }
-    
+
     /// Get decrypted API key
     pub fn get_api_key(&self) -> String {
         // If plaintext API key is set (from form input), use it directly
@@ -216,7 +206,7 @@ impl Configuration {
         }
         encryption::decrypt(&self.api_key).unwrap_or_default()
     }
-    
+
     /// Set API key (encrypts before storing)
     pub fn set_api_key(&mut self, key: &str) {
         if key.is_empty() {

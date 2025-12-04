@@ -9,3 +9,5 @@ export { Badge } from './Badge';
 export { EmptyState } from './EmptyState';
 export { IconButton } from './IconButton';
 export { Modal } from './Modal';
+export { SearchableSelect } from './SearchableSelect';
+export type { Option } from './SearchableSelect';

@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n';
 import { useHotkeyCapture } from '../hooks/useHotkeyCapture';
 import { SaveConfigRequest, PasteBehavior, ToastType } from '../types';
+import { parseApiError } from '../utils/apiErrors';
 
 interface SettingsModalProps {
   onShowToast: (type: ToastType, title: string, message?: string) => void;
@@ -113,7 +114,8 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
 
       onShowToast('success', t.toast.modelsLoaded, t.toast.modelsLoadedCount.replace('{count}', String(allModels.length)));
     } catch (error) {
-      onShowToast('error', t.toast.error, String(error));
+      const { title, message } = parseApiError(String(error), t);
+      onShowToast('error', title, message);
     } finally {
       setIsFetchingModels(false);
     }
@@ -125,7 +127,8 @@ export function SettingsModal({ onShowToast }: SettingsModalProps) {
       await testConnection();
       onShowToast('success', t.settings.api.testSuccess, t.toast.connectionSuccess);
     } catch (error) {
-      onShowToast('error', t.settings.api.testFailed, String(error));
+      const { title, message } = parseApiError(String(error), t);
+      onShowToast('error', title, message);
     } finally {
       setIsTesting(false);
     }

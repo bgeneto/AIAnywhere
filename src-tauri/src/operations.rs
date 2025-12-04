@@ -57,7 +57,7 @@ pub struct Operation {
 /// Get default system prompts for all operation types
 pub fn get_default_system_prompts() -> HashMap<String, String> {
     let mut prompts = HashMap::new();
-    
+
     prompts.insert(
         "GeneralChat".to_string(),
         r#"LANGUAGE RULE: Always respond in the same language as the user's input text.
@@ -72,9 +72,10 @@ RULES:
 5. Choose the most logical interpretation if unclear
 6. Provide complete, substantive answers
 
-Start your response directly with the helpful content."#.to_string(),
+Start your response directly with the helpful content."#
+            .to_string(),
     );
-    
+
     prompts.insert(
         "ImageGeneration".to_string(),
         r#"LANGUAGE RULE: Use the same language as the user's description for any text in the image.
@@ -89,7 +90,7 @@ RULES:
 
 Generate the image now."#.to_string(),
     );
-    
+
     prompts.insert(
         "TextTranslation".to_string(),
         r#"CRITICAL: You are translating TO {language}. The output must be in {language} only.
@@ -104,9 +105,10 @@ TRANSLATION RULES:
 5. NO explanations or comments
 6. Return ONLY the translated text
 
-Translate this text to {language}:"#.to_string(),
+Translate this text to {language}:"#
+            .to_string(),
     );
-    
+
     prompts.insert(
         "TextRewrite".to_string(),
         r#"LANGUAGE RULE: Keep the EXACT same language as the original text.
@@ -123,9 +125,10 @@ REWRITING RULES:
 7. Use natural, native-level phrasing
 8. NO explanations or comments
 
-Return ONLY the rewritten text:"#.to_string(),
+Return ONLY the rewritten text:"#
+            .to_string(),
     );
-    
+
     prompts.insert(
         "TextSummarization".to_string(),
         r#"LANGUAGE RULE: Use the EXACT same language as the original text.
@@ -143,7 +146,7 @@ SUMMARY RULES:
 
 Create the {length} {format} summary:"#.to_string(),
     );
-    
+
     prompts.insert(
         "TextToSpeech".to_string(),
         r#"TASK: Convert text to speech audio file.
@@ -155,9 +158,10 @@ TEXT-TO-SPEECH RULES:
 4. Maintain natural speech patterns and pronunciation
 5. Process the complete text without truncation
 
-Convert this text to speech:"#.to_string(),
+Convert this text to speech:"#
+            .to_string(),
     );
-    
+
     prompts.insert(
         "EmailReply".to_string(),
         r#"LANGUAGE RULE: Write your reply in the EXACT same language as the original email.
@@ -176,7 +180,7 @@ EMAIL REPLY RULES:
 
 Write a proper reply for this email message:"#.to_string(),
     );
-    
+
     prompts.insert(
         "WhatsAppResponse".to_string(),
         r#"LANGUAGE RULE: Respond in the EXACT same language as the original message.
@@ -197,7 +201,7 @@ WHATSAPP RESPONSE RULES:
 
 Generate a natural WhatsApp response to this message:"#.to_string(),
     );
-    
+
     prompts.insert(
         "SpeechToText".to_string(),
         r#"TASK: Transcribe the provided audio file to text.
@@ -209,21 +213,33 @@ TRANSCRIPTION RULES:
 4. Keep the same language as the audio
 5. Include relevant non-speech sounds in [brackets] if significant
 
-Transcribe this audio:"#.to_string(),
+Transcribe this audio:"#
+            .to_string(),
     );
-    
+
     prompts.insert(
         "UnicodeSymbols".to_string(),
-        r#"You are a helpful assistant that suggests relevant Unicode symbols and emojis for any given concept.
-Provide several accurate, diverse options (with brief explanations if useful) and favor characters that display consistently across platforms.
-Now provide unicode symbols and/or emojis for representing the following: "#.to_string(),
+        r#"LANGUAGE RULE: Always respond in the EXACT same language as the user's input text.
+
+TASK: Suggest relevant Unicode symbols and emojis for the given concept.
+
+RULES:
+1. Use the SAME language as the user's input for all explanations
+2. Provide several accurate, diverse symbol options
+3. Include brief explanations if useful (in the user's language)
+4. Favor characters that display consistently across platforms
+5. NO greetings or unnecessary commentary
+
+Provide unicode symbols and/or emojis for representing the following:"#
+            .to_string(),
     );
-    
+
     prompts
 }
 
 /// Get default operations with their configurations
-pub fn get_default_operations(system_prompts: &HashMap<String, String>) -> Vec<Operation> {
+pub fn get_default_operations() -> Vec<Operation> {
+    let system_prompts = get_default_system_prompts();
     vec![
         Operation {
             operation_type: OperationType::GeneralChat,
