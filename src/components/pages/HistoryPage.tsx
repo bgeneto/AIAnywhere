@@ -8,13 +8,7 @@ import { downloadDir } from '@tauri-apps/api/path';
 import { useI18n } from '../../i18n/index';
 import { useApp } from '../../context/AppContext';
 import { HistoryEntry, HistoryEntryResponse } from '../../types';
-import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import remarkMath from 'remark-math';
-import remarkBreaks from 'remark-breaks';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
+import { MarkdownRenderer } from '../MarkdownRenderer';
 
 interface HistoryPageProps {
   onNavigateToHome: () => void;
@@ -341,33 +335,7 @@ export function HistoryPage({ onNavigateToHome }: HistoryPageProps) {
                       )}
                       {/* Only show response text if it's not just an image URL */}
                       {entry.responseText && !(entry.mediaPath && entry.operationType === 'imageGeneration') && (
-                        <div className="prose prose-slate dark:prose-invert prose-sm max-w-none text-slate-900 dark:text-slate-200 text-sm prose-p:my-1 prose-headings:mt-3 prose-headings:mb-1 [&_.katex-display]:my-2 [&_.katex]:text-inherit">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkMath, remarkBreaks]}
-                            rehypePlugins={[rehypeKatex]}
-                            components={{
-                              code({ className, children, ...props }) {
-                                const match = /language-(\w+)/.exec(className || '');
-                                const isInline = !match;
-                                return isInline ? (
-                                  <code className="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-sm" {...props}>
-                                    {children}
-                                  </code>
-                                ) : (
-                                  <SyntaxHighlighter
-                                    style={oneDark as { [key: string]: React.CSSProperties }}
-                                    language={match[1]}
-                                    PreTag="div"
-                                  >
-                                    {String(children).replace(/\n$/, '')}
-                                  </SyntaxHighlighter>
-                                );
-                              },
-                            }}
-                          >
-                            {entry.responseText || ''}
-                          </ReactMarkdown>
-                        </div>
+                        <MarkdownRenderer content={entry.responseText || ''} />
                       )}
                     </div>
 
