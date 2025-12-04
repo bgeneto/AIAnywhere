@@ -307,6 +307,10 @@ export interface Translations {
     apiNetworkErrorDesc: string;
     apiTimeoutError: string;
     apiTimeoutErrorDesc: string;
+    noModelsAvailable: string;
+    testConnectionToFetch: string;
+    apiEndpointRequired: string;
+    verifyCredentials: string;
   };
 
   // Common
@@ -680,6 +684,10 @@ export const translations: Record<Language, Translations> = {
       apiNetworkErrorDesc: 'Unable to connect to the API. Please check your internet connection.',
       apiTimeoutError: 'Request Timeout',
       apiTimeoutErrorDesc: 'The request took too long. Please try again.',
+      noModelsAvailable: 'No models available',
+      testConnectionToFetch: 'Test connection to fetch models.',
+      apiEndpointRequired: 'API endpoint is required',
+      verifyCredentials: 'Please verify your API endpoint and credentials.',
     },
 
     common: {
@@ -1043,6 +1051,10 @@ export const translations: Record<Language, Translations> = {
       apiNetworkErrorDesc: 'Não foi possível conectar à API. Verifique sua conexão com a internet.',
       apiTimeoutError: 'Tempo Esgotado',
       apiTimeoutErrorDesc: 'A requisição demorou muito. Tente novamente.',
+      noModelsAvailable: 'Nenhum modelo disponível',
+      testConnectionToFetch: 'Teste a conexão para buscar modelos.',
+      apiEndpointRequired: 'Endpoint da API é obrigatório',
+      verifyCredentials: 'Por favor, verifique seu endpoint e credenciais da API.',
       modelsLoadedCount: 'Encontrados {count} modelos',
       validationError: 'Erro de Validação',
       llmModelRequired: 'Modelo LLM é obrigatório',

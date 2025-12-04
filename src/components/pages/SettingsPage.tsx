@@ -51,9 +51,9 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
   };
 
   const getMissingConfigMessage = (): string | null => {
-    if (!apiBaseUrl) return t.toast.validationError + ': ' + (t.settings.api.endpoint || 'API endpoint is required');
-    if (models.length === 0) return t.toast.validationError + ': ' + 'No models available. Test connection to fetch models.';
-    if (!llmModel) return t.toast.validationError + ': ' + (t.toast.llmModelRequired || 'Please select a text model');
+    if (!apiBaseUrl) return t.toast.apiEndpointRequired;
+    if (models.length === 0) return `${t.toast.noModelsAvailable}. ${t.toast.testConnectionToFetch}`;
+    if (!llmModel) return t.toast.llmModelRequired;
     return null;
   };
 
@@ -234,7 +234,7 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
           currentAudioModel = result.selectedAudio;
         } catch {
           // Connection or fetch failed - show error and stop
-          onShowToast('error', t.settings.api.testFailed, 'Please verify your API endpoint and credentials.');
+          onShowToast('error', t.settings.api.testFailed, t.toast.verifyCredentials);
           setIsSaving(false);
           return;
         }
@@ -242,14 +242,14 @@ export function SettingsPage({ onShowToast }: SettingsPageProps) {
 
       // Step 2: Validate configuration
       if (!apiBaseUrl) {
-        onShowToast('warning', t.toast.validationError, 'API endpoint is required');
+        onShowToast('warning', t.toast.validationError, t.toast.apiEndpointRequired);
         setActiveTab('api');
         setIsSaving(false);
         return;
       }
 
       if (currentModels.length === 0) {
-        onShowToast('warning', t.toast.validationError, 'No models available. Please test connection to fetch models.');
+        onShowToast('warning', t.toast.validationError, `${t.toast.noModelsAvailable}. ${t.toast.testConnectionToFetch}`);
         setActiveTab('api');
         setIsSaving(false);
         return;
