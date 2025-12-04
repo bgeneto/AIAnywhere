@@ -960,6 +960,34 @@ async fn copy_audio_file(
     Ok(())
 }
 
+/// Bring the main window to front with proper platform support
+/// On Linux (especially Wayland), request user attention before focusing
+#[tauri::command]
+async fn bring_window_to_front(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        // On Linux, request user attention first (helps with Wayland)
+        #[cfg(target_os = "linux")]
+        {
+            use tauri::UserAttentionType;
+            window.request_user_attention(Some(UserAttentionType::Critical)).ok();
+        }
+
+        // Unminimize if minimized
+        let is_minimized = window.is_minimized().unwrap_or(false);
+        if is_minimized {
+            window.unminimize().map_err(|e| e.to_string())?;
+        }
+
+        // Show and focus
+        window.show().map_err(|e| e.to_string())?;
+        window.set_focus().map_err(|e| e.to_string())?;
+
+        Ok(())
+    } else {
+        Err("Window not found".to_string())
+    }
+}
+
 /// Copy an image from URL to clipboard (exposed as Tauri command)
 /// This is used by the frontend to copy images to clipboard
 #[tauri::command]
@@ -1111,6 +1139,8 @@ pub fn run() {
             restore_foreground_window,
             capture_selected_text,
             restore_clipboard_content,
+            // Window management
+            bring_window_to_front,
             // Encryption
             encrypt_api_key,
             decrypt_api_key,

@@ -108,32 +108,17 @@ export function useGlobalShortcut(options: UseGlobalShortcutOptions) {
             const capturedText = await invoke<string>('capture_selected_text');
             console.log('Captured text length:', capturedText?.length || 0);
             
-            // Show and focus the main window
+            // Use the backend command to bring window to front (better Linux/Wayland support)
+            await invoke('bring_window_to_front');
+            
+            // Get window reference for emitting events
             const appWindow = await WebviewWindow.getByLabel('main');
             if (appWindow) {
-              const isVisible = await appWindow.isVisible();
-              const isMinimized = await appWindow.isMinimized();
-              console.log(`Window state - visible: ${isVisible}, minimized: ${isMinimized}`);
-              
-              if (isMinimized) {
-                console.log('Unminimizing window...');
-                await appWindow.unminimize();
-              }
-              
-              if (!isVisible) {
-                console.log('Showing window...');
-                await appWindow.show();
-              }
-              
-              console.log('Setting focus...');
-              await appWindow.setFocus();
-              
               // Emit the captured text to the window so HomePage can use it
               if (capturedText && capturedText.trim()) {
                 console.log('Emitting captured text to window...');
                 await appWindow.emit('text-captured', capturedText);
               }
-              
               console.log('Window operations completed');
             } else {
               console.error('Could not find window with label "main"');

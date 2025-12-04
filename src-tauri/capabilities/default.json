@@ -19,6 +19,7 @@
     "core:window:allow-minimize",
     "core:window:allow-is-visible",
     "core:window:allow-is-minimized",
+    "core:window:allow-request-user-attention",
     "core:path:default",
     "opener:default",
     "dialog:default",
