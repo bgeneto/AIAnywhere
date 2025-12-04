@@ -49,6 +49,14 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "windows": {
+      "nsis": {
+        "installerHooks": "nsis/installer.nsi"
+      },
+      "wix": {
+        "fragmentPaths": ["wix/cleanup.wxs"]
+      }
+    },
     "linux": {
       "rpm": {
         "epoch": 0,

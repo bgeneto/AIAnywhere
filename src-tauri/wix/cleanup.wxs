@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AI Anywhere WiX Fragment
+  Custom cleanup fragment to remove app data including media folder on uninstall
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  
+  <Fragment>
+    <!-- Property to store the AppData path -->
+    <Property Id="APPDATAFOLDER">
+      <DirectorySearch Id="AppDataFolderSearch" Path="[AppDataFolder]" />
+    </Property>
+    
+    <!-- Custom action to remove app data folder on uninstall -->
+    <CustomAction Id="RemoveAppDataFolder" 
+                  Directory="INSTALLDIR"
+                  ExeCommand="cmd.exe /c &quot;rmdir /s /q &quot;%APPDATA%\ai-anywhere&quot; 2>nul &amp; rmdir /s /q &quot;%LOCALAPPDATA%\ai-anywhere&quot; 2>nul &amp; rmdir /s /q &quot;%APPDATA%\AI Anywhere&quot; 2>nul &amp; rmdir /s /q &quot;%LOCALAPPDATA%\AI Anywhere&quot; 2>nul&quot;"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="yes" />
+    
+    <!-- Schedule the custom action during uninstall -->
+    <InstallExecuteSequence>
+      <Custom Action="RemoveAppDataFolder" Before="RemoveFiles">
+        REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE
+      </Custom>
+    </InstallExecuteSequence>
+  </Fragment>
+</Wix>
