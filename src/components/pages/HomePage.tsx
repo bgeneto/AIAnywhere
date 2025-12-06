@@ -193,12 +193,12 @@ export function HomePage({ onShowToast }: HomePageProps) {
 
   const handleSend = async () => {
     if (!selectedOperation) {
-      onShowToast('error', t.toast.error, 'Please select an operation');
+      onShowToast('error', t.toast.error, t.home.pleaseSelectOperation);
       return;
     }
 
     if (!promptText.trim() && selectedOperation.type !== 'speechToText') {
-      onShowToast('error', t.toast.error, 'Please enter a prompt');
+      onShowToast('error', t.toast.error, t.home.pleaseEnterPrompt);
       return;
     }
 
@@ -306,14 +306,14 @@ export function HomePage({ onShowToast }: HomePageProps) {
                                        text-blue-600 focus:ring-blue-500 focus:ring-offset-0
                                        bg-white dark:bg-slate-700 cursor-pointer"
                           />
-                          Auto
+                          {t.home.autoSync}
                         </label>
                         <button
                           onClick={syncClipboard}
                           className="btn-secondary"
-                          title="Refresh from clipboard"
+                          title={t.home.syncClipboardTooltip}
                         >
-                          📋 Sync
+                          📋 {t.home.syncClipboard}
                         </button>
                       </>
                     )}

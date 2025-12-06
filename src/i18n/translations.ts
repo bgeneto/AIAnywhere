@@ -39,6 +39,11 @@ export interface Translations {
     tokenWarning: string;
     tokenError: string;
     autoSyncTooltip: string;
+    autoSync: string;
+    syncClipboard: string;
+    syncClipboardTooltip: string;
+    pleaseSelectOperation: string;
+    pleaseEnterPrompt: string;
   };
 
   // Operations
@@ -424,6 +429,11 @@ export const translations: Record<Language, Translations> = {
       tokenWarning: 'Approaching token limit',
       tokenError: 'Prompt too long (~{count} tokens). Maximum: {max}',
       autoSyncTooltip: 'Auto-sync clipboard on window focus. Uncheck to manually paste content.',
+      autoSync: 'Auto',
+      syncClipboard: 'Sync',
+      syncClipboardTooltip: 'Paste from current clipboard content',
+      pleaseSelectOperation: 'Please select an operation',
+      pleaseEnterPrompt: 'Please enter a prompt',
     },
 
     operations: {
@@ -799,7 +809,12 @@ export const translations: Record<Language, Translations> = {
       tokenCount: '~{count} de {max} max. tokens',
       tokenWarning: 'Aproximando-se do limite de tokens',
       tokenError: 'Prompt muito longo (~{count} tokens). Máximo: {max}',
-      autoSyncTooltip: 'Sincronizar área de transferência ao focar na janela. Desmarque para colar conteúdo manualmente.',
+      autoSyncTooltip: 'Sincronizar área de transferência automaticamente. Desmarque para colar manualmente.',
+      autoSync: 'Auto',
+      syncClipboard: 'Sincronizar',
+      syncClipboardTooltip: 'Colar da área de transferência',
+      pleaseSelectOperation: 'Por favor, selecione uma operação',
+      pleaseEnterPrompt: 'Por favor, digite um prompt',
     },
 
     operations: {
