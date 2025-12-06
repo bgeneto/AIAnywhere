@@ -20,11 +20,11 @@ export interface UseClipboardSyncOptions {
  * the prompt textarea still shows old content.
  */
 export function useClipboardSync(options: UseClipboardSyncOptions) {
-  const { 
-    enabled = true, 
-    onClipboardRead, 
+  const {
+    enabled = true,
+    onClipboardRead,
     onlyIfEmpty = false,
-    currentText = '' 
+    currentText = ''
   } = options;
 
   // Track the last clipboard content to avoid unnecessary updates
@@ -36,9 +36,14 @@ export function useClipboardSync(options: UseClipboardSyncOptions) {
     onClipboardReadRef.current = onClipboardRead;
   }, [onClipboardRead]);
 
-  const syncClipboard = useCallback(async () => {
-    if (!enabled) return;
+  // Use ref to track enabled state to avoid stale closures in event handlers
+  const enabledRef = useRef(enabled);
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
 
+  // Internal sync function that performs the actual clipboard read
+  const doSync = useCallback(async () => {
     // If onlyIfEmpty is true and there's already text, don't sync
     if (onlyIfEmpty && currentText.trim()) {
       return;
@@ -46,7 +51,7 @@ export function useClipboardSync(options: UseClipboardSyncOptions) {
 
     try {
       const clipboardText = await readText();
-      
+
       // Only update if clipboard has content and is different from last read
       if (clipboardText && clipboardText.trim()) {
         // Skip if it's the same content we already synced
@@ -60,7 +65,16 @@ export function useClipboardSync(options: UseClipboardSyncOptions) {
     } catch (error) {
       console.debug('Could not read clipboard:', error);
     }
-  }, [enabled, onlyIfEmpty, currentText]);
+  }, [onlyIfEmpty, currentText]);
+
+  // Auto-sync function that respects the enabled state
+  const autoSync = useCallback(async () => {
+    // Use ref to check current enabled state (avoids stale closure issues)
+    if (!enabledRef.current) {
+      return;
+    }
+    await doSync();
+  }, [doSync]);
 
   // Listen for window focus events
   useEffect(() => {
@@ -71,16 +85,15 @@ export function useClipboardSync(options: UseClipboardSyncOptions) {
     const setupListener = async () => {
       try {
         const appWindow = getCurrentWindow();
-        
-        // Listen for focus events
+
+        // Listen for focus events - only sync when window GAINS focus
+        // We deliberately do NOT sync on initial mount to allow
+        // users to control when clipboard sync happens via the "Auto" toggle
         unlistenFocus = await appWindow.onFocusChanged(({ payload: focused }) => {
           if (focused) {
-            syncClipboard();
+            autoSync();
           }
         });
-
-        // Also sync on initial mount (only if enabled)
-        syncClipboard();
       } catch (error) {
         console.error('Failed to set up window focus listener:', error);
       }
@@ -91,16 +104,16 @@ export function useClipboardSync(options: UseClipboardSyncOptions) {
     return () => {
       unlistenFocus?.();
     };
-  }, [enabled, syncClipboard]);
+  }, [enabled, autoSync]);
 
-  // Manual sync function for refresh button
-  const manualSync = useCallback(async () => {
+  // Manual sync function for the Sync button - always works regardless of enabled state
+  const forceSync = useCallback(async () => {
     // Reset the last clipboard ref to force an update
     lastClipboardRef.current = '';
-    await syncClipboard();
-  }, [syncClipboard]);
+    await doSync();
+  }, [doSync]);
 
   return {
-    syncClipboard: manualSync,
+    syncClipboard: forceSync,
   };
 }

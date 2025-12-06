@@ -86,7 +86,7 @@ export function MainLayout({ activePage, onPageChange, children }: MainLayoutPro
                   />
                   <div>
                     <h1 className="font-bold text-slate-900 dark:text-white">{t.appName}</h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">v1.3.5</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">v1.3.6</p>
                   </div>
                 </div>
                 <button

@@ -38,6 +38,7 @@ export interface Translations {
     tokenCount: string;
     tokenWarning: string;
     tokenError: string;
+    autoSyncTooltip: string;
   };
 
   // Operations
@@ -422,6 +423,7 @@ export const translations: Record<Language, Translations> = {
       tokenCount: '~{count} of {max} max. tokens',
       tokenWarning: 'Approaching token limit',
       tokenError: 'Prompt too long (~{count} tokens). Maximum: {max}',
+      autoSyncTooltip: 'Auto-sync clipboard on window focus. Uncheck to manually paste content.',
     },
 
     operations: {
@@ -797,6 +799,7 @@ export const translations: Record<Language, Translations> = {
       tokenCount: '~{count} de {max} max. tokens',
       tokenWarning: 'Aproximando-se do limite de tokens',
       tokenError: 'Prompt muito longo (~{count} tokens). Máximo: {max}',
+      autoSyncTooltip: 'Sincronizar área de transferência ao focar na janela. Desmarque para colar conteúdo manualmente.',
     },
 
     operations: {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, KeyboardEvent, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, KeyboardEvent, useCallback, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useI18n } from '../../i18n/index';
 import { useClipboardSync } from '../../hooks/useClipboardSync';
@@ -69,11 +69,15 @@ export function HomePage({ onShowToast }: HomePageProps) {
     setPromptText(text);
   }, [setPromptText, promptLoadedFromHistory, clearPromptLoadedFromHistory]);
 
-  // Sync clipboard when window gains focus (respects disableTextSelection setting)
+  // Auto-sync toggle state (temporary, resets on app restart)
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
+
+  // Sync clipboard when window gains focus (respects disableTextSelection setting AND auto-sync toggle)
   // Default to disabled when config hasn't loaded yet
   const clipboardSyncEnabled = config ? !config.disableTextSelection : false;
+
   const { syncClipboard } = useClipboardSync({
-    enabled: clipboardSyncEnabled,
+    enabled: clipboardSyncEnabled && autoSyncEnabled, // Both must be true for auto-sync
     onClipboardRead: handleClipboardSync,
     onlyIfEmpty: false, // Always sync to keep in sync with latest clipboard
     currentText: promptText,
@@ -289,13 +293,29 @@ export function HomePage({ onShowToast }: HomePageProps) {
                   </label>
                   <div className="flex items-center gap-2">
                     {clipboardSyncEnabled && (
-                      <button
-                        onClick={syncClipboard}
-                        className="btn-secondary"
-                        title="Refresh from clipboard"
-                      >
-                        📋 Sync
-                      </button>
+                      <>
+                        <label
+                          className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none"
+                          title={t.home.autoSyncTooltip}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={autoSyncEnabled}
+                            onChange={(e) => setAutoSyncEnabled(e.target.checked)}
+                            className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-600 
+                                       text-blue-600 focus:ring-blue-500 focus:ring-offset-0
+                                       bg-white dark:bg-slate-700 cursor-pointer"
+                          />
+                          Auto
+                        </label>
+                        <button
+                          onClick={syncClipboard}
+                          className="btn-secondary"
+                          title="Refresh from clipboard"
+                        >
+                          📋 Sync
+                        </button>
+                      </>
                     )}
                     <button
                       onClick={handleClear}
@@ -331,10 +351,10 @@ export function HomePage({ onShowToast }: HomePageProps) {
                     {t.home.promptHint}
                   </p>
                   <p className={`text-xs font-medium transition-colors duration-200 ${isOverTokenLimit
-                      ? 'text-red-500 dark:text-red-400'
-                      : isNearTokenLimit
-                        ? 'text-amber-500 dark:text-amber-400'
-                        : 'text-slate-400 dark:text-slate-500'
+                    ? 'text-red-500 dark:text-red-400'
+                    : isNearTokenLimit
+                      ? 'text-amber-500 dark:text-amber-400'
+                      : 'text-slate-400 dark:text-slate-500'
                     }`}>
                     {t.home.tokenCount
                       .replace('{count}', formatNumber(tokenCount))
