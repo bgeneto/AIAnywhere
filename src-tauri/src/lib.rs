@@ -9,6 +9,8 @@ mod history;
 mod llm;
 mod operations;
 mod text;
+#[cfg(target_os = "linux")]
+mod wayland;
 
 use config::{Configuration, ConfigurationDto, PasteBehavior};
 use custom_tasks::{CustomTask, CustomTaskOption, CustomTasksManager};
@@ -622,6 +624,23 @@ fn get_platform() -> String {
     clipboard::get_platform().to_string()
 }
 
+// ============================================================================
+// Wayland Detection Commands (Linux only)
+// ============================================================================
+
+/// Check if the current session is running under Wayland
+#[tauri::command]
+fn is_wayland_session() -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        wayland::is_wayland_session()
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        false
+    }
+}
+
 #[tauri::command]
 async fn save_foreground_window() -> Result<bool, String> {
     clipboard::save_foreground_window()
@@ -946,7 +965,10 @@ async fn copy_audio_file(
 
     // Copy the file
     std::fs::copy(&source_path, &dest_path).map_err(|e| {
-        let err = format!("Failed to copy audio file: {} (from {} to {})", e, source_path, dest_path);
+        let err = format!(
+            "Failed to copy audio file: {} (from {} to {})",
+            e, source_path, dest_path
+        );
         if debug_logging {
             println!("[copy_audio_file] Error: {}", err);
         }
@@ -962,6 +984,7 @@ async fn copy_audio_file(
 
 /// Bring the main window to front with proper platform support
 /// On Linux (especially Wayland), request user attention before focusing
+/// Temporarily sets window as always-on-top to ensure it appears over all other apps
 #[tauri::command]
 async fn bring_window_to_front(app: AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
@@ -969,7 +992,9 @@ async fn bring_window_to_front(app: AppHandle) -> Result<(), String> {
         #[cfg(target_os = "linux")]
         {
             use tauri::UserAttentionType;
-            window.request_user_attention(Some(UserAttentionType::Critical)).ok();
+            window
+                .request_user_attention(Some(UserAttentionType::Critical))
+                .ok();
         }
 
         // Unminimize if minimized
@@ -978,9 +1003,19 @@ async fn bring_window_to_front(app: AppHandle) -> Result<(), String> {
             window.unminimize().map_err(|e| e.to_string())?;
         }
 
+        // Temporarily set always-on-top to ensure window appears over all other apps
+        window.set_always_on_top(true).map_err(|e| e.to_string())?;
+
         // Show and focus
         window.show().map_err(|e| e.to_string())?;
         window.set_focus().map_err(|e| e.to_string())?;
+
+        // Reset always-on-top after a short delay to allow normal window behavior
+        let window_clone = window.clone();
+        tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            window_clone.set_always_on_top(false).ok();
+        });
 
         Ok(())
     } else {
@@ -1139,6 +1174,8 @@ pub fn run() {
             restore_foreground_window,
             capture_selected_text,
             restore_clipboard_content,
+            // Wayland detection
+            is_wayland_session,
             // Window management
             bring_window_to_front,
             // Encryption

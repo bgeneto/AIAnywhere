@@ -23,7 +23,7 @@
         "center": true,
         "alwaysOnTop": false,
         "decorations": true,
-        "visible": true
+        "visible": false
       }
     ],
     "security": {
@@ -54,7 +54,9 @@
         "installerHooks": "nsis/installer.nsi"
       },
       "wix": {
-        "fragmentPaths": ["wix/cleanup.wxs"]
+        "fragmentPaths": [
+          "wix/cleanup.wxs"
+        ]
       }
     },
     "linux": {

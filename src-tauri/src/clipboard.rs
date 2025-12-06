@@ -146,7 +146,24 @@ pub fn simulate_paste() -> Result<(), String> {
 
 /// Simulate Ctrl+C with configurable delay
 /// Returns the captured text from clipboard after the copy operation
+///
+/// Note: On Linux Wayland, this function returns Ok(()) immediately without
+/// simulating keystrokes, as Wayland's security model prevents input injection.
+/// Users must manually copy (Ctrl+C) before triggering the hotkey on Wayland.
 pub fn simulate_copy_with_delay(delay_ms: u64) -> Result<(), String> {
+    #[cfg(target_os = "linux")]
+    {
+        // Check if running under Wayland - if so, skip simulation
+        // Wayland's security model prevents input injection
+        if crate::wayland::is_wayland_session() {
+            // On Wayland, we cannot inject keystrokes
+            // Return Ok - the caller should read clipboard directly
+            // (user must have already manually copied)
+            std::thread::sleep(std::time::Duration::from_millis(delay_ms));
+            return Ok(());
+        }
+    }
+
     #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
     {
         use enigo::{Enigo, Key, Keyboard, Settings};

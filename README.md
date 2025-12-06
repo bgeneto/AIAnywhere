@@ -159,6 +159,24 @@ WEBKIT_DISABLE_DMABUF_RENDERER=1 ai-anywhere
 ```
 </details>
 
+<details>
+<summary><strong>Linux Wayland: Global hotkey and text capture limitations</strong></summary>
+
+Due to Wayland's security model, the following limitations apply:
+
+- **Global hotkeys may not work**: Wayland prevents applications from registering global shortcuts directly. You may need to configure a system-level shortcut in your desktop environment (GNOME/KDE Settings → Keyboard Shortcuts) to launch AI Anywhere.
+
+- **Automatic text capture is not possible**: Wayland blocks applications from simulating keystrokes (like Ctrl+C) in other apps. **You must manually copy (Ctrl+C) your selected text before triggering the hotkey.**
+
+**Recommended workflow on Wayland:**
+1. Select text in any application
+2. Press `Ctrl+C` to copy
+3. Press your system shortcut to open AI Anywhere (or use the tray icon)
+4. The copied text will automatically appear in the prompt
+
+**Note:** These are fundamental Wayland security restrictions, not bugs. Consider using an X11 session if you need full global hotkey support.
+</details>
+
 ## 👨‍💻 Development
 
 ### Prerequisites

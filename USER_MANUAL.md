@@ -55,3 +55,12 @@ Customize the app behavior.
 *   **Global Access**: Use your **Global Hotkey** to invoke AI Anywhere while working in other apps. It can capture your selected text automatically!
 *   **Search Smart**: The history search supports partial matches and ignores extra spaces (e.g., "code   fix" finds "Code Fix").
 *   **Review Mode**: Use **Review Mode** for sensitive tasks where you want to check the output before it's pasted.
+
+## 🐧 Linux Wayland Notes
+
+Due to Wayland's security model:
+
+*   **Global hotkeys**: May not work directly. Configure a system shortcut in GNOME/KDE Settings → Keyboard Shortcuts.
+*   **Text capture**: You must **manually press Ctrl+C** before triggering the hotkey. Wayland prevents automatic text selection capture.
+
+**Workflow on Wayland**: Select text → Ctrl+C → Open AI Anywhere → Text appears automatically.
