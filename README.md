@@ -2,7 +2,7 @@
 
 A powerful multiplatform desktop application that provides universal AI assistance through global hotkeys. Access any LLM model from anywhere on your system - Word documents, IDEs, browsers, or any text field. Built with Tauri 2.0 (Rust + TypeScript + Tailwind CSS).
 
-<img width="1347" height="937" alt="image" src="https://github.com/user-attachments/assets/f71d5f38-6390-4915-8880-4e9bf2bb4ed5" />
+<img width="674" height="470" alt="image" src="https://github.com/user-attachments/assets/0f44a96a-94da-4ce6-aea5-de82212be6c9" />
 
 ## ✨ Key Features
 
@@ -251,4 +251,5 @@ MIT License - Copyright (c) 2025 LABiA-FUP/UnB
 ---
 
 **Made with ❤️ for productivity enthusiasts who want AI assistance everywhere they work.**
+
 
