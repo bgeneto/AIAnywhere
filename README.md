@@ -108,14 +108,6 @@ Works with any **OpenAI-compatible API**. Auto-detects available models.
 | `disableTextSelection` | `false` | Skip auto text capture for faster startup |
 | `enableDebugLogging` | `false` | Log API requests |
 
-### Config File Locations
-- **Windows**: `%APPDATA%\ai-anywhere\config.json`
-- **macOS**: `~/Library/Application Support/ai-anywhere/config.json`
-- **Linux**: `~/.local/share/ai-anywhere/config.json`
-
-### Custom System Prompts
-Edit `config.json` to customize AI behavior per task. Use placeholders like `{tone}`, `{language}` that are replaced at runtime.
-
 ## 🐛 Troubleshooting
 
 <details>
