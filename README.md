@@ -223,7 +223,7 @@ cargo fmt && cargo clippy  # Format/lint Rust
 3. Commit changes (`git commit -m 'Add Amazing'`)
 4. Push and open a Pull Request
 
-See [Architecture Overview](.github/copilot-instructions.md) for detailed guidelines.
+See [Architecture Overview](docs/SOFTWARE_ARCHITECTURE.md) for detailed guidelines.
 
 ## ❓ FAQ
 
@@ -242,7 +242,8 @@ A: None. Zero telemetry. Data only goes to your configured LLM API.
 ## 📚 Links
 
 - [Releases](../../releases) | [Issues](../../issues) | [Discussions](../../discussions)
-- [Architecture Docs](.github/copilot-instructions.md)
+- [Architecture Docs](docs/SOFTWARE_ARCHITECTURE.md)
+- [User Manual](USER_MANUAL.md)
 
 ## 📄 License
 

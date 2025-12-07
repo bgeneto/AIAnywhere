@@ -6,16 +6,27 @@ Welcome to **AI Anywhere**, your universal AI assistant designed to integrate se
 
 1. **Launch the App**: AI Anywhere starts minimized to the **system tray**.
 2. **Open the Window**: Click the tray icon or use your configured global hotkey.
-3. **Configure API**: Go to **Settings > API** and enter your LLM provider's **Endpoint** and **API Key**. Click **Test Connection** to verify.
-4. **Select Models**: Click **Get Models** to discover available models, then select your preferred models for Text, Image, and Audio.
+3. **Configure API**:
+   * Go to **Settings > API**.
+   * Enter your LLM provider's **Endpoint** (e.g., `https://api.openai.com/v1`).
+   * Enter your **API Key**.
+   * Click **Test Connection** to verify.
+4. **Select Models (Vital)**:
+   * Go to the **Models** tab in Settings.
+   * Click **Refresh Models** to fetch the list from your provider.
+   * **You must select a model for each category to use those features:**
+     * **Text Model**: Required for chat, summarization, translation, custom tasks, etc.
+     * **Image Model**: Required for "Generate Image" tasks (e.g., DALL-E 3).
+     * **Audio Model (STT)**: Required for "Speech-to-Text" (transcribing audio files).
+     * **TTS Model**: Required for "Read Aloud" (Text-to-Speech).
 
 ## 🏠 Home
 
 The Home screen is your main command center.
 
-* **Task Selection**: Choose from predefined tasks (e.g., "Email Reply", "Translate") or your own **My Tasks**.
+* **Task Selection**: Choose from predefined tasks (e.g., "Email Reply", "Translate", "Generate Image") or your own **My Tasks**.
 * **Task Options**: Configure task-specific options like tone, length, language, etc.
-* **Prompt Input**: Type your request in the text box.
+* **Prompt Input**: Type your request or review captured text.
 * **Clipboard Controls**:
   * **Auto checkbox**: When checked, clipboard content automatically syncs to the prompt when the window gains focus. Uncheck to manually paste content with Ctrl+V.
   * **Sync button**: Manually refresh the prompt with current clipboard content.
@@ -34,21 +45,36 @@ View and manage your past interactions.
 
 ## ✨ My Tasks
 
-Tailor AI Anywhere to your specific needs.
+Tailor AI Anywhere to your specific needs by creating custom workflows.
 
-* **Create**: Go to **My Tasks** and click **Create New Task**.
-* **Configure**: Give it a name, description, and a **System Prompt** that defines its behavior.
-* **Options**: Add custom variables (e.g., "Target Language", "Tone") that will appear as form fields when you select the task. Use `{placeholder}` syntax in the system prompt.
-* **Import/Export**: Export your tasks to JSON for backup or import tasks from others.
+1. **Create**: Go to **My Tasks** and click **Create New Task**.
+2. **Basic Info**:
+   * **Name**: The display name in the task dropdown.
+   * **Description**: A short help text explaining what the task does.
+   * **System Prompt**: The instruction sent to the AI (e.g., "You are a helpful coding assistant.").
+3. **Add Options**: Create dynamic form fields that appear when you use the task.
+   * **Option Types**:
+     * **Text**: A simple input box.
+     * **Select**: A dropdown menu. You must provide comma-separated values (e.g., `Professional, Casual, Funny`).
+     * **Number**: A numeric input, optionally with Min/Max limits.
+   * **Key**: A unique identifier for the option (e.g., `target_lang`).
+4. **Use Placeholders**:
+   * To use user input in your prompt, insert the option's **Key** wrapped in curly braces into the System Prompt.
+   * *Example*:
+     * Option: Name="Target Language", Key=`target_lang`, Type=Select, Values=`Python, Rust, TypeScript`
+     * System Prompt: `Translate the following code into {target_lang}.`
 
 ## ⚙️ Settings
 
 Customize the app behavior.
 
-### API
-* **Endpoint**: Your LLM provider's API URL (e.g., `https://api.openai.com/v1`).
+### API & Models
+* **Endpoint**: Your LLM provider's API URL.
 * **API Key**: Securely stored with AES-GCM encryption.
-* **Models**: Select models for Text, Image (DALL-E), Audio (Whisper), and Text-to-Speech.
+* **Text Model**: The primary LLM for text generation.
+* **Image Model**: The model used for image generation calls.
+* **Audio Model**: The model used for converting speech/audio to text (e.g., `whisper-1`).
+* **TTS Model**: The model used for text-to-speech.
 
 ### General
 * **Global Hotkey**: Set a keyboard shortcut (e.g., `Ctrl+Space`) to trigger AI Anywhere from *any* application.
@@ -93,4 +119,4 @@ Due to Wayland's security model:
 * **Global hotkeys**: May not work directly. Configure a system shortcut in GNOME/KDE Settings → Keyboard Shortcuts.
 * **Text capture**: You must **manually press Ctrl+C** before triggering the hotkey. Wayland prevents automatic text selection capture.
 
-**Workflow on Wayland**: Select text → Ctrl+C → Open AI Anywhere → Text appears automatically.
+**Workflow on Linux Wayland**: Select text → Ctrl+C → Open AI Anywhere → Text appears automatically.

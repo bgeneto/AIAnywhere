@@ -1,4 +1,4 @@
-# AI Anywhere - Copilot Instructions
+# AI Anywhere - Copilot/Agent Instructions
 
 ## Project Overview
 **AI Anywhere** is a Tauri 2.0 desktop application (Rust + TypeScript + Tailwind CSS) that provides universal AI assistance via global hotkeys. The architecture separates concerns into a Rust backend (`src-tauri/`) for system integration and a React frontend (`src/`) for UI.
