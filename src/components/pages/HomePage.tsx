@@ -12,8 +12,8 @@ import { parseApiError } from '../../utils/apiErrors';
 // Most LLMs use ~1.3 tokens per word for English (inverse of ~0.75 words per token)
 // We apply a 20% correction factor (1.20) to avoid underestimating
 // Conservative limit that works with most models (GPT-4, Claude, etc.)
-const MAX_ESTIMATED_TOKENS = 16000;
-const WARNING_THRESHOLD = 12000;
+const MAX_ESTIMATED_TOKENS = 24000;
+const WARNING_THRESHOLD = 16000;
 const TOKEN_CORRECTION_FACTOR = 1.20; // 20% safety margin for underestimation
 
 /**

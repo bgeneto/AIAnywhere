@@ -63,8 +63,32 @@ impl CustomTask {
         }
     }
 
+    // Token estimation constants (same as frontend)
+    const MAX_ESTIMATED_TOKENS: usize = 16000;
+    const TOKEN_CORRECTION_FACTOR: f64 = 1.20;
+
+    /// Estimates the number of tokens in a text string.
+    /// Uses word count * 1.33 * 1.20 as approximation.
+    fn estimate_tokens(text: &str) -> usize {
+        if text.trim().is_empty() {
+            return 0;
+        }
+        let words: usize = text.split_whitespace().count();
+        (words as f64 * 1.33 * Self::TOKEN_CORRECTION_FACTOR).ceil() as usize
+    }
+
     /// Validate that the system prompt contains all required placeholders for defined options
     pub fn validate(&self) -> Result<(), String> {
+        // Check token limit
+        let token_count = Self::estimate_tokens(&self.system_prompt);
+        if token_count > Self::MAX_ESTIMATED_TOKENS {
+            return Err(format!(
+                "System prompt too long (~{} tokens). Maximum: {}",
+                token_count,
+                Self::MAX_ESTIMATED_TOKENS
+            ));
+        }
+
         // Extract placeholders from system prompt using regex
         let placeholder_regex = Regex::new(r"\{(\w+)\}").unwrap();
         let prompt_placeholders: Vec<String> = placeholder_regex
@@ -147,7 +171,10 @@ impl CustomTasksManager {
         let data_dir = Self::get_app_data_dir();
 
         if let Err(e) = fs::create_dir_all(&data_dir) {
-            eprintln!("[CustomTasksManager] Failed to create data directory {:?}: {}", data_dir, e);
+            eprintln!(
+                "[CustomTasksManager] Failed to create data directory {:?}: {}",
+                data_dir, e
+            );
         }
         data_dir.join("custom_tasks.json")
     }

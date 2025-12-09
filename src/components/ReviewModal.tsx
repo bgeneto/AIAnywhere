@@ -278,7 +278,7 @@ export function ReviewModal({ onShowToast }: ReviewModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 print-modal-overlay">
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-[60%] max-w-[90%] min-w-[400px] min-h-[300px] max-h-[99vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 resize overflow-auto print-modal-container">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-[70%] max-w-[95%] min-w-[400px] min-h-[300px] max-h-[99vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 resize overflow-auto print-modal-container">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 no-print">
           <div className="flex items-center gap-3">

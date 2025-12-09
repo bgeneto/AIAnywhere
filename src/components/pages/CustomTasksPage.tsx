@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { save, open } from '@tauri-apps/plugin-dialog';
@@ -10,13 +10,31 @@ import {
   FormField, FormInput, Card, PageLayout, EmptyState, Badge
 } from '../ui';
 
+// Token estimation constants (same as HomePage)
+const MAX_ESTIMATED_TOKENS = 16000;
+const WARNING_THRESHOLD = 12000;
+const TOKEN_CORRECTION_FACTOR = 1.20;
+
+/**
+ * Estimates the number of tokens in a text string.
+ * Uses word count * 1.33 * 1.20 as approximation.
+ */
+const estimateTokens = (text: string): number => {
+  if (!text.trim()) return 0;
+  const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+  return Math.ceil(words * 1.33 * TOKEN_CORRECTION_FACTOR);
+};
+
 interface CustomTasksPageProps {
   showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message?: string) => void;
 }
 
 export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { customTasks, loadCustomTasks } = useApp();
+
+  // Format numbers according to current locale
+  const formatNumber = useCallback((num: number) => num.toLocaleString(language), [language]);
   const [editingTask, setEditingTask] = useState<CustomTask | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -45,6 +63,11 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
       setFormOptions([]);
     }
   }, [editingTask, isCreating]);
+
+  // Token count estimation for the systemPrompt
+  const tokenCount = useMemo(() => estimateTokens(formSystemPrompt), [formSystemPrompt]);
+  const isOverTokenLimit = tokenCount > MAX_ESTIMATED_TOKENS;
+  const isNearTokenLimit = tokenCount > WARNING_THRESHOLD;
 
   // Create new task
   const handleCreate = useCallback(() => {
@@ -106,6 +129,15 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
     }
     if (!formSystemPrompt.trim()) {
       showToast('error', 'Validation Error', 'System prompt is required');
+      return;
+    }
+
+    // Check token limit
+    if (isOverTokenLimit) {
+      const errorMsg = (t.customTasks.tokenError || 'System prompt too long (~{count} tokens). Maximum: {max}')
+        .replace('{count}', formatNumber(tokenCount))
+        .replace('{max}', formatNumber(MAX_ESTIMATED_TOKENS));
+      showToast('error', 'Validation Error', errorMsg);
       return;
     }
 
@@ -386,8 +418,32 @@ export function CustomTasksPage({ showToast }: CustomTasksPageProps) {
               onChange={(e) => setFormSystemPrompt(e.target.value)}
               placeholder={t.customTasks.systemPromptPlaceholder}
               rows={6}
-              className="form-input font-mono"
+              className={`form-input font-mono transition-colors duration-200 ${isOverTokenLimit
+                  ? 'border-red-400 dark:border-red-500 focus:ring-red-500'
+                  : isNearTokenLimit
+                    ? 'border-amber-400 dark:border-amber-500 focus:ring-amber-500'
+                    : ''
+                }`}
             />
+            {/* Token Counter */}
+            <div className="flex items-center justify-end mt-1">
+              <p className={`text-xs font-medium transition-colors duration-200 ${isOverTokenLimit
+                  ? 'text-red-500 dark:text-red-400'
+                  : isNearTokenLimit
+                    ? 'text-amber-500 dark:text-amber-400'
+                    : 'text-slate-400 dark:text-slate-500'
+                }`}>
+                {(t.customTasks.tokenCount || '~{count} of {max} max. tokens')
+                  .replace('{count}', formatNumber(tokenCount))
+                  .replace('{max}', formatNumber(MAX_ESTIMATED_TOKENS))}
+                {isNearTokenLimit && !isOverTokenLimit && (
+                  <span className="ml-1">⚠️</span>
+                )}
+                {isOverTokenLimit && (
+                  <span className="ml-1">❌</span>
+                )}
+              </p>
+            </div>
           </FormField>
 
           {/* Options */}

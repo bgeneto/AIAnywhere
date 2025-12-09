@@ -392,6 +392,8 @@ export interface Translations {
     exported: string;
     imported: string;
     importFailed: string;
+    tokenCount: string;
+    tokenError: string;
   };
 }
 
@@ -774,6 +776,8 @@ export const translations: Record<Language, Translations> = {
       exported: 'Tasks exported successfully',
       imported: 'Tasks imported successfully',
       importFailed: 'Failed to import tasks',
+      tokenCount: '~{count} of {max} max. tokens',
+      tokenError: 'System prompt too long (~{count} tokens). Maximum: {max}',
     },
   },
 
@@ -1103,7 +1107,7 @@ export const translations: Record<Language, Translations> = {
       searchPlaceholder: 'Buscar por prompt ou resposta...',
       noHistory: 'Nenhuma entrada no histórico ainda',
       noResults: 'Nenhuma entrada encontrada',
-      rerun: 'Reexecutar',
+      rerun: 'Reutilizar',
       delete: 'Excluir',
       clearAll: 'Limpar Tudo',
       confirmDelete: 'Tem certeza que deseja excluir esta entrada?',
@@ -1155,6 +1159,8 @@ export const translations: Record<Language, Translations> = {
       exported: 'Tarefas exportadas com sucesso',
       imported: 'Tarefas importadas com sucesso',
       importFailed: 'Falha ao importar tarefas',
+      tokenCount: '~{count} de {max} max. tokens',
+      tokenError: 'Prompt do sistema muito longo (~{count} tokens). Máximo: {max}',
     },
   },
 };

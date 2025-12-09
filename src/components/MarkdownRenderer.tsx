@@ -18,7 +18,7 @@ export function MarkdownRenderer({ content, className = '', id }: MarkdownRender
         <div
             className={`text-slate-900 dark:text-white font-serif
                   [&_.katex-display]:my-3 [&_.katex-display]:text-base
-                  [&_.katex]:text-[0.90em] [&_.katex]:text-inherit
+                  [&_.katex]:text-[0.85em] [&_.katex]:text-inherit
                   ${className}`}
             id={id}
         >
@@ -27,25 +27,25 @@ export function MarkdownRenderer({ content, className = '', id }: MarkdownRender
                 rehypePlugins={[rehypeKatex]}
                 components={{
                     h1: ({ children }) => (
-                        <h1 className="text-2xl font-bold mt-6 mb-3 text-slate-900 dark:text-white font-sans">{children}</h1>
+                        <h1 className="text-3xl font-bold mt-6 mb-3 text-slate-900 dark:text-white font-sans">{children}</h1>
                     ),
                     h2: ({ children }) => (
-                        <h2 className="text-xl font-bold mt-5 mb-2 text-slate-900 dark:text-white font-sans">{children}</h2>
+                        <h2 className="text-2xl font-bold mt-5 mb-2 text-slate-900 dark:text-white font-sans">{children}</h2>
                     ),
                     h3: ({ children }) => (
-                        <h3 className="text-lg font-semibold mt-4 mb-2 text-slate-900 dark:text-white font-sans">{children}</h3>
+                        <h3 className="text-xl font-semibold mt-4 mb-2 text-slate-900 dark:text-white font-sans">{children}</h3>
                     ),
                     h4: ({ children }) => (
-                        <h4 className="text-base font-semibold mt-3 mb-1 text-slate-900 dark:text-white font-sans">{children}</h4>
+                        <h4 className="text-lg font-semibold mt-3 mb-1 text-slate-900 dark:text-white font-sans">{children}</h4>
                     ),
                     p: ({ children }) => (
-                        <p className="text-[0.9rem] leading-relaxed my-2 text-slate-700 dark:text-slate-300">{children}</p>
+                        <p className="text-base leading-relaxed my-2 text-slate-700 dark:text-white">{children}</p>
                     ),
                     ul: ({ children }) => (
-                        <ul className="text-[0.9rem] leading-relaxed my-2 ml-4 list-disc text-slate-700 dark:text-slate-300">{children}</ul>
+                        <ul className="text-base leading-relaxed my-2 ml-4 list-disc text-slate-700 dark:text-white">{children}</ul>
                     ),
                     ol: ({ children }) => (
-                        <ol className="text-[0.9rem] leading-relaxed my-2 ml-4 list-decimal text-slate-700 dark:text-slate-300">{children}</ol>
+                        <ol className="text-base leading-relaxed my-2 ml-4 list-decimal text-slate-700 dark:text-white">{children}</ol>
                     ),
                     li: ({ children }) => (
                         <li className="my-1">{children}</li>
@@ -85,12 +85,12 @@ export function MarkdownRenderer({ content, className = '', id }: MarkdownRender
                         </tr>
                     ),
                     th: ({ children }) => (
-                        <th className="px-3 py-2 text-left text-sm font-semibold text-slate-900 dark:text-white border border-slate-300 dark:border-slate-600">
+                        <th className="px-3 py-2 text-left text-base font-semibold text-slate-900 dark:text-white border border-slate-300 dark:border-slate-600">
                             {children}
                         </th>
                     ),
                     td: ({ children }) => (
-                        <td className="px-3 py-2 text-sm text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600">
+                        <td className="px-3 py-2 text-base text-slate-700 dark:text-white border border-slate-300 dark:border-slate-600">
                             {children}
                         </td>
                     ),
