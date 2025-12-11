@@ -26,6 +26,7 @@ pub fn is_wayland_session() -> bool {
 }
 
 /// Manager for portal-based global shortcuts on Wayland
+#[allow(dead_code)]
 pub struct PortalShortcutManager {
     shortcuts: Arc<Mutex<Option<GlobalShortcuts<'static>>>>,
     _session_token: Arc<Mutex<Option<String>>>,
