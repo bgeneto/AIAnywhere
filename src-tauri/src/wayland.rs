@@ -12,7 +12,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use ashpd::desktop::global_shortcuts::{GlobalShortcuts, NewShortcut, Shortcut};
-use ashpd::WindowIdentifier;
+use futures_util::StreamExt;
 
 /// Check if the current session is running under Wayland
 pub fn is_wayland_session() -> bool {
@@ -28,7 +28,7 @@ pub fn is_wayland_session() -> bool {
 /// Manager for portal-based global shortcuts on Wayland
 pub struct PortalShortcutManager {
     shortcuts: Arc<Mutex<Option<GlobalShortcuts<'static>>>>,
-    session_token: Arc<Mutex<Option<String>>>,
+    _session_token: Arc<Mutex<Option<String>>>,
 }
 
 impl PortalShortcutManager {
@@ -36,7 +36,7 @@ impl PortalShortcutManager {
     pub fn new() -> Self {
         Self {
             shortcuts: Arc::new(Mutex::new(None)),
-            session_token: Arc::new(Mutex::new(None)),
+            _session_token: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -47,14 +47,10 @@ impl PortalShortcutManager {
             .map_err(|e| format!("Failed to connect to GlobalShortcuts portal: {}", e))?;
 
         // Create a session
-        let session = shortcuts
+        let _session = shortcuts
             .create_session()
             .await
             .map_err(|e| format!("Failed to create portal session: {}", e))?;
-
-        // Store the session token for later use
-        let token = session.path().to_string();
-        *self.session_token.lock().await = Some(token);
 
         // We need to keep the GlobalShortcuts alive, but ashpd's lifetime handling
         // makes this tricky. For now, we'll create new instances as needed.
@@ -95,10 +91,16 @@ impl PortalShortcutManager {
 
         // Request to bind the shortcut
         // This may trigger a system dialog for the user to confirm
-        let bound_shortcuts = shortcuts
-            .bind_shortcuts(&session, &[new_shortcut], &WindowIdentifier::default())
+        // In ashpd 0.10+, bind_shortcuts returns Request<BindShortcuts>
+        // We need to call .response() to get the actual BindShortcuts
+        let request = shortcuts
+            .bind_shortcuts(&session, &[new_shortcut], None)
             .await
             .map_err(|e| format!("Failed to bind shortcut: {}", e))?;
+
+        let bound_shortcuts = request
+            .response()
+            .map_err(|e| format!("Failed to get bind shortcuts response: {}", e))?;
 
         println!(
             "[Portal] Bound {} shortcut(s) via xdg-desktop-portal",
@@ -128,24 +130,32 @@ impl PortalShortcutManager {
             .await
             .map_err(|e| format!("Failed to connect to GlobalShortcuts portal: {}", e))?;
 
-        let session = shortcuts
+        let _session = shortcuts
             .create_session()
             .await
             .map_err(|e| format!("Failed to create portal session: {}", e))?;
 
+        // In ashpd 0.10+, receive_activated takes no arguments and returns a Stream
+        let mut activated_stream = shortcuts
+            .receive_activated()
+            .await
+            .map_err(|e| format!("Failed to receive activated stream: {}", e))?;
+
         // Listen for activated signals
         loop {
-            match shortcuts.receive_activated(&session).await {
-                Ok((shortcut_id, timestamp, _)) => {
+            match activated_stream.next().await {
+                Some(activated) => {
+                    let shortcut_id = activated.shortcut_id().to_string();
+                    let timestamp = activated.timestamp().as_secs();
                     println!(
                         "[Portal] Shortcut '{}' activated at timestamp {}",
                         shortcut_id, timestamp
                     );
                     on_activated(shortcut_id, timestamp);
                 }
-                Err(e) => {
-                    eprintln!("[Portal] Error receiving activation: {}", e);
-                    // Continue listening despite errors
+                None => {
+                    eprintln!("[Portal] Activation stream ended unexpectedly");
+                    // Try to reconnect after a delay
                     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                 }
             }
