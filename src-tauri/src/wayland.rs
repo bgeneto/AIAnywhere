@@ -111,7 +111,7 @@ impl PortalShortcutManager {
             println!(
                 "[Portal] Shortcut '{}' bound with trigger: {:?}",
                 shortcut.id(),
-                shortcut.trigger()
+                shortcut.trigger_description()
             );
         }
 
