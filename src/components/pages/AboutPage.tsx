@@ -37,7 +37,7 @@ export function AboutPage() {
                                 {t.appName}
                             </h1>
                             <p className="text-slate-500 dark:text-slate-400">
-                                {t.about.version} 1.3.7
+                                {t.about.version} 1.3.8
                             </p>
                         </div>
                     </div>
